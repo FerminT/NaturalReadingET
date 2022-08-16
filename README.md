@@ -4,7 +4,7 @@ A *word* is defined as a sequence of characters between two blank spaces, with t
  - *Unfrequent word*: its number of appearences in the latinamerican subtitles database from [EsPal](https://www.bcbl.eu/databases/espal/) is less or equal to 100.
  - *Short sentence*: less or equal to 5 words.
  - *Long sentence*: greater or equal to 30 words.
- - *Long word*: greater or equal to 8 letters.
+ - *Long word*: greater or equal to 10 chars.
  - *Unfrequent characters*: ¿; ?; ¡; !; “; ”; —; «; (; ).
 
 ## Corpus
