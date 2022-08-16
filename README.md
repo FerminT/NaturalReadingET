@@ -11,7 +11,7 @@ A *word* is defined as a sequence of characters between two blank spaces, with t
 The corpus is composed of 17 short stories (*items*), all written in Spanish as spoken in Buenos Aires. Most of them (14) were extracted from “100 covers de cuentos clásicos”, by Hernán Casciari. The original stories were written by several different authors and were subsequently simplified, translated (if needed) and re-written in Spanish by Casciari. This way, there is diversity in literary style, while maintaining both difficulty and slang constant.
 
 On average, these are 750 (+/- 47) words long (min: 676; max: 844) and take 3 minutes to read (51 minutes total).
-### Selecton criteria
+### Selection criteria
 - Minimize dialogue.
 - Minimize short and long sentences.
 - Minimize unfrequent words and characters.
