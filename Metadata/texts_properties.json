@@ -1,6 +1,6 @@
 {
     "Una rosa para Emilia": {
-        "long_words": "87/767",
+        "long_words": "30/767",
         "#short_sentences": "4/41",
         "#long_sentences": "8/41",
         "#weird_chars": 7,
@@ -23,7 +23,7 @@
         }
     },
     "Educar para escalar y bucear": {
-        "long_words": "140/720",
+        "long_words": "75/720",
         "#short_sentences": "5/38",
         "#long_sentences": "8/38",
         "#weird_chars": 10,
@@ -56,7 +56,7 @@
         }
     },
     "El espejo": {
-        "long_words": "85/782",
+        "long_words": "25/782",
         "#short_sentences": "13/57",
         "#long_sentences": "5/57",
         "#weird_chars": 12,
@@ -86,7 +86,7 @@
         }
     },
     "La salud de los enfermos": {
-        "long_words": "113/765",
+        "long_words": "29/765",
         "#short_sentences": "0/27",
         "#long_sentences": "9/27",
         "#weird_chars": 7,
@@ -110,39 +110,8 @@
             "velaron": 1
         }
     },
-    "Las fotografías": {
-        "long_words": "99/753",
-        "#short_sentences": "5/46",
-        "#long_sentences": "7/46",
-        "#weird_chars": 27,
-        "#unfrequent_words": "15/753",
-        "short_sentences": [
-            "No se podía respirar.",
-            "Adrianita sudaba y hacía muecas.",
-            "Todos aplaudieron de alegría.",
-            "Lástima los botines...».\n",
-            "Ya ni sonreía."
-        ],
-        "unfrequent_words": {
-            "Adrianita": 11,
-            "Humberta": 8,
-            "ortopédicos": 1,
-            "asomaban": 1,
-            "abanicaba": 3,
-            "sanguchitos": 2,
-            "destaparon": 1,
-            "tapaban": 1,
-            "posara": 1,
-            "sentadita": 1,
-            "hacinados": 1,
-            "desubicado": 1,
-            "exclamó": 1,
-            "bocanadas": 1,
-            "destapando": 1
-        }
-    },
     "La noche de los feos": {
-        "long_words": "118/725",
+        "long_words": "41/725",
         "#short_sentences": "21/69",
         "#long_sentences": "2/69",
         "#weird_chars": 26,
@@ -185,7 +154,7 @@
         }
     },
     "La lluvia de fuego": {
-        "long_words": "97/767",
+        "long_words": "31/767",
         "#short_sentences": "3/46",
         "#long_sentences": "3/46",
         "#weird_chars": 0,
@@ -212,7 +181,7 @@
         }
     },
     "Embarrar la magia": {
-        "long_words": "167/844",
+        "long_words": "64/844",
         "#short_sentences": "12/56",
         "#long_sentences": "6/56",
         "#weird_chars": 6,
@@ -259,7 +228,7 @@
         }
     },
     "El almohadón de plumas": {
-        "long_words": "96/718",
+        "long_words": "26/718",
         "#short_sentences": "9/52",
         "#long_sentences": "4/52",
         "#weird_chars": 7,
@@ -290,7 +259,7 @@
         }
     },
     "La gallina degollada": {
-        "long_words": "116/806",
+        "long_words": "33/806",
         "#short_sentences": "4/50",
         "#long_sentences": "5/50",
         "#weird_chars": 15,
@@ -318,7 +287,7 @@
         }
     },
     "Ahora debería reírme, si no estuviera muerto": {
-        "long_words": "90/711",
+        "long_words": "21/711",
         "#short_sentences": "1/33",
         "#long_sentences": "4/33",
         "#weird_chars": 17,
@@ -346,7 +315,7 @@
         }
     },
     "La canción que cantábamos todos los días": {
-        "long_words": "91/744",
+        "long_words": "29/744",
         "#short_sentences": "3/37",
         "#long_sentences": "8/37",
         "#weird_chars": 18,
@@ -370,7 +339,7 @@
         }
     },
     "Wakefield": {
-        "long_words": "98/841",
+        "long_words": "28/841",
         "#short_sentences": "4/56",
         "#long_sentences": "1/56",
         "#weird_chars": 10,
@@ -391,7 +360,7 @@
         }
     },
     "La de la Obsesión por la Patineta": {
-        "long_words": "101/708",
+        "long_words": "25/708",
         "#short_sentences": "7/48",
         "#long_sentences": "6/48",
         "#weird_chars": 2,
@@ -427,47 +396,8 @@
             "Trac": 1
         }
     },
-    "Cómo funcionan los bolsillos": {
-        "long_words": "273/1131",
-        "#short_sentences": "0/42",
-        "#long_sentences": "12/42",
-        "#weird_chars": 25,
-        "#unfrequent_words": "29/1131",
-        "short_sentences": [],
-        "unfrequent_words": {
-            "ademanes": 1,
-            "inquietó": 1,
-            "plegada": 1,
-            "estupefacción": 1,
-            "sujetaban": 2,
-            "bolsillóloga": 1,
-            "Unsworth": 1,
-            "XV": 1,
-            "simulan": 1,
-            "accederse": 1,
-            "subóptima": 1,
-            "XIX": 2,
-            "alfiletero": 1,
-            "Theresa": 1,
-            "Tidy": 1,
-            "pulcritud": 1,
-            "inexpresable": 1,
-            "percate": 1,
-            "representaran": 1,
-            "esbeltas": 1,
-            "decoradas": 1,
-            "ornamentales": 1,
-            "polleras": 1,
-            "procuraba": 1,
-            "XX": 1,
-            "trascendido": 1,
-            "Gilman": 1,
-            "migró": 1,
-            "perversamente": 1
-        }
-    },
     "El golpe de gracia": {
-        "long_words": "81/710",
+        "long_words": "20/710",
         "#short_sentences": "3/35",
         "#long_sentences": "9/35",
         "#weird_chars": 4,
@@ -497,7 +427,7 @@
         }
     },
     "Buenos Aires": {
-        "long_words": "102/714",
+        "long_words": "32/714",
         "#short_sentences": "2/30",
         "#long_sentences": "8/30",
         "#weird_chars": 8,
@@ -526,7 +456,7 @@
         }
     },
     "La máscara de la Muerte Roja": {
-        "long_words": "125/676",
+        "long_words": "38/676",
         "#short_sentences": "4/31",
         "#long_sentences": "8/31",
         "#weird_chars": 12,
@@ -550,37 +480,8 @@
             "terciopelos": 1
         }
     },
-    "Cómo funciona caminar en la nieve": {
-        "long_words": "158/1215",
-        "#short_sentences": "3/41",
-        "#long_sentences": "15/41",
-        "#weird_chars": 24,
-        "#unfrequent_words": "15/1215",
-        "short_sentences": [
-            "¡Abrigate!\nMi mamá me advierte.",
-            "¿Me estará extrañando alguien?",
-            "Desde arriba suena su voz."
-        ],
-        "unfrequent_words": {
-            "Abrigate": 1,
-            "cinematográficas": 1,
-            "contraejemplo": 1,
-            "humedecida": 1,
-            "geométricamente": 1,
-            "sobrada": 1,
-            "ejemplificar": 1,
-            "anotadores": 1,
-            "tapara": 1,
-            "setecientas": 1,
-            "agujitas": 1,
-            "enmudecer": 1,
-            "desfigure": 1,
-            "derritan": 1,
-            "desabrigarme": 1
-        }
-    },
     "Rubí y el lago danzante": {
-        "long_words": "109/770",
+        "long_words": "26/770",
         "#short_sentences": "3/45",
         "#long_sentences": "5/45",
         "#weird_chars": 22,

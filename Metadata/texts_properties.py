@@ -1,13 +1,14 @@
-from os import listdir, path
+from os import listdir, path, pardir
 import pandas as pd
 import spacy
 import json
 
-texts_dir   = 'Texts'
+texts_dir   = path.join(path.pardir, 'Texts')
 texts_files = listdir(texts_dir)
 
 nlp = spacy.load('es_dep_news_trf')
 
+max_chars = 10
 min_word_freq = 100
 min_sentence_length = 5
 max_sentence_length = 30
@@ -52,7 +53,7 @@ for text_file in texts_files:
 
             word = token.text
 
-            if len(word) >= 8:
+            if len(word) >= max_chars:
                 total_long_words += 1
 
             lowercase_word_freq = words_freq[words_freq['word'] == word.lower()]
