@@ -2,24 +2,15 @@ Screen('Preference', 'SkipSyncTests', 1);
 Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
 Screen('Preference', 'Verbosity', 1); % remove warnings
 
-config.maxlines    = 14;
-config.linespacing = 55;
-config.charwrap    = 99;
-config.font        = 'Courier New';
-config.fontsize    = 24;
-config.charwidth   = 14;
-config.charwidthmargin = 3;
-config.windowrect  = [0 0 1920 1080];
-config.backgroundcolor = 180;
-config.textcolor   = 0;
-config.leftmargin  = 280;
-config.topmargin   = 185;
-
-items_path = fullfile('..', 'Texts');
-save_path  = fullfile('..', 'Stimuli');
+config_file = fullfile('..', 'stimuli_config.mat');
+items_path  = fullfile('..', 'Texts');
+save_path   = fullfile('..', 'Stimuli');
 mkdir(save_path)
+
 files      = dir(items_path);
 filenames  = string({files([files.isdir] == 0).name});
+
+load(config_file)
 
 for index = 1:length(filenames)
     try
