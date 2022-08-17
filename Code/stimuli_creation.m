@@ -1,46 +1,47 @@
-% function genero_texto
 Screen('Preference', 'SkipSyncTests', 1);
-Screen('Preference', 'VisualDebuglevel', 3); % para que no aparezca la pantalla de presentacion
-Screen('Preference', 'Verbosity', 1); % para que no muestre los warnings
+Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
+Screen('Preference', 'Verbosity', 1); % remove warnings
 
 config.maxlines    = 14;
 config.linespacing = 55;
 config.charwrap    = 99; % right margin: 280 aprox.
 config.font        = 'Courier New';
 config.fontsize    = 24;
-config.windowrect  = [0 0 1920 1080];
+config.windowrect  = [0 0 1024 768];
 config.backgroundcolor = 180;
 config.textcolor   = 0;
 config.leftmargin  = 280;
 config.topmargin   = 185;
 
-items_path = 'Textos';
-save_path  = 'Screens';
+charproperties.correctingwidth = 3;
+charproperties.width = 14;
+
+items_path = fullfile('..', 'Texts');
+save_path  = fullfile('..', 'Stimuli');
+mkdir(save_path)
 files      = dir(items_path);
 filenames  = string({files([files.isdir] == 0).name});
 
 for index = 1:length(filenames)
     try
-        clear pantallas
+        clear screens
         filename = filenames(index);
         filepath = fullfile(items_path, filename);
-        text     = importa_texto(filepath, config);
-        fprintf('Generando %s\n', filename);
+        lines    = import_text_in_lines(filepath, config);
+        fprintf('Generating %s\n', filename);
 
-        [screenWindow, config] = inicializa_pantalla(config);
-        config.currentline = 1;
-        for screenid = 1:ceil(length(text) / config.maxlines)
-            [text, config, pantallas(screenid)] = dibuja_pantalla_genera_imagenes(screenWindow, config, text, screenid); % esto incrementa init.currentline        
+        [screenWindow, config] = initialize_screen(config);
+        config.currentline_index = 1;
+        for screenid = 1:ceil(length(lines) / config.maxlines)
+            [lines, config, screens(screenid)] = draw_screen(screenWindow, config, lines, screenid);
         end
-        disp('Imágenes generadas')
+        disp('Images created.')
         sca    
         ListenChar(0)
         
-        charproperties.correctingWidth = 3;
-        charproperties.width = 14;
-        text = defino_espacios_en_texto(text, charproperties, config);        
+        lines = add_text_info(lines, charproperties, config);        
 
-        save(fullfile(save_path, filename), 'text', 'config', 'pantallas')
+        save(fullfile(save_path, filename), 'lines', 'config', 'screens')
     catch ME
         sca
         disp(getReport(ME))
@@ -49,135 +50,123 @@ for index = 1:length(filenames)
     end
 end
 
-% end
-
-function text = importa_texto(filename, config)
-    % importo el texto
+function text_lines = import_text_in_lines(filename, config)
     text = importdata(filename);
     
-    % lo separo en líneas de hasta config.charwrap caracteres
-    lineas = [];
+    lines = [];
     for i = 1:length(text)
         text{i} = WrapString(text{i}, config.charwrap);
         temp    = regexp(text{i}, '\n', 'split');
-        lineas  = [lineas temp];%#ok<AGROW>
+        lines   = [lines temp]; %#ok<AGROW>
     end
     
-    % lo convierto en una estructura donde cada fila es una línea
-    text = struct();
-    for i = 1:length(lineas)
-        text(i).texto = lineas{i};
+    text_lines = struct();
+    for i = 1:length(lines)
+        text_lines(i).text = lines{i};
     end    
 end
 
-function [screenWindow, config] = inicializa_pantalla(config)
-    % inicializa pantalla
+function [screenWindow, config] = initialize_screen(config)
     try
         screenNumber = max(Screen('Screens'));
         screenWindow = Screen('OpenWindow', screenNumber, 0, config.linespacing + config.windowrect, 32, 2);
-        % [50 50 50+1024 50+768]
         Screen(screenWindow, 'BlendFunction', GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        % HideCursor; % oculta el cursor
-        ListenChar(2) % hace que los keypresses no se vean en matlab editor (ojo hay que habilitarlo al final del programa!)
-        disp('Pantalla inicializada')
+        ListenChar(2)
+        disp('Screen initialized')
         
-        config.fps = Screen('FrameRate', screenWindow); % frames per second
-        config.ifi = 1 / config.fps; % inter-frame interval (no lo hago con getflipinterval porque ese mide y este redondea)
+        config.fps = Screen('FrameRate', screenWindow);
+        config.ifi = 1 / config.fps;
         [config.width, config.height] = Screen('WindowSize', screenWindow);
         config.CX = round(config.width/2);
         config.CY = round(config.height/2);
     catch ME
         Screen('CloseAll')
-        % ShowCursor; % muestra el cursor
-        ListenChar(0) % vuelve a la normalidad. si no pude ejecutarlo, ctrl+c hace lo mismo
-        disp('¡Hubo un error en inicializa_pantalla()!')
+        ListenChar(0)
+        disp('An error occurred in initialize_screen(config)!')
         disp(ME)
         keyboard
     end
 end
 
-function [texto, config, pantalla] = dibuja_pantalla_genera_imagenes(screenWindow, config, texto, screenid)
-% agrega bbox e imagen a texto
-try
-    Screen('TextFont', screenWindow, config.font);
-    Screen('TextSize', screenWindow, config.fontsize);
-    Screen('TextStyle', screenWindow, 1); % 0=normal,1=bold,2=italic,4=underline,8=outline,32=condense,64=extend.
-    Screen('FillRect', screenWindow, config.backgroundcolor);
+function [lines, config, screen] = draw_screen(screenWindow, config, lines, screenid)
+    try
+        Screen('TextFont', screenWindow, config.font);
+        Screen('TextSize', screenWindow, config.fontsize);
+        Screen('TextStyle', screenWindow, 1); % 0=normal,1=bold,2=italic,4=underline,8=outline,32=condense,64=extend.
+        Screen('FillRect', screenWindow, config.backgroundcolor);
+        
+        counter = 0;
+        lastdrawnlines = [];
     
-    contador = 0;
-    lastdrawnlines = [];
-
-    startingLine = config.currentline;
-    for indline = 1:config.maxlines
-        if length(texto) < config.currentline % si quisiera mostrar lineas mas alla del fin del texto        
-            config.currentline = startingLine;
-            break
+        starting_line = config.currentline_index;
+        for indline = 1:config.maxlines
+            if length(lines) < config.currentline_index    
+                config.currentline_index = starting_line;
+                break
+            end
+    
+            current_text = lines(config.currentline_index).text;
+            [nx, ny, bbox] = DrawFormattedText(screenWindow, current_text,  config.leftmargin,  ...
+                config.topmargin + counter * config.linespacing, config.textcolor);     %#ok<ASGLU>
+            
+            bbox = bbox + [-1 3 2 8]; % left top right bottom
+    
+            lines(config.currentline_index).bbox   = bbox;
+            lines(config.currentline_index).screen = screenid;
+    
+            lastdrawnlines = [lastdrawnlines config.currentline_index];
+    
+            config.currentline_index = config.currentline_index + 1;
+            counter = counter + 1;
         end
-
-        currentText = texto(config.currentline).texto;
-        [nx, ny, bbox] = DrawFormattedText(screenWindow, currentText,  config.leftmargin,  ...
-            config.topmargin + contador * config.linespacing, config.textcolor);     %#ok<ASGLU>
-        bbox = bbox + [-1 3 2 8]; % left top right bottom, para agarrar todo.
-
-        texto(config.currentline).bbox     = bbox;
-        texto(config.currentline).pantalla = screenid;
-
-        lastdrawnlines = [lastdrawnlines config.currentline];
-
-        config.currentline = config.currentline + 1;
-        contador = contador + 1;
-    end
-
-    Screen('Flip', screenWindow);
-    I = Screen('getimage', screenWindow);     
-    for i = 1:length(lastdrawnlines)
-        ind  = lastdrawnlines(i);
-        bbox = texto(ind).bbox;
-        texto(ind).imagen = I(bbox(2):bbox(4), bbox(1):bbox(3), :);
-    end
-
-    pantalla.imagen = I;
-catch ME
-    sca
-    ListenChar(0)
-    keyboard
-end
-
-end
-
-function text = defino_espacios_en_texto(text, charproperties, config)
-% 4- definir posicion de los espacios en cada oracion y agrego info de texto (inicio parrafo, renglon)
-%texto=rmfield(texto,'espacios');
-
-    disp('Defino la posición de los espacios en cada oración,')
-    disp('   y agrego info de texto (inicioparrafopal, espacioschar, renglon, numpalabras, WNG)')
-    WNG=0;
-    for indtexto = 1:length(text)
-        espacios = strfind(text(indtexto).texto,' ');
     
-        lastChar = text(indtexto).texto(end);
+        Screen('Flip', screenWindow);
+        I = Screen('getimage', screenWindow);     
+        for i = 1:length(lastdrawnlines)
+            ind  = lastdrawnlines(i);
+            bbox = lines(ind).bbox;
+            lines(ind).image = I(int32(bbox(2)):int32(bbox(4)), int32(bbox(1)):int32(bbox(3)), :);
+        end
+    
+        screen.image = I;
+    catch ME
+        sca
+        ListenChar(0)
+        keyboard
+    end
+end
+
+function lines = add_text_info(lines, charproperties, config)
+% Get where blank spaces are in each line; add some more text info
+% (paragraph init, line number)
+
+    WNG = 0;
+    for line_index = 1:length(lines)
+        spaces = strfind(lines(line_index).text, ' ');
+    
+        lastChar = lines(line_index).text(end);
         if strcmp(lastChar, ' ')
-            disp(['espacio de más en indtexto=' num2str(indtexto) ': ' text(indtexto).texto])
-            text(indtexto).texto(end) = [];
-            espacios = strfind(text(indtexto).texto,' ');    
+            disp(['Extra space in line index=' num2str(line_index) ': ' lines(line_index).text])
+            lines(line_index).text(end) = [];
+            spaces = strfind(lines(line_index).text, ' ');    
         end
     
-        espacios = [0 espacios length(text(indtexto).texto) + 1];         %#ok<AGROW>
-        if strcmp(text(indtexto).texto(1:3), '   ') % si empieza un parrafo, hay 3 espacios
-                espacios = espacios(4:end);
-                text(indtexto).inicioparrafopal = [1 zeros(1,length(espacios) - 2)];
+        spaces = [0 spaces length(lines(line_index).text) + 1];         %#ok<AGROW>
+        if strcmp(lines(line_index).text(1:3), '   ') % whenever a paragraph starts, there are three blank spaces
+                spaces = spaces(4:end);
+                lines(line_index).wordparagraph_init = [1 zeros(1,length(spaces) - 2)];
             else
-                text(indtexto).inicioparrafopal = zeros(1, length(espacios) - 1);
+                lines(line_index).wordparagraph_init = zeros(1, length(spaces) - 1);
         end
-        text(indtexto).espacioschar = espacios;
-        text(indtexto).espacios = text(indtexto).bbox(1) + ...        % el inicio del bounding box
-                                    charproperties.correctingWidth + ...  % la correccion por agarrar el bbox un poquin mas grande
-                                    (espacios - 0.5) * charproperties.width;  % el 0.5 es para quedarme en el centro del espacio        
+        lines(line_index).spaces_index = spaces;
+        lines(line_index).spaces_pos   = lines(line_index).bbox(1) + ...     % bounding box starting point
+                                        charproperties.correctingwidth + ...  % some extra margin for the bbox
+                                        (spaces - 0.5) * charproperties.width; % 0.5 to land in the middle of it
     
-        text(indtexto).renglon     = 1 + mod(indtexto - 1, config.maxlines);
-        text(indtexto).numpalabras = length(text(indtexto).inicioparrafopal);
+        lines(line_index).linenumber = 1 + mod(line_index - 1, config.maxlines);
+        lines(line_index).numwords   = length(lines(line_index).wordparagraph_init);
     
-        text(indtexto).WNG = WNG + (1:text(indtexto).numpalabras);
-        WNG = WNG + text(indtexto).numpalabras;
+        lines(line_index).WNG = WNG + (1:lines(line_index).numwords);
+        WNG = WNG + lines(line_index).numwords;
     end
 end
