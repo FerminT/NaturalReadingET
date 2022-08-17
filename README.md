@@ -22,9 +22,9 @@ On average, these are 750 (+/- 47) words long (min: 676; max: 844) and take 3 mi
 
 There is a correlation between *minimizing dialogues* and *minimizing unfrequent characters*, as dialogues are usually characterized by such.
 ## Methodology
-* Stimuli creation:
+* Stimuli creation (see config.mat:
     * Resolution: 1080x1920.
-    * Font: Courier New; Size: 22; Color: black; Background color: grey.
+    * Font: Courier New; Size: 24; Color: black; Background color: grey.
     * Linespacing: 55px.
     * Max lines per screen: 14.
     * Max chars per line: 99.
