@@ -1,3 +1,7 @@
+%%% This function receives as input texts and outputs the images (i.e.
+%%% stimuli) that will be displayed on screen. Additional text information
+%%% (position of each word, number of words, etc.) is also stored.
+
 Screen('Preference', 'SkipSyncTests', 1);
 Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
 Screen('Preference', 'Verbosity', 1); % remove warnings
@@ -31,7 +35,7 @@ for index = 1:length(filenames)
         
         lines = add_text_info(lines, config);        
 
-        save(fullfile(save_path, filename), 'lines', 'config', 'screens')
+        save(fullfile(save_path, filename), 'lines', 'screens')
     catch ME
         sca
         disp(getReport(ME))
@@ -41,6 +45,7 @@ for index = 1:length(filenames)
 end
 
 function text_lines = import_text_in_lines(filename, config)
+%%% Import text and divide it into lines according to config.charwrap.
     text = importdata(filename);
     
     lines = [];
@@ -57,6 +62,8 @@ function text_lines = import_text_in_lines(filename, config)
 end
 
 function [lines, currentline_index, screen] = draw_screen(screenWindow, config, lines, screenid, currentline_index)
+%%% Draw a screen with config.maxlines lines of text. Resolution, text
+%%% properties and background color are defined in config.
     try
         Screen('TextFont', screenWindow, config.font);
         Screen('TextSize', screenWindow, config.fontsize);
@@ -108,7 +115,7 @@ end
 
 function lines = add_text_info(lines, config)
 % Get where blank spaces are in each line; add some more text info
-% (paragraph init, line number)
+% (paragraph init, line number).
 
     WNG = 0;
     for line_index = 1:length(lines)
