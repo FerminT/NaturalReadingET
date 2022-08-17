@@ -4,17 +4,16 @@ Screen('Preference', 'Verbosity', 1); % remove warnings
 
 config.maxlines    = 14;
 config.linespacing = 55;
-config.charwrap    = 99; % right margin: 280 aprox.
+config.charwrap    = 99;
 config.font        = 'Courier New';
 config.fontsize    = 24;
-config.windowrect  = [0 0 1024 768];
+config.charwidth   = 14;
+config.charwidthmargin = 3;
+config.windowrect  = [0 0 1920 1080];
 config.backgroundcolor = 180;
 config.textcolor   = 0;
 config.leftmargin  = 280;
 config.topmargin   = 185;
-
-charproperties.correctingwidth = 3;
-charproperties.width = 14;
 
 items_path = fullfile('..', 'Texts');
 save_path  = fullfile('..', 'Stimuli');
@@ -30,16 +29,16 @@ for index = 1:length(filenames)
         lines    = import_text_in_lines(filepath, config);
         fprintf('Generating %s\n', filename);
 
-        [screenWindow, config] = initialize_screen(config);
-        config.currentline_index = 1;
+        [screenWindow, config] = initialize_screen(config, 0);
+        currentline_index = 1;
         for screenid = 1:ceil(length(lines) / config.maxlines)
-            [lines, config, screens(screenid)] = draw_screen(screenWindow, config, lines, screenid);
+            [lines, currentline_index, screens(screenid)] = draw_screen(screenWindow, config, lines, screenid, currentline_index);
         end
         disp('Images created.')
         sca    
         ListenChar(0)
         
-        lines = add_text_info(lines, charproperties, config);        
+        lines = add_text_info(lines, config);        
 
         save(fullfile(save_path, filename), 'lines', 'config', 'screens')
     catch ME
@@ -66,29 +65,7 @@ function text_lines = import_text_in_lines(filename, config)
     end    
 end
 
-function [screenWindow, config] = initialize_screen(config)
-    try
-        screenNumber = max(Screen('Screens'));
-        screenWindow = Screen('OpenWindow', screenNumber, 0, config.linespacing + config.windowrect, 32, 2);
-        Screen(screenWindow, 'BlendFunction', GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        ListenChar(2)
-        disp('Screen initialized')
-        
-        config.fps = Screen('FrameRate', screenWindow);
-        config.ifi = 1 / config.fps;
-        [config.width, config.height] = Screen('WindowSize', screenWindow);
-        config.CX = round(config.width/2);
-        config.CY = round(config.height/2);
-    catch ME
-        Screen('CloseAll')
-        ListenChar(0)
-        disp('An error occurred in initialize_screen(config)!')
-        disp(ME)
-        keyboard
-    end
-end
-
-function [lines, config, screen] = draw_screen(screenWindow, config, lines, screenid)
+function [lines, currentline_index, screen] = draw_screen(screenWindow, config, lines, screenid, currentline_index)
     try
         Screen('TextFont', screenWindow, config.font);
         Screen('TextSize', screenWindow, config.fontsize);
@@ -98,45 +75,47 @@ function [lines, config, screen] = draw_screen(screenWindow, config, lines, scre
         counter = 0;
         lastdrawnlines = [];
     
-        starting_line = config.currentline_index;
+        startingline_index = currentline_index;
         for indline = 1:config.maxlines
-            if length(lines) < config.currentline_index    
-                config.currentline_index = starting_line;
+            if length(lines) < currentline_index    
+                currentline_index = startingline_index;
                 break
             end
     
-            current_text = lines(config.currentline_index).text;
+            current_text = lines(currentline_index).text;
             [nx, ny, bbox] = DrawFormattedText(screenWindow, current_text,  config.leftmargin,  ...
                 config.topmargin + counter * config.linespacing, config.textcolor);     %#ok<ASGLU>
             
             bbox = bbox + [-1 3 2 8]; % left top right bottom
     
-            lines(config.currentline_index).bbox   = bbox;
-            lines(config.currentline_index).screen = screenid;
+            lines(currentline_index).bbox   = bbox;
+            lines(currentline_index).screen = screenid;
     
-            lastdrawnlines = [lastdrawnlines config.currentline_index];
+            lastdrawnlines = [lastdrawnlines currentline_index];
     
-            config.currentline_index = config.currentline_index + 1;
+            currentline_index = currentline_index + 1;
             counter = counter + 1;
         end
     
         Screen('Flip', screenWindow);
-        I = Screen('getimage', screenWindow);     
+        I = Screen('getimage', screenWindow);  
+        screen.image = I;
+        
         for i = 1:length(lastdrawnlines)
             ind  = lastdrawnlines(i);
             bbox = lines(ind).bbox;
             lines(ind).image = I(int32(bbox(2)):int32(bbox(4)), int32(bbox(1)):int32(bbox(3)), :);
         end
-    
-        screen.image = I;
+ 
     catch ME
         sca
+        disp(getReport(ME))
         ListenChar(0)
         keyboard
     end
 end
 
-function lines = add_text_info(lines, charproperties, config)
+function lines = add_text_info(lines, config)
 % Get where blank spaces are in each line; add some more text info
 % (paragraph init, line number)
 
@@ -158,10 +137,11 @@ function lines = add_text_info(lines, charproperties, config)
             else
                 lines(line_index).wordparagraph_init = zeros(1, length(spaces) - 1);
         end
+
         lines(line_index).spaces_index = spaces;
         lines(line_index).spaces_pos   = lines(line_index).bbox(1) + ...     % bounding box starting point
-                                        charproperties.correctingwidth + ...  % some extra margin for the bbox
-                                        (spaces - 0.5) * charproperties.width; % 0.5 to land in the middle of it
+                                        config.charwidthmargin + ...  % some extra margin for the bbox
+                                        (spaces - 0.5) * config.charwidth; % 0.5 to land in the middle of it
     
         lines(line_index).linenumber = 1 + mod(line_index - 1, config.maxlines);
         lines(line_index).numwords   = length(lines(line_index).wordparagraph_init);
