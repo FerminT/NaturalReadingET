@@ -1,7 +1,7 @@
 function [screenWindow, config] = initialize_screen(config, use_eyetracker)
     try
         screenNumber = max(Screen('Screens'));
-        screenWindow = Screen('OpenWindow', screenNumber, 0, config.linespacing + config.windowrect, 32, 2);
+        screenWindow = Screen('OpenWindow', screenNumber, 0, config.windowrect, 32, 2);
         Screen(screenWindow, 'BlendFunction', GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         ListenChar(2)
         disp('Screen initialized')
