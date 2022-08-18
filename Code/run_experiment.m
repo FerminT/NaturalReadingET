@@ -49,7 +49,7 @@ try
         PARAMS.calBACKGROUND = config.backgroundcolor;
         PARAMS.calFOREGROUND = config.textcolor;
         [edfFile el] = Eyelink_ini(filename, PARAMS);
-        transfiere_imagen_promedio(config, screens);        
+        meanimage_transfer(config, screens);        
         sca
         WaitSecs(1);
     end
@@ -65,9 +65,9 @@ try
 
     waitforkeypress
 
-    %if USE_EYETRACKER
+    if USE_EYETRACKER
         validate_calibration(screenWindow, config);
-    %end
+    end
 
     Screen('fillrect', screenWindow, config.backgroundcolor)
     Screen('Flip', screenWindow);               
@@ -138,7 +138,7 @@ try
                     EyelinkDoDriftCorrection(el);
                     FlushEvents('keydown')
 
-                    transfiere_imagen_promedio(config, screens);        
+                    meanimage_transfer(config, screens);        
                     
                     Eyelink('StartRecording');                    
                 end                   
@@ -150,7 +150,7 @@ try
     end
     
     if USE_EYETRACKER
-        draw_eye_to_first_letter(screenWindow, config);    
+        validate_calibration(screenWindow, config);   
         Eyelink('Command', 'clear_screen 0');
     end
     
@@ -193,24 +193,4 @@ function eyetracker_message(msg)
         str = sprintf('%s %d', msg, GetSecs);        
         Eyelink('Message', str);
     end
-end
-
-function transfiere_imagen_promedio(config,pantallas)
-I=zeros(size(pantallas(1).imagen));
-for i=1:length(pantallas)    
-    I=or(I,pantallas(i).imagen==0);
-end
-I=config.colorfondo*(1-I);
-
-imwrite(I,'imagen.bmp');
-finfo = imfinfo('imagen.bmp');
-finfo.Filename 
-Eyelink('StopRecording');
-transferStatus = Eyelink('ImageTransfer', finfo.Filename ,0,0,0,0,round(config.width/2 - finfo.Width/2) ,round(config.height/2 - finfo.Height/2),4);
-if transferStatus ~= 0
-    fprintf('Image to host transfer failed\n');
-end
-WaitSecs(0.1);
-Eyelink('StartRecording');
-
 end
