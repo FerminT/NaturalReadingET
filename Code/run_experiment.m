@@ -46,31 +46,19 @@ try
     end
 
     if USE_EYETRACKER
-        PARAMS.calBACKGROUND = config.backgroundcolor;
-        PARAMS.calFOREGROUND = config.textcolor;
-        [edfFile el] = Eyelink_ini(filename, PARAMS);
-        meanimage_transfer(config, screens);        
-        sca
-        WaitSecs(1);
+        eyetrackerptr = initeyetracker(filename, screens, config);
     end
 
     [screenWindow, config] = initialize_screen(config, USE_EYETRACKER);
-            
-    Screen('fillrect', screenWindow, config.backgroundcolor);
-    Screen('TextSize', screenWindow, config.fontsize + 2);
-    DrawFormattedText(screenWindow, title, 100,  config.height * .3, config.textcolor); 
-    Screen('TextSize', screenWindow, config.fontsize / 2 + 3);
-    DrawFormattedText(screenWindow, 'Presione una tecla para seguir', 100,  config.height * .7, config.textcolor);
-    Screen('Flip', screenWindow);     
 
+    showinitscreen(screenWindow, title, config)
     waitforkeypress
 
     if USE_EYETRACKER
         validate_calibration(screenWindow, config);
     end
 
-    Screen('fillrect', screenWindow, config.backgroundcolor)
-    Screen('Flip', screenWindow);               
+    resetscreen(screenWindow, config.backgroundcolor)
     
     textures = nan(size(screens));
     for screenid = 1:length(screens)
@@ -101,8 +89,7 @@ try
         while KbCheck;WaitSecs(0.001);end
         keypressed = get_keypress;
         
-        Screen('fillrect', screenWindow, config.backgroundcolor)
-        Screen('Flip', screenWindow);               
+        resetscreen(screenWindow, config.backgroundcolor)        
         
         trial.sequence(sequenceid).timeend = GetSecs;        
         if USE_EYETRACKER
@@ -110,40 +97,13 @@ try
             eyetracker_message(str);
         end    
 
-        switch keypressed
-            case 10
-                disp('Pulsada tecla ESC, salimos.')
-                break
-            case 115
-                fprintf('Presionada flecha adelante, pantalla %d\n', currentscreenid);
-                if currentscreenid == length(screens)
-                    if USE_EYETRACKER
-                        str = sprintf('termina experimento');
-                        eyetracker_message(str);
-                    end
-                    disp('Fin del experimento, salimos.')
-                    break                    
-                else
-                    currentscreenid = currentscreenid + 1;
-                end
-            case 114
-                fprintf('Presionada flecha atras, pantalla %d\n', currentscreenid);
-                currentscreenid = max(currentscreenid - 1, 1);                
-            case 55 % C
-                if USE_EYETRACKER
-                    Eyelink('StopRecording');    
+        [currentscreenid, finish] = handlekeypress(keypressed, currentscreenid, length(screens), USE_EYETRACKER);
 
-                    % Calibrate the eye tracker
-                    EyelinkDoTrackerSetup(el);
-                    EyelinkDoDriftCorrection(el);
-                    FlushEvents('keydown')
-
-                    meanimage_transfer(config, screens);        
-                    
-                    Eyelink('StartRecording');                    
-                end                   
-        end        
+        if finish
+            break
+        end
     end
+
     fprintf('Tiempo: %2.2f\n', GetSecs - t0);    
     for screenid = 1:length(screens)
         Screen('close', textures(screenid));    
@@ -155,11 +115,8 @@ try
     end
     
     save(filename, 'trial')
-    
-    ShowCursor;
-    ListenChar(0)
+    returncontrol()
     Screen('CloseAll')
-    Priority(0);
     
     if USE_EYETRACKER
         disp('Getting the file from the eyetracker')    
@@ -171,10 +128,9 @@ try
 catch ME
     sca
     disp(ME) 
-    ShowCursor;
+    returncontrol()
     disp('Hubo un error en run_experiment')
-    ListenChar(0)
-    Priority(0);
+
     if USE_EYETRACKER    
         Eyelink_end
     end
@@ -183,9 +139,66 @@ end
 
 disp('Listo!')
 
+function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, USE_EYETRACKER)
+    exit = 0;
+    switch keypressed
+        case 10
+            disp('Pulsada tecla ESC, salimos.')
+            exit = 1;
+        case 115
+            fprintf('Presionada flecha adelante, pantalla %d\n', currentscreenid);
+            if currentscreenid == maxscreens
+                if USE_EYETRACKER
+                    str = sprintf('termina experimento');
+                    eyetracker_message(str);
+                end
+                disp('Fin del experimento, salimos.')
+                exit = 1;                    
+            else
+                currentscreenid = currentscreenid + 1;
+            end
+        case 114
+            fprintf('Presionada flecha atras, pantalla %d\n', currentscreenid);
+            currentscreenid = max(currentscreenid - 1, 1);                
+        case 55 % C
+            if USE_EYETRACKER
+                calibrate_eyetracker(eyetrackerptr, screens, config)                 
+            end                   
+    end 
+end
+
 function waitforkeypress()
     while ~KbCheck;end
     while KbCheck;end
+end
+
+function returncontrol()
+    ShowCursor;
+    ListenChar(0);
+    Priority(0);
+end
+
+function showinitscreen(screenptr, title, config)
+    Screen('fillrect', screenptr, config.backgroundcolor);
+    Screen('TextSize', screenptr, config.fontsize + 2);
+    DrawFormattedText(screenptr, title, 100,  config.height * .3, config.textcolor); 
+    Screen('TextSize', screenptr, config.fontsize / 2 + 3);
+    DrawFormattedText(screenptr, 'Presione una tecla para seguir', 100,  config.height * .7, config.textcolor);
+    Screen('Flip', screenptr);    
+end
+
+function resetscreen(screenptr, color)
+    Screen('fillrect', screenptr, color);
+    Screen('Flip', screenptr); 
+end
+
+function eyetrackerptr = initeyetracker(filename, screens, config)
+    PARAMS.calBACKGROUND = config.backgroundcolor;
+    PARAMS.calFOREGROUND = config.textcolor;
+    [~, eyetrackerptr] = Eyelink_ini(filename, PARAMS);
+    meanimage_transfer(screens, config);        
+    sca
+    WaitSecs(1);
 end
 
 function eyetracker_message(msg)

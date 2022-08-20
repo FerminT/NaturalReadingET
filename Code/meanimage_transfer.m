@@ -1,4 +1,4 @@
-function meanimage_transfer(config, screens)
+function meanimage_transfer(screens, config)
     I = zeros(size(screens(1).image));
     
     for i = 1:length(screens)    
