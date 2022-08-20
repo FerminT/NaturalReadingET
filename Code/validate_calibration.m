@@ -100,14 +100,15 @@ function [time condition] = wait_for_fixation(region, size, timeout)
 end
 
 function [firstrowpos, midrowpos, lastrowpos] = get_letters_positions(config)
-    % Get an estimation of where letter positions will be
+    % Get an estimation of where letter positions will be at the top (first row), mid (mid row),
+    % and bottom (last row)
     firstrowpos = struct();
     lastrowpos  = struct();
-    midrowpos = struct();
+    midrowpos   = struct();
 
-    firstrowpos.first = [config.leftmargin + config.charwidth / 2, config.topmargin + config.charheight / 2];
-    firstrowpos.last = [config.leftmargin + (config.charwidth * config.charwrap) - config.charwidth / 2, config.topmargin + config.charheight / 2];
-    firstrowpos.mid  = [(firstrowpos.first(1) + firstrowpos.last(1)) / 2, (firstrowpos.first(2) + firstrowpos.last(2)) / 2];
+    firstrowpos.first = [config.leftmargin, config.topmargin];
+    firstrowpos.last  = [config.leftmargin + (config.charwidth * config.charwrap), config.topmargin];
+    firstrowpos.mid   = [(firstrowpos.first(1) + firstrowpos.last(1)) / 2, (firstrowpos.first(2) + firstrowpos.last(2)) / 2];
 
     height_offset = (config.charheight + config.linespacing) * (config.maxlines - 1);
 
