@@ -110,15 +110,15 @@ function [firstrowpos, midrowpos, lastrowpos] = get_letters_positions(config)
     firstrowpos.last  = [config.leftmargin + (config.charwidth * config.charwrap), config.topmargin];
     firstrowpos.mid   = [(firstrowpos.first(1) + firstrowpos.last(1)) / 2, (firstrowpos.first(2) + firstrowpos.last(2)) / 2];
 
-    height_offset = (config.charheight + config.linespacing) * (config.maxlines - 1);
+    height_offset = config.linespacing * (config.maxlines - 1);
 
-    lastrowpos.first = [firstrowpos.first(1), height_offset];
-    lastrowpos.last  = [firstrowpos.last(1), height_offset];
+    lastrowpos.first = [firstrowpos.first(1), firstrowpos.first(2) + height_offset];
+    lastrowpos.last  = [firstrowpos.last(1), firstrowpos.last(2) + height_offset];
     lastrowpos.mid   = [(lastrowpos.first(1) + lastrowpos.last(1)) / 2, (lastrowpos.first(2) + lastrowpos.last(2)) / 2];
 
     midrowpos.first = [(firstrowpos.first(1) + lastrowpos.first(1)) / 2, (firstrowpos.first(2) + lastrowpos.first(2)) / 2];
-    midrowpos.mid = [(firstrowpos.mid(1) + lastrowpos.mid(1)) / 2, (firstrowpos.mid(2) + lastrowpos.mid(2)) / 2];
-    midrowpos.last = [(firstrowpos.last(1) + lastrowpos.last(1)) / 2, (firstrowpos.last(2) + lastrowpos.last(2)) / 2];
+    midrowpos.mid   = [(firstrowpos.mid(1) + lastrowpos.mid(1)) / 2, (firstrowpos.mid(2) + lastrowpos.mid(2)) / 2];
+    midrowpos.last  = [(firstrowpos.last(1) + lastrowpos.last(1)) / 2, (firstrowpos.last(2) + lastrowpos.last(2)) / 2];
 end
 
 function waitforkeypress()
