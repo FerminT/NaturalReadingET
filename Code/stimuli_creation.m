@@ -84,7 +84,7 @@ function [lines, currentline_index, screen] = draw_screen(screenWindow, config, 
             [nx, ny, bbox] = DrawFormattedText(screenWindow, current_text,  config.leftmargin,  ...
                 config.topmargin + counter * config.linespacing, config.textcolor);     %#ok<ASGLU>
             
-            bbox = bbox + [-1 3 2 8]; % left top right bottom
+            % bbox = bbox + [-1 3 2 8]; % left top right bottom
     
             lines(currentline_index).bbox   = bbox;
             lines(currentline_index).screen = screenid;
