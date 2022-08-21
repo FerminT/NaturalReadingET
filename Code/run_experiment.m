@@ -113,10 +113,16 @@ try
         validate_calibration(screenWindow, config);   
         Eyelink('Command', 'clear_screen 0');
     end
-    
-    save(filename, 'trial')
+
     returncontrol()
     Screen('CloseAll')
+
+    if finish == 2
+        trial.answers = show_questions(title);
+    end
+    
+    save(filename, 'trial')
+    
     
     if USE_EYETRACKER
         disp('Getting the file from the eyetracker')    
@@ -140,6 +146,7 @@ end
 disp('Listo!')
 
 function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, USE_EYETRACKER)
+    % exit = 2 -> story finished
     exit = 0;
     switch keypressed
         case 10
@@ -153,7 +160,7 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
                     eyetracker_message(str);
                 end
                 disp('Fin del experimento, salimos.')
-                exit = 1;                    
+                exit = 2;                    
             else
                 currentscreenid = currentscreenid + 1;
             end
