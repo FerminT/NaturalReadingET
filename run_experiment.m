@@ -1,6 +1,8 @@
+addpath('Code/')
 % Constants
 SAVE_PATH     = 'Data';
 METADATA_PATH = 'Metadata';
+TEST_FILE     = 'Test';
 stimuli_splits = [6 6 5];
 
 [subjname, reading_level, use_eyetracker] = initial_questions();
@@ -21,11 +23,14 @@ if length(stimuli_order.title) ~= sum(stimuli_splits)
 end
 
 shuffled_stimuli = shuffle_in_blocks(stimuli_splits, stimuli_order.title);
+shuffled_stimuli = [TEST_FILE, shuffled_stimuli];
 stimuli_index = 1;
 
-save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index')
+save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
 
-filename  = fullfile(SAVE_PATH, filenames{idstimuli});
+for i = stimuli_index:length(shuffled_stimuli)
+    %%%%%%%%%%% EJECUTAR TRIALS
+end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
     shuffled_elems   = {};

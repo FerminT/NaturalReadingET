@@ -1,28 +1,27 @@
-function run_trial(subjname, numtrial, trial_order, constants, config)
+function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, use_eyetracker)
     % addpath('C:\Documents and Settings\Diego\Mis documentos\Dropbox\_LABO\eyetracker_Funciones')
     
     Screen('Preference', 'SkipSyncTests', 1);
     Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
     Screen('Preference', 'Verbosity', 1); % remove warnings
     
-    USE_EYETRACKER = 0;
-    
-    CONFIG_FILE  = fullfile('..', 'stimuli_config.mat');
+    % CONFIG_FILE  = fullfile('..', 'stimuli_config.mat');
     STIMULI_PATH = fullfile('..', 'Stimuli');
     % SAVE_PATH    = fullfile('..', 'Data');
     
     files      = dir(STIMULI_PATH);
     filenames  = string({files([files.isdir] == 0).name});
     
-    [idstimuli, ok] = listdlg('PromptString','Elija un texto a presentar:', ...
-                    'SelectionMode','single', ...
-                    'ListSize', [400 300], ...
-                    'ListString', filenames);
-    if ok == 0
-        return
-    end
+%     [idstimuli, ok] = listdlg('PromptString','Elija un texto a presentar:', ...
+%                     'SelectionMode','single', ...
+%                     'ListSize', [400 300], ...
+%                     'ListString', filenames);
+%     if ok == 0
+%         return
+%     end
     
-    selected_stimuli = fullfile(STIMULI_PATH, filenames{idstimuli});            
+    title = stimuli_order{stimuli_index};
+    selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));            
     load(selected_stimuli)
     load(CONFIG_FILE)
     
@@ -42,21 +41,21 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
 %                 mkdir(SAVE_PATH)
 %             end
 %         end
+
+        eyelink_filename = num2str(stimuli_index);
     
-        if USE_EYETRACKER
-            eyetrackerptr = initeyetracker(filename, screens, config);
+        if use_eyetracker
+            eyetrackerptr = initeyetracker(eyelink_filename, screens, stimuli_config);
         end
     
-        [screenWindow, config] = initialize_screen(config, USE_EYETRACKER);
+        [screenWindow, stimuli_config] = initialize_screen(stimuli_config, use_eyetracker);
     
-        showinitscreen(screenWindow, title, config)
+        showinitscreen(screenWindow, title, stimuli_config)
         waitforkeypress
     
-        % if USE_EYETRACKER
-            validate_calibration(screenWindow, config)
-        % end
+        validate_calibration(screenWindow, stimuli_config)
     
-        resetscreen(screenWindow, config.backgroundcolor)
+        resetscreen(screenWindow, stimuli_config.backgroundcolor)
         
         textures = nan(size(screens));
         for screenid = 1:length(screens)
@@ -75,7 +74,7 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
             trial.sequence(sequenceid).currentscreenid = currentscreenid;        
             trial.sequence(sequenceid).timeini = GetSecs;
     
-            if USE_EYETRACKER
+            if use_eyetracker
                 str = sprintf('ini %d %d', sequenceid, currentscreenid);
                 eyetracker_message(str);
             end
@@ -87,15 +86,15 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
             while KbCheck;WaitSecs(0.001);end
             keypressed = get_keypress;
             
-            resetscreen(screenWindow, config.backgroundcolor)        
+            resetscreen(screenWindow, stimuli_config.backgroundcolor)        
             
             trial.sequence(sequenceid).timeend = GetSecs;        
-            if USE_EYETRACKER
+            if use_eyetracker
                 str = sprintf('fin %d %d', sequenceid, currentscreenid);
                 eyetracker_message(str);
             end    
     
-            [currentscreenid, finish] = handlekeypress(keypressed, currentscreenid, length(screens), USE_EYETRACKER);
+            [currentscreenid, finish] = handlekeypress(keypressed, currentscreenid, length(screens), use_eyetracker);
     
             if finish
                 break
@@ -107,10 +106,10 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
             Screen('close', textures(screenid));    
         end
         
-        % if USE_EYETRACKER
-            validate_calibration(screenWindow, config);   
-        %    Eyelink('Command', 'clear_screen 0');
-        % end
+        validate_calibration(screenWindow, stimuli_config);   
+        if use_eyetracker
+           Eyelink('Command', 'clear_screen 0');
+        end
     
         returncontrol()
         Screen('CloseAll')
@@ -120,12 +119,11 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
         end
         
         save(filename, 'trial')
-        
-        
-        if USE_EYETRACKER
+
+        if use_eyetracker
             disp('Getting the file from the eyetracker')    
             if Eyelink('isconnected')
-                eyelink_receive_file(filename)
+                eyelink_receive_file(eyelink_filename)
             end
         end
         
@@ -135,7 +133,7 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
         returncontrol()
         disp('Hubo un error en run_experiment')
     
-        if USE_EYETRACKER    
+        if use_eyetracker    
             Eyelink_end
         end
         keyboard
@@ -144,7 +142,7 @@ function run_trial(subjname, numtrial, trial_order, constants, config)
     disp('Listo!')
 end
 
-function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, USE_EYETRACKER)
+function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, use_eyetracker)
     % exit = 2 -> story finished
     exit = 0;
     switch keypressed
@@ -154,7 +152,7 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
         case 115
             fprintf('Presionada flecha adelante, pantalla %d\n', currentscreenid);
             if currentscreenid == maxscreens
-                if USE_EYETRACKER
+                if use_eyetracker
                     str = sprintf('termina experimento');
                     eyetracker_message(str);
                 end
@@ -167,7 +165,7 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
             fprintf('Presionada flecha atras, pantalla %d\n', currentscreenid);
             currentscreenid = max(currentscreenid - 1, 1);                
         case 55 % C
-            if USE_EYETRACKER
+            if use_eyetracker
                 calibrate_eyetracker(eyetrackerptr, screens, config)                 
             end                   
     end 

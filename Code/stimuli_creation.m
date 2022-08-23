@@ -6,7 +6,8 @@ Screen('Preference', 'SkipSyncTests', 1);
 Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
 Screen('Preference', 'Verbosity', 1); % remove warnings
 
-config_file = fullfile('..', 'stimuli_config.mat');
+METADATA_PATH = fullfile('..', 'Metadata');
+config_file = fullfile(METADATA_PATH, 'stimuli_config.mat');
 items_path  = fullfile('..', 'Texts');
 save_path   = fullfile('..', 'Stimuli');
 mkdir(save_path)
