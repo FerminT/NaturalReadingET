@@ -3,7 +3,7 @@ SAVE_PATH     = 'Data';
 METADATA_PATH = 'Metadata';
 stimuli_splits = [6 6 5];
 
-[subjname, reading_level] = initial_questions();
+[subjname, reading_level, use_eyetracker] = initial_questions();
 if isempty(subjname); return; end
 
 SAVE_PATH = fullfile(SAVE_PATH, subjname);
@@ -38,12 +38,14 @@ function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
     end
 end
 
-function [initials, reading_level] =  initial_questions()
+function [initials, reading_level, use_eyetracker] =  initial_questions()
     prompt = {'Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
-        'Del 1 al 10, ¿qué tan frecuente lee?'};
-    dlgtitle = 'Información personal';
-    dims   = [1 40];
-    answer = inputdlg(prompt, dlgtitle, dims);
+        'Del 1 al 10, ¿qué tan frecuente lee?', ...
+        '¿Usar el eyetracker? (Y/N)'};
+    dlgtitle = 'Metadata';
+    dims     = [1 40];
+    definput = {'', '', 'Y'};
+    answer = inputdlg(prompt, dlgtitle, dims, definput);
     if isempty(answer)
         return
     else
@@ -52,6 +54,15 @@ function [initials, reading_level] =  initial_questions()
             reading_level = answer{2};
         else
             reading_level = 'N/C';
+        end
+        if isempty(answer{3})
+            use_eyetracker = 0;
+        else
+            if strcmp(answer{3}, 'Y')
+                use_eyetracker = 1;
+            else
+                use_eyetracker = 0;
+            end
         end
     end
 end
