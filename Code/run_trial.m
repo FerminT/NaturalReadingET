@@ -87,16 +87,16 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
            Eyelink('Command', 'clear_screen 0');
         end
     
-        returncontrol()
-        Screen('CloseAll')
-    
         if exit_status == 2
             % Successful trial
-            trial.answers = show_questions(title, stimuli_questions);
+            trial.answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config);
         
             trial_filename = fullfile(save_path, title);
             save(trial_filename, 'trial')
         end
+
+        returncontrol()
+        Screen('CloseAll')
 
         if use_eyetracker
             disp('Getting the file from the eyetracker')    
