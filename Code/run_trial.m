@@ -7,7 +7,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
 
     title = stimuli_order{stimuli_index};
 
-    STIMULI_PATH     = fullfile('..', 'Stimuli');
+    STIMULI_PATH     = 'Stimuli';
     selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));            
     load(selected_stimuli)
 
@@ -35,7 +35,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         
         t0 = GetSecs;
         trial = struct();
-        trial.sujname  = initials;
+        trial.subjname = subjname;
         trial.file     = selected_stimuli;
         trial.sequence = struct();
         sequenceid = 0;
