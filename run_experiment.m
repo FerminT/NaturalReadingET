@@ -18,13 +18,14 @@ load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
 load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
 load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
 
+ordered_stimuli = transpose(string({stimuli_order(:).title}));
 % Sanity check
-if length(stimuli_order.title) ~= sum(stimuli_splits)
+if length(ordered_stimuli) ~= sum(stimuli_splits)
     disp('ERROR: la suma de los bloques no condice con la cantidad de textos')
     return
 end
 
-shuffled_stimuli = shuffle_in_blocks(stimuli_splits, stimuli_order.title);
+shuffled_stimuli = shuffle_in_blocks(stimuli_splits, ordered_stimuli);
 shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
 stimuli_index = 1;
 
