@@ -29,7 +29,13 @@ stimuli_index = 1;
 save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
 
 for i = stimuli_index:length(shuffled_stimuli)
-    %%%%%%%%%%% EJECUTAR TRIALS
+    if i == 1
+        use_eyetracker_in_trial = 0;
+    else
+        use_eyetracker_in_trial = use_eyetracker;
+    end
+
+    run_trial(subjname, i, shuffled_stimuli, config, SAVE_PATH, use_eyetracker_in_trial)
 end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)

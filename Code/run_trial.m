@@ -1,48 +1,19 @@
-function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, use_eyetracker)
+function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_path, use_eyetracker)
     % addpath('C:\Documents and Settings\Diego\Mis documentos\Dropbox\_LABO\eyetracker_Funciones')
     
     Screen('Preference', 'SkipSyncTests', 1);
     Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
     Screen('Preference', 'Verbosity', 1); % remove warnings
-    
-    % CONFIG_FILE  = fullfile('..', 'stimuli_config.mat');
-    STIMULI_PATH = fullfile('..', 'Stimuli');
-    % SAVE_PATH    = fullfile('..', 'Data');
-    
-    files      = dir(STIMULI_PATH);
-    filenames  = string({files([files.isdir] == 0).name});
-    
-%     [idstimuli, ok] = listdlg('PromptString','Elija un texto a presentar:', ...
-%                     'SelectionMode','single', ...
-%                     'ListSize', [400 300], ...
-%                     'ListString', filenames);
-%     if ok == 0
-%         return
-%     end
-    
+
     title = stimuli_order{stimuli_index};
+
+    STIMULI_PATH     = fullfile('..', 'Stimuli');
     selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));            
     load(selected_stimuli)
-    load(CONFIG_FILE)
-    
-    disp(['Usamos el texto ' filenames{idstimuli}])
-    
-    try       
-%         answer = inputdlg('Ingrese solo las iniciales del sujeto', 'Nombre', 1, {'test'});
-%         [~, title, ~] = fileparts(filenames{idstimuli});
-%     
-%         if isempty(answer)
-%             return
-%         else
-%             initials  = upper(answer{1});
-%             SAVE_PATH = fullfile(SAVE_PATH, initials);
-%             filename  = fullfile(SAVE_PATH, filenames{idstimuli});
-%             if exist(SAVE_PATH, 'dir') ~= 7
-%                 mkdir(SAVE_PATH)
-%             end
-%         end
 
-        eyelink_filename = num2str(stimuli_index);
+    disp(['Usamos el texto ' title])
+    try
+        eyelink_filename = strcat(subjname, '_', num2str(stimuli_index));
     
         if use_eyetracker
             eyetrackerptr = initeyetracker(eyelink_filename, screens, stimuli_config);
@@ -65,7 +36,7 @@ function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, use_e
         t0 = GetSecs;
         trial = struct();
         trial.sujname  = initials;
-        trial.file     = filename;
+        trial.file     = selected_stimuli;
         trial.sequence = struct();
         sequenceid = 0;
         currentscreenid = 1;
@@ -118,7 +89,8 @@ function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, use_e
             trial.answers = show_questions(title);
         end
         
-        save(filename, 'trial')
+        trial_filename = fullfile(save_path, title);
+        save(trial_filename, 'trial')
 
         if use_eyetracker
             disp('Getting the file from the eyetracker')    
