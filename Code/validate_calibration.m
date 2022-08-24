@@ -40,9 +40,9 @@ function validate_calibration(window, config)
         
         t = GetSecs;
         Screen('Flip', window, t + config.ifi); 
-%         if condition == 2 % key press
-%             break
-%         end
+        if condition == 3 % mouse click
+            break
+        end
         WaitSecs(0.5);        
     end
 
@@ -110,9 +110,4 @@ function [firstrowpos, midrowpos, lastrowpos] = get_letters_positions(config)
     midrowpos.first = [(firstrowpos.first(1) + lastrowpos.first(1)) / 2, (firstrowpos.first(2) + lastrowpos.first(2)) / 2];
     midrowpos.mid   = [(firstrowpos.mid(1) + lastrowpos.mid(1)) / 2, (firstrowpos.mid(2) + lastrowpos.mid(2)) / 2];
     midrowpos.last  = [(firstrowpos.last(1) + lastrowpos.last(1)) / 2, (firstrowpos.last(2) + lastrowpos.last(2)) / 2];
-end
-
-function waitforkeypress()
-    while ~KbCheck;end
-    while KbCheck;end
 end

@@ -88,8 +88,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         end
     
         if exit_status == 2
-            showcentertext(screenWindow, 'Terminó el cuento! Ahora deberás responder unas preguntas y luego avisar al investigador', stimuli_config)
             % Successful trial
+            showcentertext(screenWindow, 'Terminó el cuento! Ahora deberás responder unas preguntas y luego avisar al investigador', stimuli_config)
             trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
             showcentertext(screenWindow, 'Se presentarán palabras. Escribí la primera palabra que se te venga a la mente.', stimuli_config)
             trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
