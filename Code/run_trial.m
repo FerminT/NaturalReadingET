@@ -21,12 +21,12 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         end
     
         [screenWindow, stimuli_config] = initialize_screen(stimuli_config, use_eyetracker);
-    
-        showinitscreen(screenWindow, title, stimuli_config)
-        waitforkeypress
+
+        showcentertext(screenWindow, title, stimuli_config)
     
 %         validate_calibration(screenWindow, stimuli_config)
-    
+        showcentertext(screenWindow, 'Ahora se presentará el texto. Leé con atención.', stimuli_config)
+
         resetscreen(screenWindow, stimuli_config.backgroundcolor)
         
         textures = nan(size(screens));
@@ -88,8 +88,10 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         end
     
         if exit_status == 2
+            showcentertext(screenWindow, 'Terminó el cuento! Ahora deberás responder unas preguntas y luego avisar al investigador', stimuli_config)
             % Successful trial
             trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
+            showcentertext(screenWindow, 'Se presentarán palabras. Escribí la primera palabra que se te venga a la mente.', stimuli_config)
             trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
         
             trial_filename = fullfile(save_path, title);
@@ -151,7 +153,7 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
 end
 
 function waitforkeypress()
-    while ~KbCheck;end
+    while ~KbCheck;WaitSecs(0.001);end
     while KbCheck;end
 end
 
@@ -161,13 +163,17 @@ function returncontrol()
     Priority(0);
 end
 
-function showinitscreen(screenptr, title, stimuli_config)
+function showcentertext(screenptr, text, stimuli_config)
     Screen('fillrect', screenptr, stimuli_config.backgroundcolor);
     Screen('TextSize', screenptr, stimuli_config.fontsize + 2);
-    DrawFormattedText(screenptr, title, 100,  stimuli_config.height * .3, stimuli_config.textcolor); 
+
+    offset = stimuli_config.charwidth * length(text) / 2;
+    DrawFormattedText(screenptr, text, stimuli_config.CX - offset, stimuli_config.CY - 100, stimuli_config.textcolor); 
     Screen('TextSize', screenptr, stimuli_config.fontsize / 2 + 3);
-    DrawFormattedText(screenptr, 'Presione una tecla para seguir', 100,  stimuli_config.height * .7, stimuli_config.textcolor);
-    Screen('Flip', screenptr);    
+    DrawFormattedText(screenptr, 'Presione una tecla para seguir', stimuli_config.CX - 100, stimuli_config.CY + 50, stimuli_config.textcolor);
+    Screen('Flip', screenptr);
+    WaitSecs(0.2);
+    waitforkeypress();
 end
 
 function resetscreen(screenptr, color)
