@@ -3,6 +3,7 @@ function [screenWindow, config] = initialize_screen(config, use_eyetracker)
         screenNumber = max(Screen('Screens'));
         screenWindow = Screen('OpenWindow', screenNumber, 0, config.windowrect, 32, 2);
         Screen(screenWindow, 'BlendFunction', GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        HideCursor;
         ListenChar(2)
         disp('Screen initialized')
         

@@ -127,10 +127,10 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
     % exit = 2 -> story finished
     exit = 0;
     switch keypressed
-        case 10
+        case 10 % Windows: 27
             disp('Pulsada tecla ESC, salimos.')
             exit = 1;
-        case 115
+        case 115 % Windows: 39
             fprintf('Presionada flecha adelante, pantalla %d\n', currentscreenid);
             if currentscreenid == maxscreens
                 if use_eyetracker
@@ -142,10 +142,10 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
             else
                 currentscreenid = currentscreenid + 1;
             end
-        case 114
+        case 114 % Windows: 37
             fprintf('Presionada flecha atras, pantalla %d\n', currentscreenid);
             currentscreenid = max(currentscreenid - 1, 1);                
-        case 55 % C
+        case 55 % C; Windows: 67
             if use_eyetracker
                 calibrate_eyetracker(eyetrackerptr, screens, stimuli_config)                 
             end                   
