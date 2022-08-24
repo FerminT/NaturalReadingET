@@ -1,4 +1,4 @@
-function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_path, use_eyetracker)
+function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_path, use_eyetracker)
     % addpath('C:\Documents and Settings\Diego\Mis documentos\Dropbox\_LABO\eyetracker_Funciones')
     
     Screen('Preference', 'SkipSyncTests', 1);
@@ -65,9 +65,9 @@ function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_
                 eyetracker_message(str);
             end    
     
-            [currentscreenid, finish] = handlekeypress(keypressed, currentscreenid, length(screens), use_eyetracker);
+            [currentscreenid, exit_status] = handlekeypress(keypressed, currentscreenid, length(screens), use_eyetracker);
     
-            if finish
+            if exit_status > 0
                 break
             end
         end
@@ -85,7 +85,7 @@ function run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_
         returncontrol()
         Screen('CloseAll')
     
-        if finish == 2
+        if exit_status == 2
             trial.answers = show_questions(title);
         end
         

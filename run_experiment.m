@@ -2,7 +2,7 @@ addpath('Code/')
 % Constants
 SAVE_PATH     = 'Data';
 METADATA_PATH = 'Metadata';
-TEST_FILE     = 'Test';
+TEST_FILE     = ["Test"];
 stimuli_splits = [6 6 5];
 
 [subjname, reading_level, use_eyetracker] = initial_questions();
@@ -23,19 +23,25 @@ if length(stimuli_order.title) ~= sum(stimuli_splits)
 end
 
 shuffled_stimuli = shuffle_in_blocks(stimuli_splits, stimuli_order.title);
-shuffled_stimuli = [TEST_FILE, shuffled_stimuli];
+shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
 stimuli_index = 1;
 
 save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
 
 for i = stimuli_index:length(shuffled_stimuli)
     if i == 1
+        % Test trial
         use_eyetracker_in_trial = 0;
     else
         use_eyetracker_in_trial = use_eyetracker;
     end
 
-    run_trial(subjname, i, shuffled_stimuli, config, SAVE_PATH, use_eyetracker_in_trial)
+    exit_status = run_trial(subjname, i, shuffled_stimuli, config, SAVE_PATH, use_eyetracker_in_trial);
+    
+    if exit_status == 1
+        % Aborted
+        break
+    end
 end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
@@ -50,6 +56,10 @@ function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
 end
 
 function [initials, reading_level, use_eyetracker] =  initial_questions()
+    initials = '';
+    reading_level = '';
+    use_eyetracker = 0;
+    
     prompt = {'Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
         'Del 1 al 10, ¿qué tan frecuente lee?', ...
         '¿Usar el eyetracker? (Y/N)'};
