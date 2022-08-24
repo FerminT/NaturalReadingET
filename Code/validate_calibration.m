@@ -5,17 +5,8 @@ function validate_calibration(window, config)
         lastrowpos.first(1) lastrowpos.mid(1) lastrowpos.last(1)];
     yy = [firstrowpos.first(2) firstrowpos.mid(2) firstrowpos.last(2) midrowpos.first(2) midrowpos.mid(2) midrowpos.last(2) ...
         lastrowpos.first(2) lastrowpos.mid(2) lastrowpos.last(2)];
-    
-    Screen('FillRect', window, config.backgroundcolor);
-    Screen('TextSize', window, 20);
-    Screen('DrawText', window, 'Mire los puntos que aparecen', config.CX - 200, config.CY - 100, config.textcolor);
-    Screen('DrawText', window, 'Presione una tecla para comenzar', config.CX - 200, config.CY, config.textcolor);
 
-    t = GetSecs;
-    Screen('Flip', window, t + config.ifi); 
-
-    WaitSecs(0.5)
-    waitforkeypress
+    showcentertext(window, 'Mire los puntos que aparecen', config)
     
     for i = 1:length(xx)             
         Screen('FillRect', window, config.backgroundcolor);

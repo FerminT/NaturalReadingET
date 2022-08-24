@@ -24,7 +24,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
 
         showcentertext(screenWindow, title, stimuli_config)
     
-%         validate_calibration(screenWindow, stimuli_config)
+        validate_calibration(screenWindow, stimuli_config)
         showcentertext(screenWindow, 'Ahora se presentará el texto. Leé con atención.', stimuli_config)
 
         resetscreen(screenWindow, stimuli_config.backgroundcolor)
@@ -80,9 +80,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
             Screen('close', textures(screenid));    
         end
         
-%         if exit_status ~= 1
-%             validate_calibration(screenWindow, stimuli_config);
-%         end
+        if exit_status ~= 1
+            validate_calibration(screenWindow, stimuli_config);
+        end
         if use_eyetracker
            Eyelink('Command', 'clear_screen 0');
         end
@@ -152,28 +152,10 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
     end 
 end
 
-function waitforkeypress()
-    while ~KbCheck;WaitSecs(0.001);end
-    while KbCheck;end
-end
-
 function returncontrol()
     ShowCursor;
     ListenChar(0);
     Priority(0);
-end
-
-function showcentertext(screenptr, text, stimuli_config)
-    Screen('fillrect', screenptr, stimuli_config.backgroundcolor);
-    Screen('TextSize', screenptr, stimuli_config.fontsize + 2);
-
-    offset = stimuli_config.charwidth * length(text) / 2;
-    DrawFormattedText(screenptr, text, stimuli_config.CX - offset, stimuli_config.CY - 100, stimuli_config.textcolor); 
-    Screen('TextSize', screenptr, stimuli_config.fontsize / 2 + 3);
-    DrawFormattedText(screenptr, 'Presione una tecla para seguir', stimuli_config.CX - 100, stimuli_config.CY + 50, stimuli_config.textcolor);
-    Screen('Flip', screenptr);
-    WaitSecs(0.2);
-    waitforkeypress();
 end
 
 function resetscreen(screenptr, color)
