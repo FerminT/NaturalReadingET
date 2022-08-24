@@ -67,7 +67,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
                 eyetracker_message(str);
             end    
     
-            [currentscreenid, exit_status] = handlekeypress(keypressed, currentscreenid, length(screens), use_eyetracker);
+            [currentscreenid, exit_status] = handlekeypress(keypressed, currentscreenid, length(screens), ...
+                stimuli_config, use_eyetracker);
     
             if exit_status > 0
                 break
@@ -119,7 +120,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     disp('Listo!')
 end
 
-function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, use_eyetracker)
+function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, stimuli_config, use_eyetracker)
     % exit = 2 -> story finished
     exit = 0;
     switch keypressed
@@ -143,7 +144,7 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
             currentscreenid = max(currentscreenid - 1, 1);                
         case 55 % C
             if use_eyetracker
-                calibrate_eyetracker(eyetrackerptr, screens, config)                 
+                calibrate_eyetracker(eyetrackerptr, screens, stimuli_config)                 
             end                   
     end 
 end
@@ -159,12 +160,12 @@ function returncontrol()
     Priority(0);
 end
 
-function showinitscreen(screenptr, title, config)
-    Screen('fillrect', screenptr, config.backgroundcolor);
-    Screen('TextSize', screenptr, config.fontsize + 2);
-    DrawFormattedText(screenptr, title, 100,  config.height * .3, config.textcolor); 
-    Screen('TextSize', screenptr, config.fontsize / 2 + 3);
-    DrawFormattedText(screenptr, 'Presione una tecla para seguir', 100,  config.height * .7, config.textcolor);
+function showinitscreen(screenptr, title, stimuli_config)
+    Screen('fillrect', screenptr, stimuli_config.backgroundcolor);
+    Screen('TextSize', screenptr, stimuli_config.fontsize + 2);
+    DrawFormattedText(screenptr, title, 100,  stimuli_config.height * .3, stimuli_config.textcolor); 
+    Screen('TextSize', screenptr, stimuli_config.fontsize / 2 + 3);
+    DrawFormattedText(screenptr, 'Presione una tecla para seguir', 100,  stimuli_config.height * .7, stimuli_config.textcolor);
     Screen('Flip', screenptr);    
 end
 
@@ -173,11 +174,11 @@ function resetscreen(screenptr, color)
     Screen('Flip', screenptr); 
 end
 
-function eyetrackerptr = initeyetracker(filename, screens, config)
-    PARAMS.calBACKGROUND = config.backgroundcolor;
-    PARAMS.calFOREGROUND = config.textcolor;
+function eyetrackerptr = initeyetracker(filename, screens, stimuli_config)
+    PARAMS.calBACKGROUND = stimuli_config.backgroundcolor;
+    PARAMS.calFOREGROUND = stimuli_config.textcolor;
     [~, eyetrackerptr] = Eyelink_ini(filename, PARAMS);
-    meanimage_transfer(screens, config);        
+    meanimage_transfer(screens, stimuli_config);        
     sca
     WaitSecs(1);
 end
