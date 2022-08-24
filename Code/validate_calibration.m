@@ -14,8 +14,8 @@ function validate_calibration(window, config)
     t = GetSecs;
     Screen('Flip', window, t + config.ifi); 
 
+    WaitSecs(0.5)
     waitforkeypress
-    WaitSecs(0.5);  
     
     for i = 1:length(xx)             
         Screen('FillRect', window, config.backgroundcolor);
