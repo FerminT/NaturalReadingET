@@ -1,7 +1,12 @@
-function answers = show_questions(screenptr, title, stimuli_questions, stimuli_config)
-    title_index = find(strcmp({stimuli_questions.title}, title));
-    questions   = stimuli_questions(title_index).questions;
+function answers = show_questions(screenptr, title, stimuli_questions, stimuli_config, mode)
+    title_index   = find(strcmp({stimuli_questions.title}, title));
     questions_pos = [(stimuli_config.CX - 800) (stimuli_config.CY - 200) (stimuli_config.CX + 200) (stimuli_config.CY + 100)];
+
+    if strcmp(mode, 'questions')
+        questions = stimuli_questions(title_index).questions;
+    else
+        questions = stimuli_questions(title_index).synonyms;
+    end
 
     answers = {};
     for qindex = 1:length(questions)

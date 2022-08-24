@@ -25,7 +25,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         showinitscreen(screenWindow, title, stimuli_config)
         waitforkeypress
     
-        validate_calibration(screenWindow, stimuli_config)
+%         validate_calibration(screenWindow, stimuli_config)
     
         resetscreen(screenWindow, stimuli_config.backgroundcolor)
         
@@ -80,16 +80,17 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
             Screen('close', textures(screenid));    
         end
         
-        if exit_status ~= 1
-            validate_calibration(screenWindow, stimuli_config);
-        end
+%         if exit_status ~= 1
+%             validate_calibration(screenWindow, stimuli_config);
+%         end
         if use_eyetracker
            Eyelink('Command', 'clear_screen 0');
         end
     
         if exit_status == 2
             % Successful trial
-            trial.answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config);
+            trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
+            trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
         
             trial_filename = fullfile(save_path, title);
             save(trial_filename, 'trial')
