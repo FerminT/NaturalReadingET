@@ -1,7 +1,4 @@
-function answers = show_questions(title)
-    QUESTIONS_FILE  = fullfile('..', 'stimuli_questions.mat');
-    load(QUESTIONS_FILE);
-
+function answers = show_questions(title, stimuli_questions)
     title_index = find(strcmp({stimuli_questions.title}, title));
 
     prompt   = cellstr(stimuli_questions(title_index).questions);

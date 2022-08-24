@@ -1,8 +1,8 @@
 addpath('Code/')
 % Constants
-SAVE_PATH     = 'Data';
-METADATA_PATH = 'Metadata';
-TEST_FILE     = ["Test"];
+SAVE_PATH      = 'Data';
+METADATA_PATH  = 'Metadata';
+TEST_FILE      = 'Test';
 stimuli_splits = [6 6 5];
 
 [subjname, reading_level, use_eyetracker] = initial_questions();
@@ -16,6 +16,8 @@ subjfile = fullfile(SAVE_PATH, 'metadata');
 
 load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
 load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
+load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
+
 % Sanity check
 if length(stimuli_order.title) ~= sum(stimuli_splits)
     disp('ERROR: la suma de los bloques no condice con la cantidad de textos')
@@ -36,7 +38,7 @@ for i = stimuli_index:length(shuffled_stimuli)
         use_eyetracker_in_trial = use_eyetracker;
     end
 
-    exit_status = run_trial(subjname, i, shuffled_stimuli, config, SAVE_PATH, use_eyetracker_in_trial);
+    exit_status = run_trial(subjname, i, shuffled_stimuli, stimuli_questions, config, SAVE_PATH, use_eyetracker_in_trial);
     
     if exit_status == 1
         % Aborted
@@ -79,7 +81,7 @@ function [initials, reading_level, use_eyetracker] =  initial_questions()
         if isempty(answer{3})
             use_eyetracker = 0;
         else
-            if strcmp(answer{3}, 'Y')
+            if strcmp(upper(answer{3}), 'Y')
                 use_eyetracker = 1;
             else
                 use_eyetracker = 0;

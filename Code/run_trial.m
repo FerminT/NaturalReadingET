@@ -1,4 +1,6 @@
-function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_config, save_path, use_eyetracker)
+function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_questions, stimuli_config, save_path, use_eyetracker)
+    % Constants
+    STIMULI_PATH = 'Stimuli';
     % addpath('C:\Documents and Settings\Diego\Mis documentos\Dropbox\_LABO\eyetracker_Funciones')
     
     Screen('Preference', 'SkipSyncTests', 1);
@@ -7,7 +9,6 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
 
     title = stimuli_order{stimuli_index};
 
-    STIMULI_PATH     = 'Stimuli';
     selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));            
     load(selected_stimuli)
 
@@ -35,8 +36,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         
         t0 = GetSecs;
         trial = struct();
-        trial.subjname = subjname;
-        trial.file     = selected_stimuli;
+        trial.subjname      = subjname;
+        trial.stimuli_index = stimuli_index;
+        trial.file          = selected_stimuli;
         trial.sequence = struct();
         sequenceid = 0;
         currentscreenid = 1;
@@ -77,7 +79,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
             Screen('close', textures(screenid));    
         end
         
-        validate_calibration(screenWindow, stimuli_config);   
+        if exit_status ~= 1
+            validate_calibration(screenWindow, stimuli_config);
+        end
         if use_eyetracker
            Eyelink('Command', 'clear_screen 0');
         end
@@ -86,11 +90,12 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         Screen('CloseAll')
     
         if exit_status == 2
-            trial.answers = show_questions(title);
-        end
+            % Successful trial
+            trial.answers = show_questions(title, stimuli_questions);
         
-        trial_filename = fullfile(save_path, title);
-        save(trial_filename, 'trial')
+            trial_filename = fullfile(save_path, title);
+            save(trial_filename, 'trial')
+        end
 
         if use_eyetracker
             disp('Getting the file from the eyetracker')    
