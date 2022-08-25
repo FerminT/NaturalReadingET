@@ -27,7 +27,13 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         [screenWindow, stimuli_config] = initialize_screen(stimuli_config, use_eyetracker);
 
         keypressed = showcentertext(screenWindow, title, stimuli_config);
-
+        if keypressed == keys.ESC
+            finish_eyetracking(use_eyetracker)
+            returncontrol()
+            Screen('CloseAll')
+            exit_status = 1;
+            return
+        end
     
         validate_calibration(screenWindow, stimuli_config, use_eyetracker)
         showcentertext(screenWindow, 'Ahora se presentara el texto. Lee con atencion.', stimuli_config)
@@ -84,11 +90,10 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         end
         
         if exit_status ~= 1
-            validate_calibration(screenWindow, stimuli_config);
+            validate_calibration(screenWindow, stimuli_config, use_eyetracker);
         end
-        if use_eyetracker
-           Eyelink('Command', 'clear_screen 0');
-        end
+        
+        finish_eyetracking(use_eyetracker)
     
         if exit_status == 2
             % Successful trial
@@ -103,10 +108,6 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
 
         returncontrol()
         Screen('CloseAll')
-
-        if use_eyetracker
-            eyelink_end
-        end
         
     catch ME
         sca
@@ -114,9 +115,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         returncontrol()
         disp('Hubo un error en run_experiment')
     
-        if use_eyetracker    
-            eyelink_end
-        end
+        finish_eyetracking(use_eyetracker)
         keyboard
     end
     
@@ -170,6 +169,13 @@ function eyetrackerptr = initeyetracker(filename, screens, stimuli_config)
     meanimage_transfer(screens, stimuli_config);        
     sca
     WaitSecs(1);
+end
+
+function finish_eyetracking(use_eyetracker)
+    if use_eyetracker
+       Eyelink('Command', 'clear_screen 0');
+       eyelink_end
+    end
 end
 
 function eyetracker_message(msg)
