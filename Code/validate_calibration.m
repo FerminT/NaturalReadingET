@@ -1,4 +1,4 @@
-function validate_calibration(window, config)
+function validate_calibration(window, config, use_eyetracker)
     [firstrowpos, midrowpos, lastrowpos] = get_letters_positions(config);
 
     xx = [firstrowpos.first(1) firstrowpos.mid(1) firstrowpos.last(1) midrowpos.first(1) midrowpos.mid(1) midrowpos.last(1) ...
@@ -22,11 +22,11 @@ function validate_calibration(window, config)
         t = GetSecs;
         Screen('Flip', window, t + config.ifi); 
         str = ['pseudocalib ' num2str(xx(i)) ',' num2str(yy(i))];
-        if Eyelink('isconnected')
+        if use_eyetracker && Eyelink('isconnected')
             Eyelink('Message', str)
         end  
 
-        [~, condition] = wait_for_fixation([xx(i) yy(i)], 30, 0);
+        [~, condition] = wait_for_fixation([xx(i) yy(i)], 30, 0, use_eyetracker);
 
         Screen('FillRect', window, config.backgroundcolor);
 
@@ -50,15 +50,16 @@ function validate_calibration(window, config)
     Screen('Flip', window); 
 end
 
-function [time condition] = wait_for_fixation(region, size, timeout)
+function [time, condition] = wait_for_fixation(region, size, timeout, use_eyetracker)
     % Condition: 0 -> fixation on region; 1 -> timeout; 2 -> keypress; 3 ->
     % mouse click
+    WaitSecs(0.1)
     t0 = GetSecs;
     while 1
-        [x, y, clicks] = GetMouse;
+        [~, ~, clicks] = GetMouse;
         if max(clicks) > 0
             while any(clicks)
-                [x, y, clicks] = GetMouse;
+                [~, ~, clicks] = GetMouse;
             end
             condition = 3;
             break             
@@ -72,7 +73,7 @@ function [time condition] = wait_for_fixation(region, size, timeout)
            condition = 1;
            break
         end
-        if Eyelink('isconnected')
+        if use_eyetracker && Eyelink('isconnected')
             if Eyelink('NewFloatSampleAvailable') > 0
                 evt = Eyelink('NewestFloatSample');
                 %evt.gx = [posxleft posxright] 

@@ -1,6 +1,10 @@
 function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_questions, stimuli_config, save_path, use_eyetracker)
     % Constants
     STIMULI_PATH = 'Stimuli';
+    keys.ESC = 10; % Windows: 27
+    keys.NEXT = 115; % Windows: 39
+    keys.BACK = 114; % Windows: 37
+    keys.Ckey = 55; % Windows: 67
     
     Screen('Preference', 'SkipSyncTests', 1);
     Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
@@ -22,9 +26,10 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     
         [screenWindow, stimuli_config] = initialize_screen(stimuli_config, use_eyetracker);
 
-        showcentertext(screenWindow, title, stimuli_config)
+        keypressed = showcentertext(screenWindow, title, stimuli_config);
+
     
-        validate_calibration(screenWindow, stimuli_config)
+        validate_calibration(screenWindow, stimuli_config, use_eyetracker)
         showcentertext(screenWindow, 'Ahora se presentara el texto. Lee con atencion.', stimuli_config)
 
         resetscreen(screenWindow, stimuli_config.backgroundcolor)
@@ -54,10 +59,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     
             Screen('DrawTexture', screenWindow, textures(currentscreenid), []);
             Screen('Flip', screenWindow);       
-    
-            % Wait for a keypress
-            while KbCheck;WaitSecs(0.001);end
-            keypressed = get_keypress;
+
+            keypressed = waitforkeypress();
             
             resetscreen(screenWindow, stimuli_config.backgroundcolor)        
             
@@ -67,8 +70,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
                 eyetracker_message(str);
             end    
     
-            [currentscreenid, exit_status] = handlekeypress(keypressed, currentscreenid, length(screens), ...
-                eyetrackerptr, stimuli_config, use_eyetracker);
+            [currentscreenid, exit_status] = handlekeypress(keypressed, keys, currentscreenid, ...
+                length(screens), eyetrackerptr, stimuli_config, use_eyetracker);
     
             if exit_status > 0
                 break
@@ -120,14 +123,14 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     disp('Listo!')
 end
 
-function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, eyetrackerptr, stimuli_config, use_eyetracker)
+function [currentscreenid, exit] = handlekeypress(keypressed, keys, currentscreenid, maxscreens, eyetrackerptr, stimuli_config, use_eyetracker)
     % exit = 2 -> story finished
     exit = 0;
     switch keypressed
-        case 10 % Windows: 27
+        case keys.ESC
             disp('Pulsada tecla ESC, salimos.')
             exit = 1;
-        case 115 % Windows: 39
+        case keys.NEXT
             fprintf('Presionada flecha adelante, pantalla %d\n', currentscreenid);
             if currentscreenid == maxscreens
                 if use_eyetracker
@@ -139,10 +142,10 @@ function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, m
             else
                 currentscreenid = currentscreenid + 1;
             end
-        case 114 % Windows: 37
+        case keys.BACK
             fprintf('Presionada flecha atras, pantalla %d\n', currentscreenid);
             currentscreenid = max(currentscreenid - 1, 1);                
-        case 55 % C; Windows: 67
+        case keys.CKey
             if use_eyetracker
                 calibrate_eyetracker(eyetrackerptr, screens, stimuli_config)                 
             end                   
