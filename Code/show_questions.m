@@ -12,7 +12,7 @@ function answers = show_questions(screenptr, title, stimuli_questions, stimuli_c
     for qindex = 1:length(questions)
         current_question = [char(questions(qindex)), ' '];
         reply   = Ask(screenptr, current_question, stimuli_config.textcolor, stimuli_config.backgroundcolor, ...
-            'GetChar', questions_pos, 'center', stimuli_config.fontsize);
+            'GetChar', questions_pos, 'left' , stimuli_config.fontsize);
         answers = [answers reply];
     end
 end

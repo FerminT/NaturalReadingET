@@ -1,7 +1,6 @@
 function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_questions, stimuli_config, save_path, use_eyetracker)
     % Constants
     STIMULI_PATH = 'Stimuli';
-    % addpath('C:\Documents and Settings\Diego\Mis documentos\Dropbox\_LABO\eyetracker_Funciones')
     
     Screen('Preference', 'SkipSyncTests', 1);
     Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
@@ -16,6 +15,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     try
         eyelink_filename = strcat(subjname, '_', num2str(stimuli_index));
     
+        eyetrackerptr = 0;
         if use_eyetracker
             eyetrackerptr = initeyetracker(eyelink_filename, screens, stimuli_config);
         end
@@ -25,7 +25,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         showcentertext(screenWindow, title, stimuli_config)
     
         validate_calibration(screenWindow, stimuli_config)
-        showcentertext(screenWindow, 'Ahora se presentará el texto. Leé con atención.', stimuli_config)
+        showcentertext(screenWindow, 'Ahora se presentara el texto. Lee con atencion.', stimuli_config)
 
         resetscreen(screenWindow, stimuli_config.backgroundcolor)
         
@@ -68,7 +68,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
             end    
     
             [currentscreenid, exit_status] = handlekeypress(keypressed, currentscreenid, length(screens), ...
-                stimuli_config, use_eyetracker);
+                eyetrackerptr, stimuli_config, use_eyetracker);
     
             if exit_status > 0
                 break
@@ -89,9 +89,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     
         if exit_status == 2
             % Successful trial
-            showcentertext(screenWindow, 'Terminó el cuento! Ahora deberás responder unas preguntas y luego avisar al investigador', stimuli_config)
+            showcentertext(screenWindow, 'Termino el cuento! Ahora deberas responder unas preguntas y luego avisar al investigador', stimuli_config)
             trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
-            showcentertext(screenWindow, 'Se presentarán palabras. Escribí la primera palabra que se te venga a la mente.', stimuli_config)
+            showcentertext(screenWindow, 'Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.', stimuli_config)
             trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
         
             trial_filename = fullfile(save_path, title);
@@ -102,10 +102,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         Screen('CloseAll')
 
         if use_eyetracker
-            disp('Getting the file from the eyetracker')    
-            if Eyelink('isconnected')
-                eyelink_receive_file(eyelink_filename)
-            end
+            eyelink_end
         end
         
     catch ME
@@ -115,7 +112,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         disp('Hubo un error en run_experiment')
     
         if use_eyetracker    
-            Eyelink_end
+            eyelink_end
         end
         keyboard
     end
@@ -123,7 +120,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     disp('Listo!')
 end
 
-function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, stimuli_config, use_eyetracker)
+function [currentscreenid, exit] = handlekeypress(keypressed, currentscreenid, maxscreens, eyetrackerptr, stimuli_config, use_eyetracker)
     % exit = 2 -> story finished
     exit = 0;
     switch keypressed
@@ -166,7 +163,7 @@ end
 function eyetrackerptr = initeyetracker(filename, screens, stimuli_config)
     PARAMS.calBACKGROUND = stimuli_config.backgroundcolor;
     PARAMS.calFOREGROUND = stimuli_config.textcolor;
-    [~, eyetrackerptr] = Eyelink_ini(filename, PARAMS);
+    [~, eyetrackerptr] = eyelink_ini(filename, PARAMS);
     meanimage_transfer(screens, stimuli_config);        
     sca
     WaitSecs(1);
