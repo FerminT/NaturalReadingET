@@ -5,6 +5,8 @@ function run_experiment()
     METADATA_PATH  = 'Metadata';
     TEST_FILE      = 'Test';
     stimuli_splits = [7 6 4];
+    load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
+    load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
     
     [subjname, reading_level, use_eyetracker] = initial_questions();
     if isempty(subjname); return; end
@@ -13,25 +15,37 @@ function run_experiment()
     if exist(SAVE_PATH, 'dir') ~= 7
         mkdir(SAVE_PATH)
     end
-    subjfile = fullfile(SAVE_PATH, 'metadata');
+
+    subjfile = fullfile(SAVE_PATH, 'metadata.mat');
+    loaded_metadata = false;
+    if exist(subjfile, 'file') > 0
+        load_metadata = questdlg('Se encontro informacion previa del participante. Cargar el archivo?', 'Experimento previo');
+        if strcmp(load_metadata, 'Yes')
+            load(subjfile)
+            loaded_metadata = true;
+        elseif strcmp(load_metadata, 'Cancel')
+            return
+        end
+    end
+   
+    if ~loaded_metadata
+        load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
+        ordered_stimuli = {stimuli_order(:).title}';
+
+        % Sanity check
+        if length(ordered_stimuli) ~= sum(stimuli_splits)
+            disp('ERROR: la suma de los bloques no condice con la cantidad de textos')
+            return
+        end
     
-    load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
-    load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
-    load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
+        shuffled_stimuli = shuffle_in_blocks(stimuli_splits, ordered_stimuli);
+        shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
+        stimuli_index = 1;
     
-    ordered_stimuli = {stimuli_order(:).title}' ;
-    % Sanity check
-    if length(ordered_stimuli) ~= sum(stimuli_splits)
-        disp('ERROR: la suma de los bloques no condice con la cantidad de textos')
-        return
+        save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
     end
     
-    shuffled_stimuli = shuffle_in_blocks(stimuli_splits, ordered_stimuli);
-    shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
-    stimuli_index = 1;
-    
-    save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
-    
+    newstimuli_index = stimuli_index;
     for i = stimuli_index:length(shuffled_stimuli)
         if i == 1
             % Test trial
@@ -46,7 +60,10 @@ function run_experiment()
             % Aborted
             break
         end
+        newstimuli_index = newstimuli_index + 1;
     end
+    stimuli_index = newstimuli_index;
+    save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
 end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
