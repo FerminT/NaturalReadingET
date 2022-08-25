@@ -1,10 +1,10 @@
 function run_experiment()
-    addpath('Code/')
+    addpath(genpath('Code/'))
     % Constants
     SAVE_PATH      = 'Data';
     METADATA_PATH  = 'Metadata';
     TEST_FILE      = 'Test';
-    stimuli_splits = [6 6 5];
+    stimuli_splits = [7 6 4];
     
     [subjname, reading_level, use_eyetracker] = initial_questions();
     if isempty(subjname); return; end
@@ -19,7 +19,7 @@ function run_experiment()
     load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
     load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
     
-    ordered_stimuli = transpose(string({stimuli_order(:).title}));
+    ordered_stimuli = {stimuli_order(:).title}' ;
     % Sanity check
     if length(ordered_stimuli) ~= sum(stimuli_splits)
         disp('ERROR: la suma de los bloques no condice con la cantidad de textos')
@@ -66,8 +66,8 @@ function [initials, reading_level, use_eyetracker] =  initial_questions()
     use_eyetracker = 0;
     
     prompt = {'Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
-        'Del 1 al 10, ¿que tan frecuentemente lee?', ...
-        '¿Usar el eyetracker? (Y/N)'};
+        'Del 1 al 10, que tan frecuentemente lee?', ...
+        'Usar el eyetracker? (Y/N)'};
     dlgtitle = 'Metadata';
     dims     = [1 40];
     definput = {'', '', 'Y'};
