@@ -31,9 +31,10 @@ There is a correlation between *minimizing dialogues* and *minimizing unfrequent
     * Left margin: 280px.
     * Top margin: 185px.
 * The participant is told that, after reading each text, he/she will be evaluated with three comprehensive questions.
-* Their reading skills are also inquired?
-* Item order is random.
+* Their reading skills are also inquired.
+* Items are ordered according to their number of unfrequent words and characters and short and long sentences. Then they are divided in splits of 7, 6 and 4 items, and presented randomly within each split.
 * Once an item has been read, comprehension questions are answered.
+* Additionally, words are displayed (one by one) and the participant is asked to write the first word that comes to mind.
 * The following item is displayed by pressing a button.
 * Each item is a *block*. After each block, a one minute break and eye-tracker calibration follows.
-* After the 30 minute mark, a longer break takes place.
+* Eye-tracker calibration is validated by the presentation of points positioned in the corners of where stimuli is displayed.
