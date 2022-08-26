@@ -1,34 +1,29 @@
-%%% This function receives as input texts and outputs the images (i.e.
-%%% stimuli) that will be displayed on screen. Additional text information
-%%% (position of each word, number of words, etc.) is also stored.
+function exit_status = create_stimuli(title, config, save_path)
+    %%% This function receives as input the text filename, config and save path, and outputs the images (i.e.
+    %%% stimuli) that will be displayed on screen. Additional text information
+    %%% (position of each word, number of words, etc.) is also stored.
+    
+    Screen('Preference', 'SkipSyncTests', 1);
+    Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
+    Screen('Preference', 'Verbosity', 1); % remove warnings
 
-Screen('Preference', 'SkipSyncTests', 1);
-Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
-Screen('Preference', 'Verbosity', 1); % remove warnings
-
-METADATA_PATH = fullfile('..', 'Metadata');
-config_file = fullfile(METADATA_PATH, 'stimuli_config.mat');
-items_path  = fullfile('..', 'Texts');
-save_path   = fullfile('..', 'Stimuli');
-mkdir(save_path)
-
-files      = dir(items_path);
-filenames  = string({files([files.isdir] == 0).name});
-
-load(config_file)
-
-for index = 1:length(filenames)
+    if exist(save_path, 'dir') ~= 7
+        mkdir(save_path)
+    end
+    
+    items_path = 'Texts';
+    filename   = fullfile(items_path, title);
+    
     try
         clear screens
-        filename = filenames(index);
-        filepath = fullfile(items_path, filename);
-        lines    = import_text_in_lines(filepath, config);
+        lines = import_text_in_lines(filename, config);
         fprintf('Generating %s\n', filename);
 
         [screenWindow, config] = initialize_screen(config, 0);
         currentline_index = 1;
         for screenid = 1:ceil(length(lines) / config.maxlines)
-            [lines, currentline_index, screens(screenid)] = draw_screen(screenWindow, config, lines, screenid, currentline_index);
+            [lines, currentline_index, screens(screenid)] = draw_screen(screenWindow, config, lines, ...
+                screenid, currentline_index);
         end
         disp('Images created.')
         sca    
@@ -36,12 +31,14 @@ for index = 1:length(filenames)
         
         lines = add_text_info(lines, config);        
 
-        save(fullfile(save_path, filename), 'lines', 'screens')
+        save(fullfile(save_path, title), 'lines', 'screens')
+        exit_status = 0;
     catch ME
         sca
+        disp('Hubo un error al crear el estimulo')
         disp(getReport(ME))
         ListenChar(0)
-        keyboard
+        exit_status = 1;
     end
 end
 

@@ -5,17 +5,20 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     keys.NEXT = 115; % Windows: 39
     keys.BACK = 114; % Windows: 37
     keys.Ckey = 55; % Windows: 67
+
+    title = stimuli_order{stimuli_index};
+    selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));
+    if exist(selected_stimuli, 'file') == 0
+        exit_status = create_stimuli(title, stimuli_config, STIMULI_PATH);
+        if exit_status > 0; return; end
+    end
+    load(selected_stimuli)
+    disp(['Usamos el texto ' title])
     
     Screen('Preference', 'SkipSyncTests', 1);
     Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
     Screen('Preference', 'Verbosity', 1); % remove warnings
 
-    title = stimuli_order{stimuli_index};
-
-    selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));            
-    load(selected_stimuli)
-
-    disp(['Usamos el texto ' title])
     try
         eyelink_filename = strcat(subjname, '_', num2str(stimuli_index));
     
