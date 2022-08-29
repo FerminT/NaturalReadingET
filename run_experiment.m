@@ -64,6 +64,12 @@ function run_experiment()
     end
     stimuli_index = newstimuli_index;
     save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
+
+    if newstimuli_index > length(shuffled_stimuli)
+        msgbox('Experimento terminado!')
+    else
+        msgbox('Experimento interrumpido. Se guardo el estado de la/el participante')
+    end
 end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
