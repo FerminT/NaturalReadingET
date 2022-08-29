@@ -7,36 +7,35 @@ function validate_calibration(window, config, use_eyetracker)
         lastrowpos.first(2) lastrowpos.mid(2) lastrowpos.last(2)];
 
     showcentertext(window, 'Mire los puntos que aparecen', config)
+
+    color_green = [0 128 0];
+    outercircle_radius = config.charwidth * 2;
+    innercircle_radius = fix(outercircle_radius / 3);
     
     for i = 1:length(xx)             
         Screen('FillRect', window, config.backgroundcolor);
 
-        ssize = 10;
-        circle_pos = [xx(i) - ssize yy(i) - ssize xx(i) + ssize yy(i) + ssize];       
-        Screen('FillOval', window, config.textcolor, circle_pos);
+        outercircle_pos = [(xx(i) - outercircle_radius) (yy(i) - outercircle_radius) ...
+            (xx(i) + outercircle_radius) (yy(i) + outercircle_radius)];       
+        innercircle_pos = [(xx(i) - innercircle_radius) (yy(i) - innercircle_radius) ...
+            (xx(i) + innercircle_radius) (yy(i) + innercircle_radius)];
 
-        ssize = 3;
-        circle_pos = [xx(i) - ssize yy(i) - ssize xx(i) + ssize yy(i) + ssize];       
-        Screen('FillOval', window, config.backgroundcolor, circle_pos);
+        Screen('FillOval', window, config.textcolor, outercircle_pos);
+        Screen('FillOval', window, config.backgroundcolor, innercircle_pos);
 
         t = GetSecs;
         Screen('Flip', window, t + config.ifi); 
-        str = ['pseudocalib ' num2str(xx(i)) ',' num2str(yy(i))];
+        str = ['validation ' num2str(xx(i)) ',' num2str(yy(i))];
         if use_eyetracker && Eyelink('isconnected')
             Eyelink('Message', str)
         end  
 
-        [~, condition] = wait_for_fixation([xx(i) yy(i)], 30, 0, use_eyetracker);
+        [~, condition] = wait_for_fixation([xx(i) yy(i)], outercircle_radius * innercircle_radius, ...
+            0, use_eyetracker);
 
         Screen('FillRect', window, config.backgroundcolor);
-
-        ssize = 10;
-        circle_pos = [xx(i) - ssize yy(i) - ssize xx(i) + ssize yy(i) + ssize];       
-        Screen('FillOval', window, config.textcolor, circle_pos);     
-
-        ssize = 3;
-        circle_pos = [xx(i) - ssize yy(i) - ssize xx(i) + ssize yy(i) + ssize];       
-        Screen('FillOval', window, [0 128 0], circle_pos);
+        Screen('FillOval', window, config.textcolor, outercircle_pos);     
+        Screen('FillOval', window, color_green, innercircle_pos);
         
         t = GetSecs;
         Screen('Flip', window, t + config.ifi); 
