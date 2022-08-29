@@ -45,8 +45,8 @@ function run_experiment()
         save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
     end
     
-    newstimuli_index = stimuli_index;
-    for i = stimuli_index:length(shuffled_stimuli)
+    laststimuli_index = stimuli_index;
+    for i = laststimuli_index:length(shuffled_stimuli)
         if i == 1
             % Test trial
             use_eyetracker_in_trial = 0;
@@ -59,13 +59,13 @@ function run_experiment()
         if exit_status == 1
             % Aborted
             break
+        else
+            stimuli_index = stimuli_index + 1;
+            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
         end
-        newstimuli_index = newstimuli_index + 1;
     end
-    stimuli_index = newstimuli_index;
-    save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
 
-    if newstimuli_index > length(shuffled_stimuli)
+    if stimuli_index > length(shuffled_stimuli)
         msgbox('Experimento terminado!')
     else
         msgbox('Experimento interrumpido. Se guardo el estado de la/el participante')
