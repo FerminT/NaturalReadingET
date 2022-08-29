@@ -56,7 +56,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         trial.sequence = struct();
         sequenceid = 0;
         currentscreenid = 1;
-        while 1
+        exit_status = 0;
+        while exit_status == 0
             sequenceid = sequenceid + 1;
             trial.sequence(sequenceid).currentscreenid = currentscreenid;        
             trial.sequence(sequenceid).timeini = GetSecs;
@@ -81,10 +82,6 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     
             [currentscreenid, exit_status] = handlekeypress(keypressed, keys, currentscreenid, ...
                 length(screens), eyetrackerptr, stimuli_config, use_eyetracker);
-    
-            if exit_status > 0
-                break
-            end
         end
     
         fprintf('Tiempo: %2.2f\n', GetSecs - t0);    
