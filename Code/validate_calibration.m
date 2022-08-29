@@ -30,7 +30,7 @@ function validate_calibration(window, config, use_eyetracker)
             Eyelink('Message', str)
         end  
 
-        [~, condition] = wait_for_fixation([xx(i) yy(i)], outercircle_radius * innercircle_radius, ...
+        [~, condition] = wait_for_fixation([xx(i) yy(i)], outercircle_radius * 2, ...
             0, use_eyetracker);
 
         Screen('FillRect', window, config.backgroundcolor);
