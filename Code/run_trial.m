@@ -89,25 +89,24 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
             Screen('close', textures(screenid));    
         end
         
-        if exit_status ~= 1
+        if exit_status == 2
+            % Successful trial
             validate_calibration(screenWindow, stimuli_config, use_eyetracker);
+            showcentertext(screenWindow, 'Termino el cuento! Ahora deberas responder unas preguntas y luego avisar al investigador', stimuli_config)
         end
         
         finish_eyetracking(use_eyetracker)
-    
+        returncontrol()
+        Screen('CloseAll')
+
         if exit_status == 2
-            % Successful trial
-            showcentertext(screenWindow, 'Termino el cuento! Ahora deberas responder unas preguntas y luego avisar al investigador', stimuli_config)
             trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
-            showcentertext(screenWindow, 'Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.', stimuli_config)
+            uiwait(msgbox('Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.'))
             trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
         
             trial_filename = fullfile(save_path, title);
             save(trial_filename, 'trial')
         end
-
-        returncontrol()
-        Screen('CloseAll')
         
     catch ME
         sca
