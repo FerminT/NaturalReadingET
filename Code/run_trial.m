@@ -1,10 +1,11 @@
 function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_questions, stimuli_config, save_path, use_eyetracker)
     % Constants
     STIMULI_PATH = 'Stimuli';
-    keys.ESC = 10; % Windows: 27
-    keys.NEXT = 115; % Windows: 39
-    keys.BACK = 114; % Windows: 37
-    keys.Ckey = 55; % Windows: 67
+    KbName('UnifyKeyNames')
+    keys.ESC = KbName('ESCAPE');
+    keys.NEXT = KbName('RightArrow');
+    keys.BACK = KbName('LeftArrow');
+    keys.Ckey = KbName('C');
 
     title = stimuli_order{stimuli_index};
     selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));
