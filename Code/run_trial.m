@@ -100,9 +100,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         Screen('CloseAll')
 
         if exit_status == 2
-            trial.questions_answers = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'questions');
+            trial.questions_answers = show_questions(title, stimuli_questions, 'questions');
             uiwait(msgbox('Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.'))
-            trial.synonyms_answers  = show_questions(screenWindow, title, stimuli_questions, stimuli_config, 'synonyms');
+            trial.synonyms_answers  = show_questions(title, stimuli_questions, 'synonyms');
         
             trial_filename = fullfile(save_path, title);
             save(trial_filename, 'trial')
