@@ -4,7 +4,7 @@ function answers = show_questions(title, stimuli_questions, mode)
     if strcmp(mode, 'questions')
         questions = stimuli_questions(title_index).questions;
     else
-        questions = stimuli_questions(title_index).synonyms;
+        questions = stimuli_questions(title_index).words;
     end
 
     answers = {};
