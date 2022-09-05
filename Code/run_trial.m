@@ -99,6 +99,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         finish_eyetracking(use_eyetracker)
         returncontrol()
         Screen('CloseAll')
+        beep
 
         if exit_status == 2
             trial.questions_answers = show_questions(title, stimuli_questions, 'questions');
