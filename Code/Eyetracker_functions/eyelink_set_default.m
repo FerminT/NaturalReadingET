@@ -24,7 +24,7 @@ try
 % – HV9: 9-point grid calibration, best overall
 % – HV13: 13-point calibration for large calibration region (EyeLink II version 2.0 or later; Eye-
 % Link 1000)
-    strings{end+1}='calibration_type = HV13';
+    strings{end+1}='calibration_type = HV9';
     strings{end+1}='calibration_area_proportion 0.88 0.83';
     strings{end+1}='validation_area_proportion 0.88 0.83';
     
