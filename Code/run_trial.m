@@ -5,7 +5,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     keys.ESC = KbName('ESCAPE');
     keys.NEXT = KbName('RightArrow');
     keys.BACK = KbName('LeftArrow');
-    keys.Ckey = KbName('C');
+    keys.CKey = KbName('C');
 
     title = stimuli_order{stimuli_index};
     selected_stimuli = fullfile(STIMULI_PATH, strcat(title, '.mat'));
