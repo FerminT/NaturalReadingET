@@ -2,7 +2,7 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     % Constants
     STIMULI_PATH = 'Stimuli';
     KbName('UnifyKeyNames')
-    keys.ESC = KbName('ESCAPE');
+    keys.ESC  = KbName('ESCAPE');
     keys.NEXT = KbName('RightArrow');
     keys.BACK = KbName('LeftArrow');
     keys.CKey = KbName('C');

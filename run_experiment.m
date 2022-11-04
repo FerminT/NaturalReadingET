@@ -4,7 +4,7 @@ function run_experiment()
     SAVE_PATH      = 'Data';
     METADATA_PATH  = 'Metadata';
     TEST_FILE      = 'Test';
-    stimuli_splits = [7 6 4];
+    stimuli_splits = [5 5 5 5];
     load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
     load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
     
@@ -31,6 +31,7 @@ function run_experiment()
     if ~loaded_metadata
         load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
         ordered_stimuli = {stimuli_order(:).title}';
+        first_session = 1;
 
         % Sanity check
         if length(ordered_stimuli) ~= sum(stimuli_splits)
@@ -59,10 +60,15 @@ function run_experiment()
         if exit_status == 1
             % Aborted
             break
+        elseif first_session && i==10
+            % Aborted
+            break
         else
             stimuli_index = stimuli_index + 1;
-            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
+            first_session = 0;
+            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker', 'first_session')
         end
+        
     end
 
     if stimuli_index > length(shuffled_stimuli)
