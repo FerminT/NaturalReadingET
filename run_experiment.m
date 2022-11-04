@@ -57,18 +57,21 @@ function run_experiment()
     
         exit_status = run_trial(subjname, i, shuffled_stimuli, stimuli_questions, config, SAVE_PATH, use_eyetracker_in_trial);
         
+        
+        end_first_session = first_session && i==10;
         if exit_status == 1
-            % Aborted
-            break
-        elseif first_session && i==10
             % Aborted
             break
         else
             stimuli_index = stimuli_index + 1;
-            first_session = 0;
+            first_session = i<=10;
             save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker', 'first_session')
         end
         
+        if end_first_session
+            break % No se junta con el break de arriba porque quiero guardar antes
+        end 
+                
     end
 
     if stimuli_index > length(shuffled_stimuli)
