@@ -5,6 +5,7 @@ function run_experiment()
     METADATA_PATH  = 'Metadata';
     TEST_FILE      = 'Test';
     stimuli_splits = [5 5 5 5];
+    splits_per_session = 2;
     load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
     load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
     
@@ -47,6 +48,7 @@ function run_experiment()
     end
     
     laststimuli_index = stimuli_index;
+    first_session_trials = sum(stimuli_splits(1:splits_per_session));
     for i = laststimuli_index:length(shuffled_stimuli)
         if i == 1
             % Test trial
@@ -56,20 +58,15 @@ function run_experiment()
         end
     
         exit_status = run_trial(subjname, i, shuffled_stimuli, stimuli_questions, config, SAVE_PATH, use_eyetracker_in_trial);
+        aborted = exit_status == 1;
         
-        
-        end_first_session = first_session && i==10;
-        if exit_status == 1
-            % Aborted
-            break
-        else
+        if ~aborted
             stimuli_index = stimuli_index + 1;
-            first_session = i<=10;
             save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker', 'first_session')
         end
         
-        if end_first_session
-            break % No se junta con el break de arriba porque quiero guardar antes
+        if i == first_session_trials || aborted
+            break
         end 
                 
     end
