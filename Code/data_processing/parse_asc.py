@@ -29,7 +29,7 @@ def ParseEyeLinkAsc(elFilename):
     print('Parsing EyeLink ASCII file %s...'%str(elFilename))
     t0 = time.time()
     with elFilename.open('r') as fp:
-        fileTxt0 = fp.read().splitlines(keeplinebreaks=True)
+        fileTxt0 = fp.read().splitlines(keepends=True)
         
     fileTxt0 = list(filter(None, fileTxt0))
     fileTxt0 = np.array(fileTxt0)
