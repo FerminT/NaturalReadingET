@@ -9,7 +9,7 @@ def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='p
     for participant_path in participants:
         out_path = participant_path / save_path
         if not out_path.exists(): out_path.mkdir()
-        save_profile(participant_path, save_path)
+        save_profile(participant_path, out_path)
         mat_files = participant_path.glob('*.mat')
         for mat_file in mat_files:
             print(f'Processing {mat_file}')
@@ -70,8 +70,10 @@ def save_to_pickle(trial_metadata, trial_path):
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
     _, dfMsg, dfFix, _, _, _ = ParseEyeLinkAsc(asc_file)
-    best_eye = find_besteye(dfMsg)
-    dfFix = dfFix[dfFix['eye'] == best_eye]
+    binocular = len(dfFix['eye'].unique()) > 1
+    if binocular:
+        best_eye = find_besteye(dfMsg)
+        dfFix    = dfFix[dfFix['eye'] == best_eye]
     dfMsg = filter_msgs(dfMsg)
     
     return dfMsg, dfFix
