@@ -1,3 +1,7 @@
-# ignore eyetracking data
+# eyetracking data
 *.edf
 *.asc
+
+# temp files
+*.pyc
+*.asv
