@@ -32,7 +32,6 @@ function run_experiment()
     if ~loaded_metadata
         load(fullfile(METADATA_PATH, 'stimuli_order.mat'));
         ordered_stimuli = {stimuli_order(:).title}';
-        first_session = 1;
 
         % Sanity check
         if length(ordered_stimuli) ~= sum(stimuli_splits)
@@ -62,10 +61,10 @@ function run_experiment()
         
         if ~aborted
             stimuli_index = stimuli_index + 1;
-            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker', 'first_session')
+            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
         end
         
-        if i == first_session_trials || aborted
+        if i == first_session_trials + 1 || aborted
             break
         end 
                 
