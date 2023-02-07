@@ -1,6 +1,7 @@
 # eyetracking data
 *.edf
 *.asc
+*.pkl
 
 # temp files
 *.pyc
