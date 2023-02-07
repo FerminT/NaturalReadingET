@@ -4,13 +4,13 @@ from scipy.io import loadmat
 import argparse
 import pandas as pd
 
-def parse_rawdata(datapath, ascii_location='asc', save_path='pkl'):
-    participants = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
-    for participant_dir in participants:
-        out_path = participant_dir / save_path
+def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='pkl'):
+    participants = get_dirs(datapath, participant)
+    for participant_path in participants:
+        out_path = participant_path / save_path
         if not out_path.exists(): out_path.mkdir()
-        
-        mat_files = participant_dir.glob('*.mat')
+        save_profile(participant_path, save_path)
+        mat_files = participant_path.glob('*.mat')
         for mat_file in mat_files:
             print(f'Processing {mat_file}')
             if mat_file.name == 'Test.mat' or mat_file.name == 'metadata.mat':
@@ -21,10 +21,25 @@ def parse_rawdata(datapath, ascii_location='asc', save_path='pkl'):
             trial_sequence, _, _ = save_to_pickle(trial_metadata, trial_path)
             
             stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-            trial_msgs, trial_fix = get_eyetracking_data(participant_dir / ascii_location, subj_name, stimuli_index)
+            trial_msgs, trial_fix = get_eyetracking_data(participant_path / ascii_location, subj_name, stimuli_index)
             trial_msgs.to_pickle(trial_path / 'et_msgs.pkl')
             
             divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name)
+
+def get_dirs(datapath, participant):
+    if participant:
+        dirs = [datapath / participant]
+        if not dirs[0].exists():
+            raise FileNotFoundError(f'Participant {participant} not found')
+    else:
+        dirs = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
+        
+    return dirs
+
+def save_profile(participant_path, save_path):
+    metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
+    profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])]}
+    pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
 
 def divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name):
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
@@ -37,7 +52,7 @@ def divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path
         # Account for repeated screens (i.e. returning to it)
         if len(fixations_files):
             fix_file = screen_path / f'fixations_{len(fixations_files)}.pkl'
-            print('Repeated screen for subject ' + subj_name)
+            print('Repeated screen for participant ' + subj_name)
         else:
             fix_file = screen_path / 'fixations.pkl'
         screen_fixations.to_pickle(fix_file)
@@ -79,7 +94,8 @@ def filter_msgs(dfMsg, cutout='validation'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract fixations from EyeLink .asc file')
     parser.add_argument('-path', type=str, help='Path where participants data is stored')
+    parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()
 
     datapath = Path(args.path)
-    parse_rawdata(datapath)
+    parse_rawdata(datapath, args.subj)
