@@ -22,8 +22,9 @@ def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='p
             
             stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
             trial_msgs, trial_fix = get_eyetracking_data(participant_path / ascii_location, subj_name, stimuli_index)
-            trial_msgs.to_pickle(trial_path / 'et_msgs.pkl')
+            trial_msgs.to_pickle(trial_path / 'et_messages.pkl')
             
+            save_validation_fixations(trial_msgs, trial_fix, trial_path)
             divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name)
 
 def get_dirs(datapath, participant):
@@ -40,11 +41,26 @@ def save_profile(participant_path, save_path):
     metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
     profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])]}
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
+    
+def save_validation_fixations(trial_msgs, trial_fix, trial_path):
+    val_msgs = trial_msgs[trial_msgs['text'].str.contains('validation')]
+    fin_msgindex = trial_msgs[trial_msgs['text'].str.contains('termina experimento')].index[0]
+    first_val = val_msgs.loc[:fin_msgindex]
+    last_val  = val_msgs.loc[fin_msgindex:]
+    # Add some time to let the eye get to the last point
+    first_valfix = trial_fix[(trial_fix['tStart'] >= first_val.iloc[0]['time']) & (trial_fix['tEnd'] <= first_val.iloc[-1]['time'] + 300)]
+    last_valfix  = trial_fix[(trial_fix['tStart'] >= last_val.iloc[0]['time']) & (trial_fix['tEnd'] <= last_val.iloc[-1]['time'] + 300)]
+    
+    val_path = trial_path / 'validation'
+    if not val_path.exists(): val_path.mkdir()
+    first_valfix.to_pickle(val_path / 'first.pkl')
+    last_valfix.to_pickle(val_path / 'last.pkl')
 
 def divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name):
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = trial_msgs[trial_msgs['text'].str.contains('ini')].iloc[i]['time']
         fin_time = trial_msgs[trial_msgs['text'].str.contains('fin')].iloc[i]['time']
+        # TODO: Check where to make a strict cut, if at the beginning or the end
         screen_fixations = trial_fix[(trial_fix['tStart'] >= ini_time) & (trial_fix['tEnd'] <= fin_time)]
         screen_path = trial_path / f'screen_{screen_id}'
         if not screen_path.exists(): screen_path.mkdir()
