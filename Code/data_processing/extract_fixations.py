@@ -21,11 +21,11 @@ def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='p
             trial_sequence, _, _ = save_to_pickle(trial_metadata, trial_path)
             
             stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-            trial_msgs, trial_fix = get_eyetracking_data(participant_path / ascii_location, subj_name, stimuli_index)
+            trial_msgs, trial_fix, trial_sacc = get_eyetracking_data(participant_path / ascii_location, subj_name, stimuli_index)
             trial_msgs.to_pickle(trial_path / 'et_messages.pkl')
             
             save_validation_fixations(trial_msgs, trial_fix, trial_path)
-            divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name)
+            divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, trial_path, subj_name)
 
 def get_dirs(datapath, participant):
     if participant:
@@ -56,22 +56,26 @@ def save_validation_fixations(trial_msgs, trial_fix, trial_path):
     first_valfix.to_pickle(val_path / 'first.pkl')
     last_valfix.to_pickle(val_path / 'last.pkl')
 
-def divide_fixations_by_screen(trial_sequence, trial_msgs, trial_fix, trial_path, subj_name):
+def divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, trial_path, subj_name):
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = trial_msgs[trial_msgs['text'].str.contains('ini')].iloc[i]['time']
         fin_time = trial_msgs[trial_msgs['text'].str.contains('fin')].iloc[i]['time']
-        # TODO: Check where to make a strict cut, if at the beginning or the end
+        # TODO: Check where to make a strict cut, if at the beginning or at the end
         screen_fixations = trial_fix[(trial_fix['tStart'] >= ini_time) & (trial_fix['tEnd'] <= fin_time)]
+        screen_saccades  = trial_sacc[(trial_sacc['tStart'] >= ini_time) & (trial_sacc['tEnd'] <= fin_time)]
         screen_path = trial_path / f'screen_{screen_id}'
         if not screen_path.exists(): screen_path.mkdir()
         fixations_files = list(sorted(screen_path.glob('fixations*.pkl')))
         # Account for repeated screens (i.e. returning to it)
         if len(fixations_files):
-            fix_file = screen_path / f'fixations_{len(fixations_files)}.pkl'
+            fix_file  = screen_path / f'fixations_{len(fixations_files)}.pkl'
+            sacc_file = screen_path / f'saccades_{len(fixations_files)}.pkl'
             print('Repeated screen for participant ' + subj_name)
         else:
-            fix_file = screen_path / 'fixations.pkl'
-        screen_fixations.to_pickle(fix_file)
+            fix_file  = screen_path / 'fixations.pkl'
+            sacc_file = screen_path / 'saccades.pkl'
+            
+        screen_fixations.to_pickle(fix_file), screen_saccades.to_pickle(sacc_file)
 
 def save_to_pickle(trial_metadata, trial_path):
     trial_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
@@ -85,14 +89,15 @@ def save_to_pickle(trial_metadata, trial_path):
 
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, dfMsg, dfFix, _, _, _ = ParseEyeLinkAsc(asc_file)
+    _, dfMsg, dfFix, dfSacc, _, _ = ParseEyeLinkAsc(asc_file)
     binocular = len(dfFix['eye'].unique()) > 1
     if binocular:
         best_eye = find_besteye(dfMsg)
         dfFix    = dfFix[dfFix['eye'] == best_eye]
+        dfSacc   = dfSacc[dfSacc['eye'] == best_eye]
     dfMsg = filter_msgs(dfMsg)
     
-    return dfMsg, dfFix
+    return dfMsg, dfFix, dfSacc
 
 def find_besteye(dfMsg):
     val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
