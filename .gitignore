@@ -6,3 +6,6 @@
 # temp files
 *.pyc
 *.asv
+
+# vscode
+.vscode
