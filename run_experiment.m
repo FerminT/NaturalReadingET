@@ -80,6 +80,7 @@ end
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
     shuffled_elems   = {};
     block_startindex = 1;
+    rng('shuffle');
     for split_index = 1:length(blocks_size)
         block_finishindex = block_startindex + blocks_size(split_index) - 1;
         current_block     = elems(block_startindex:block_finishindex);
