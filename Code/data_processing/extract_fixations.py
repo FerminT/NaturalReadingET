@@ -13,9 +13,9 @@ def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='p
         save_profile(participant_path, out_path)
         mat_files = participant_path.glob('*.mat')
         for mat_file in mat_files:
-            print(f'Processing {mat_file}')
             if mat_file.name == 'Test.mat' or mat_file.name == 'metadata.mat':
                 continue
+            print(f'Processing {mat_file}')
             trial_metadata = loadmat(str(mat_file), simplify_cells=True)['trial']
             trial_path     = out_path / mat_file.name.split('.')[0]
             if trial_path.exists(): shutil.rmtree(trial_path)
@@ -59,7 +59,7 @@ def save_validation_fixations(trial_msgs, trial_fix, trial_path, val_legend='val
     lastval_iscorrect  = check_validation_fixations(last_valfix, points_coords, num_points, points_area)
 
     if not firstval_iscorrect:
-        print('Validation error at the begining of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
+        print('Validation error at the beginning of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
     if not lastval_iscorrect:
         print('Validation error at the end of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
         
