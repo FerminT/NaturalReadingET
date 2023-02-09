@@ -59,7 +59,7 @@ def save_validation_fixations(trial_msgs, trial_fix, trial_path, val_legend='val
     lastval_iscorrect  = check_validation_fixations(last_valfix, points_coords, num_points, points_area)
 
     if not firstval_iscorrect:
-        print('Validation error at the begining of trial for participant', trial_path.parent[1].name, 'in trial', trial_path.name)
+        print('Validation error at the begining of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
     if not lastval_iscorrect:
         print('Validation error at the end of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
         
@@ -125,8 +125,10 @@ def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     
     return dfMsg, dfFix, dfSacc
 
-def find_besteye(dfMsg):
+def find_besteye(dfMsg, default='R'):
     val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
+    if 'ABORTED' in val_msgs[0][1]: return default
+    
     left_index  = int('LEFT' in val_msgs[1][1])
     right_index = 1 - left_index
     lefterror_index, righterror_index = val_msgs[left_index][1].split().index('ERROR'), val_msgs[right_index][1].split().index('ERROR')
