@@ -41,7 +41,8 @@ def get_dirs(datapath, participant):
 
 def save_profile(participant_path, save_path):
     metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
-    profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])]}
+    stimuli_order = list(metafile['shuffled_stimuli'][1:].astype(str))
+    profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])], 'stimuli_order': [stimuli_order]}
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
     
 def save_validation_fixations(trial_msgs, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56):
