@@ -2,6 +2,7 @@ from parse_asc import ParseEyeLinkAsc
 from pathlib import Path
 from scipy.io import loadmat
 import argparse
+import shutil
 import pandas as pd
 
 def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='pkl'):
@@ -17,7 +18,8 @@ def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='p
                 continue
             trial_metadata = loadmat(str(mat_file), simplify_cells=True)['trial']
             trial_path     = out_path / mat_file.name.split('.')[0]
-            if not trial_path.exists(): trial_path.mkdir()
+            if trial_path.exists(): shutil.rmtree(trial_path)
+            trial_path.mkdir()
             trial_sequence, _, _ = save_to_pickle(trial_metadata, trial_path)
             
             stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
@@ -56,9 +58,9 @@ def save_validation_fixations(trial_msgs, trial_fix, trial_path, val_legend='val
     lastval_iscorrect  = check_validation_fixations(last_valfix, points_coords, num_points, points_area)
 
     if not firstval_iscorrect:
-        print('Validation error at the begining of trial for participant ', trial_path.parent.name, ' in trial ', trial_path.name)
+        print('Validation error at the begining of trial for participant', trial_path.parent[1].name, 'in trial', trial_path.name)
     if not lastval_iscorrect:
-        print('Validation error at the end of trial for participant ', trial_path.parent.name, ' in trial ', trial_path.name)
+        print('Validation error at the end of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
         
     val_path = trial_path / 'validation'
     if not val_path.exists(): val_path.mkdir()
