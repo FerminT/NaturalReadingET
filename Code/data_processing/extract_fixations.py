@@ -114,7 +114,7 @@ def save_to_pickle(trial_metadata, trial_path):
 
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, dfMsg, dfFix, dfSacc, _, _ = ParseEyeLinkAsc(asc_file)
+    _, dfMsg, dfFix, dfSacc, _, _ = ParseEyeLinkAsc(asc_file, verbose=False)
     binocular = len(dfFix['eye'].unique()) > 1
     if binocular:
         best_eye = find_besteye(dfMsg)

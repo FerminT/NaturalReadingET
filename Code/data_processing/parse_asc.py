@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 import time
-from pathlib import Path
 
-def ParseEyeLinkAsc(elFilename):
+def ParseEyeLinkAsc(elFilename, verbose=True):
     """Reads in .asc data files from EyeLink and produces pandas dataframes for further analysis
     
     Created 7/31/18-8/15/18 by DJ.
@@ -26,7 +25,8 @@ def ParseEyeLinkAsc(elFilename):
     Updated 11/12/18 by DJ - switched from "trials" to "recording periods" for experiments with continuous recording
     Modified by Gustavo Juantorena (github.com/gej1) 06/01/22
     """
-    print('Parsing EyeLink ASCII file %s...'%str(elFilename))
+    if verbose:
+        print('Parsing EyeLink ASCII file %s...'%str(elFilename))
     t0 = time.time()
     with elFilename.open('r') as fp:
         fileTxt0 = fp.read().splitlines(keepends=True)
@@ -60,8 +60,6 @@ def ParseEyeLinkAsc(elFilename):
     # combine trial info
     dfRec = pd.concat([dfRecStart, dfRecEnd],axis=1)
     nRec = dfRec.shape[0]
-    print('%d recording periods found.'%nRec)
-
     
     # Import Messages
     t = time.time()
@@ -75,20 +73,16 @@ def ParseEyeLinkAsc(elFilename):
         tMsg.append(int(info[1]))
         txtMsg.append(' '.join(info[2:]))
     dfMsg = pd.DataFrame({'time': tMsg, 'text': txtMsg})
-    print(f'{len(iMsg)} messages')
     
     # Import Fixations
     iNotEfix = np.nonzero(lineType!='EFIX')[0]
     dfFix = pd.read_csv(elFilename, skiprows=iNotEfix, header=None, delim_whitespace=True, usecols=range(1,8), low_memory=False)
     dfFix.columns = ['eye', 'tStart', 'tEnd', 'duration', 'xAvg', 'yAvg', 'pupilAvg']
-    nFix = dfFix.shape[0]
-    print(f'{nFix} fixations')
 
     # Saccades
     iNotEsacc = np.nonzero(lineType!='ESACC')[0]
     dfSacc = pd.read_csv(elFilename, skiprows=iNotEsacc, header=None, delim_whitespace=True, usecols=range(1,11), low_memory=False)
     dfSacc.columns = ['eye', 'tStart', 'tEnd', 'duration', 'xStart', 'yStart', 'xEnd', 'yEnd', 'ampDeg', 'vPeak']
-    print(f'{dfSacc.shape[0]} saccades')
     
     # Blinks
     dfBlink = pd.DataFrame()
@@ -96,12 +90,10 @@ def ParseEyeLinkAsc(elFilename):
     if len(iNotEblink) < nLines:
       dfBlink = pd.read_csv(elFilename, skiprows=iNotEblink, header=None, delim_whitespace=True, usecols=range(1,5), low_memory=False)
       dfBlink.columns = ['eye', 'tStart', 'tEnd', 'duration']
-      print(f'{dfBlink.shape[0]} blinks')
       
     # determine sample columns based on eyes recorded in file
     eyesInFile = np.unique(dfFix.eye)
     if eyesInFile.size == 2:
-        print('binocular data detected.')
         cols = ['tSample', 'LX', 'LY', 'LPupil', 'RX', 'RY', 'RPupil']
     else:
         eye = eyesInFile[0]
@@ -122,8 +114,18 @@ def ParseEyeLinkAsc(elFilename):
             dfSamples['%cX'%eye] = np.nan
             dfSamples['%cY'%eye] = np.nan
             dfSamples['%cPupil'%eye] = np.nan
-            
-    print(f'{dfSamples.shape[0]} samples')
-    print('Done! Took %.1f seconds.'%(time.time()-t0))
+    
+    if verbose:
+        print('%d recording periods found.'%nRec)
+        print(f'{len(iMsg)} messages')
+        print(f'{dfFix.shape[0]} fixations')
+        print(f'{dfSacc.shape[0]} saccades')
+        print(f'{dfBlink.shape[0]} blinks')
+        print(f'{dfSamples.shape[0]} samples')
+        if eyesInFile.size == 2:
+            print('binocular data detected.')
+        else:
+            print('monocular data detected (%c eye).'%eyesInFile[0])
+        print('Done! Took %.1f seconds.'%(time.time()-t0))
     
     return dfRec, dfMsg, dfFix, dfSacc, dfBlink, dfSamples
