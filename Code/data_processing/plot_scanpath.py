@@ -4,29 +4,29 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.cm as cm
+import numpy as np
 
 def plot_scanpath(img, fixs_list):
     for fixs in fixs_list:
         xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
         fig, ax = plt.subplots()
         ax.imshow(img, cmap=plt.cm.gray)
-        initial_color  = 'red'
-        scanpath_color = 'yellow'
+        color_map = cm.get_cmap('rainbow')
+        colors = color_map(np.linspace(0, 1, xs.shape[0]))
         
-        cir_rad_min, cir_rad_max = 30, 60
+        cir_rad_min, cir_rad_max = 10, 70
         rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
 
         circles = []
         for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
-            radius = int(25 + rad_per_T * (t - ts.min()))
-            face_color = initial_color if i == 0 else scanpath_color
+            radius = int(10 + rad_per_T * (t - ts.min()))
             circle = patches.Circle((x, y),
                                     radius=radius,
-                                    edgecolor='red',
-                                    facecolor=face_color,
-                                    alpha=0.2)
+                                    color=colors[i],
+                                    alpha=0.3)
             ax.add_patch(circle)
-            circle_ann = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center")
+            circle_ann = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
             circles.append((circle, circle_ann))
 
         # plot the arrows connecting the circles
@@ -34,13 +34,12 @@ def plot_scanpath(img, fixs_list):
         for i in range(len(circles) - 1):
             x1, y1 = circles[i][0].center
             x2, y2 = circles[i + 1][0].center
-            arrow = patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=scanpath_color, alpha=0.2)
+            arrow = patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
             arrows.append(arrow)
             ax.add_patch(arrow)
 
         ax.axis('off')
         plt.show()
-        plt.close()
 
 def load_stimuli(item, stimuli_path):
     stimuli_file = stimuli_path / (item + '.mat')
