@@ -3,6 +3,7 @@ from pathlib import Path
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 def plot_scanpath(img, fixs_list):
     for fixs in fixs_list:
@@ -15,23 +16,27 @@ def plot_scanpath(img, fixs_list):
         cir_rad_min, cir_rad_max = 30, 60
         rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
 
-        for i in range(len(xs)):
-            if i > 0:
-                plt.arrow(xs[i - 1], ys[i - 1], xs[i] - xs[i - 1], ys[i] - ys[i - 1], width=3, color=scanpath_color, alpha=0.2)
-
-        for i in range(len(xs)):
-            if i == 0:
-                face_color = initial_color
-            else:
-                face_color = scanpath_color
-            cir_rad = int(25 + rad_per_T * (ts[i] - ts.min()))
-            circle  = plt.Circle((xs[i], ys[i]),
-                                radius=cir_rad,
-                                edgecolor='red',
-                                facecolor=face_color,
-                                alpha=0.2)
+        circles = []
+        for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
+            radius = int(25 + rad_per_T * (t - ts.min()))
+            face_color = initial_color if i == 0 else scanpath_color
+            circle = patches.Circle((x, y),
+                                    radius=radius,
+                                    edgecolor='red',
+                                    facecolor=face_color,
+                                    alpha=0.2)
             ax.add_patch(circle)
-            plt.annotate("{}".format(i + 1), xy=(xs[i], ys[i] + 3), fontsize=10, ha="center", va="center")
+            circle_ann = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center")
+            circles.append((circle, circle_ann))
+
+        # plot the arrows connecting the circles
+        arrows = []
+        for i in range(len(circles) - 1):
+            x1, y1 = circles[i][0].center
+            x2, y2 = circles[i + 1][0].center
+            arrow = patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=scanpath_color, alpha=0.2)
+            arrows.append(arrow)
+            ax.add_patch(arrow)
 
         ax.axis('off')
         plt.show()
