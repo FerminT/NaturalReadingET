@@ -17,7 +17,7 @@ def plot_scanpath(img, fixs_list):
 
         for i in range(len(xs)):
             if i > 0:
-                plt.arrow(xs[i - 1], ys[i - 1], xs[i] - xs[i - 1], ys[i] - ys[i - 1], width=3, color=scanpath_color, alpha=0.5)
+                plt.arrow(xs[i - 1], ys[i - 1], xs[i] - xs[i - 1], ys[i] - ys[i - 1], width=3, color=scanpath_color, alpha=0.2)
 
         for i in range(len(xs)):
             if i == 0:
@@ -29,7 +29,7 @@ def plot_scanpath(img, fixs_list):
                                 radius=cir_rad,
                                 edgecolor='red',
                                 facecolor=face_color,
-                                alpha=0.5)
+                                alpha=0.2)
             ax.add_patch(circle)
             plt.annotate("{}".format(i + 1), xy=(xs[i], ys[i] + 3), fontsize=10, ha="center", va="center")
 
@@ -48,10 +48,10 @@ def load_stimuli_screen(screenid, stimuli):
     return stimuli['screens'][screenid - 1]['image']
 
 def load_screen_fixations(screenid, subjitem_path, dataformat='pkl'):
-    screen_path = subjitem_path / dataformat / ('screen_' + str(screenid))
-    fixations_files  = screen_path.glob('fixations*.%c'%dataformat)
+    screen_path = subjitem_path / ('screen_' + str(screenid))
+    fixations_files  = screen_path.glob('fixations*.%s'%dataformat)
     screen_fixations = [pd.read_pickle(fix_file) for fix_file in fixations_files]
-    if screen_fixations.isempty():
+    if not screen_fixations:
         raise ValueError('No fixations found for screen ' + str(screenid) + ' in ' + str(subjitem_path))
     return screen_fixations
 
@@ -59,14 +59,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stimuli_path', type=str, default='Stimuli')
     parser.add_argument('--data_path', type=str, default='Data/raw')
+    parser.add_argument('--data_format', type=str, default='pkl')
     parser.add_argument('--subj', type=str, required=True)
     parser.add_argument('--item', type=str, required=True)
     parser.add_argument('--screenid', type=int, default=1)
     args = parser.parse_args()
 
-    subjitem_path = Path(args.data_path) / args.subj / args.item
+    subjitem_path = Path(args.data_path) / args.subj / args.data_format / args.item
 
-    stimuli = load_stimuli(args.item, args.stimuli_path)
+    stimuli = load_stimuli(args.item, Path(args.stimuli_path))
     screen  = load_stimuli_screen(args.screenid, stimuli)
     fixations = load_screen_fixations(args.screenid, subjitem_path)
     
