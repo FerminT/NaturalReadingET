@@ -11,12 +11,10 @@ def plot_scanpath(img, fixs_list, interactive=True):
         xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
         fig, ax = plt.subplots()
         ax.imshow(img, cmap=mpl.colormaps['gray'])
-        color_map = mpl.colormaps['rainbow']
-        colors = color_map(np.linspace(0, 1, xs.shape[0]))
         
         cir_rad_min, cir_rad_max = 10, 70
         rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
-
+        colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
         circles, circles_anns = [], []
         for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
             radius = int(10 + rad_per_T * (t - ts.min()))
@@ -30,87 +28,72 @@ def plot_scanpath(img, fixs_list, interactive=True):
 
         arrows = []
         for i in range(len(circles) - 1):
-            x1, y1 = circles[i].center
-            x2, y2 = circles[i + 1].center
-            arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
-            arrows.append(arrow)
-            ax.add_patch(arrow)
+            add_arrow(ax, circles[i].center, circles[i + 1].center, colors[i], arrows, i)
 
         lines = []
         removed_fixations = []
         if interactive:
-            latest_action = []
+            last_actions = []
             def onclick(event):
                 if event.button == 1:
-                    for i, circle in enumerate(circles):
-                        if circle.contains(event)[0]:
-                            # remove the circle from the plot
-                            latest_action.append((circle, i, circles_anns[i]))
-                            # remove the arrow pointing from and to the circle
-                            if i < len(circles) - 1:
-                                arrows[i].remove()
-                                arrows.pop(i)
-                            if i > 0:
-                                arrows[i - 1].remove()
-                                arrows.pop(i - 1)
-                            
-                            # add new arrow pointing from the previous circle to the next circle
-                            if i > 0 and i < len(circles) - 1:
-                                x1, y1 = circles[i - 1].center
-                                x2, y2 = circles[i + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
-                                arrows.insert(i - 1, arrow)
-                                ax.add_patch(arrow)
-                                
-                            circle.remove(), circles.pop(i)
-                            removed_fixations.append(int(circles_anns[i].get_text()))
-                            circles_anns[i].remove(), circles_anns.pop(i)
-
-                            fig.canvas.draw()
-                            break
+                    remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations)
                 elif event.button == 2:
-                    line = ax.axhline(y=event.ydata, color='black')
-                    lines.append(event.ydata)
-                    latest_action.append((line, len(lines) - 1, -1))
-                    fig.canvas.draw()
+                    add_hline(event, lines, last_actions, ax)
                 elif event.button == 3:
-                    if latest_action:
-                        last_action, index, ann = latest_action.pop()
-                        if isinstance(last_action, mpl.patches.Circle):
-                            circles.insert(index, last_action)
-                            circles_anns.insert(index, ann)
-                            removed_fixations.remove(int(ann.get_text()))
-                            ax.add_patch(last_action)
-                            ax.add_artist(ann)
-                            
-                            # remove the previously added arrow
-                            if index > 0 and index < len(circles) - 1:
-                                arrows[index - 1].remove()
-                                arrows.pop(index)
-                            # restore arrows pointing from and to the circle
-                            if index < len(circles) - 1:
-                                x1, y1 = circles[index].center
-                                x2, y2 = circles[index + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[index], alpha=0.2)
-                                arrows.insert(index, arrow)
-                                ax.add_patch(arrow)
-                            if index > 0:
-                                x1, y1 = circles[index - 1].center
-                                x2, y2 = circles[index].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[index], alpha=0.2)
-                                arrows.insert(index - 1, arrow)
-                                ax.add_patch(arrow)
-
-                            fig.canvas.draw()
-                        elif isinstance(last_action, mpl.lines.Line2D):
-                            last_action.remove()
-                            lines.pop(index)
-                            fig.canvas.draw()
-
+                    undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations)
+                fig.canvas.draw()
             fig.canvas.mpl_connect("button_press_event", onclick)
 
         ax.axis('off')
         plt.show()
+        lines.sort()
+
+def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations):
+    if last_actions:
+        last_action, index, ann = last_actions.pop()
+        if isinstance(last_action, mpl.patches.Circle):
+            circles.insert(index, last_action)
+            circles_anns.insert(index, ann)
+            removed_fixations.remove(int(ann.get_text()))
+            ax.add_patch(last_action), ax.add_artist(ann)
+            
+            if index > 0 and index < len(circles) - 1:
+                arrows[index - 1].remove(), arrows.pop(index - 1)
+            if index > 0:
+                add_arrow(ax, circles[index - 1].center, circles[index].center, colors[index], arrows, index - 1)
+            if index < len(circles) - 1:
+                add_arrow(ax, circles[index].center, circles[index + 1].center, colors[index], arrows, index)
+        elif isinstance(last_action, mpl.lines.Line2D):
+            last_action.remove()
+            lines.pop(index)
+
+def add_hline(event, lines, last_actions, ax):
+    line = ax.axhline(y=event.ydata, color='black')
+    lines.append(event.ydata)
+    last_actions.append((line, len(lines) - 1, -1))
+
+def remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations):
+    for i, circle in enumerate(circles):
+        if circle.contains(event)[0]:
+            last_actions.append((circle, i, circles_anns[i]))
+            if i < len(circles) - 1:
+                arrows[i].remove(), arrows.pop(i)
+            if i > 0:
+                arrows[i - 1].remove(), arrows.pop(i - 1)
+            if i > 0 and i < len(circles) - 1:
+                add_arrow(ax, circles[i - 1].center, circles[i + 1].center, colors[i], arrows, i - 1)
+                
+            circle.remove(), circles.pop(i)
+            removed_fixations.append(int(circles_anns[i].get_text()))
+            circles_anns[i].remove(), circles_anns.pop(i)
+            break
+
+def add_arrow(ax, p1, p2, color, arrows_list, index, alpha=0.2, width=0.05):
+    x1, y1 = p1
+    x2, y2 = p2
+    arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=width, color=color, alpha=alpha)
+    arrows_list.insert(index, arrow)
+    ax.add_patch(arrow)
 
 def load_stimuli(item, stimuli_path):
     stimuli_file = stimuli_path / (item + '.mat')
