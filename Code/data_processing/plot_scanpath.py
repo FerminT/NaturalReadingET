@@ -2,17 +2,16 @@ from scipy.io import loadmat
 from pathlib import Path
 import argparse
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.cm as cm
 import numpy as np
 
-def plot_scanpath(img, fixs_list):
+def plot_scanpath(img, fixs_list, interactive=True):
     for fixs in fixs_list:
         xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
         fig, ax = plt.subplots()
-        ax.imshow(img, cmap=plt.cm.gray)
-        color_map = cm.get_cmap('rainbow')
+        ax.imshow(img, cmap=mpl.colormaps['gray'])
+        color_map = mpl.colormaps['rainbow']
         colors = color_map(np.linspace(0, 1, xs.shape[0]))
         
         cir_rad_min, cir_rad_max = 10, 70
@@ -21,22 +20,87 @@ def plot_scanpath(img, fixs_list):
         circles = []
         for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
             radius = int(10 + rad_per_T * (t - ts.min()))
-            circle = patches.Circle((x, y),
+            circle = mpl.patches.Circle((x, y),
                                     radius=radius,
                                     color=colors[i],
                                     alpha=0.3)
             ax.add_patch(circle)
             circle_ann = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
-            circles.append((circle, circle_ann))
+            circles.append(circle)
 
         # plot the arrows connecting the circles
         arrows = []
         for i in range(len(circles) - 1):
-            x1, y1 = circles[i][0].center
-            x2, y2 = circles[i + 1][0].center
-            arrow = patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
+            x1, y1 = circles[i].center
+            x2, y2 = circles[i + 1].center
+            arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
             arrows.append(arrow)
             ax.add_patch(arrow)
+
+        lines = []
+        removed_circles = []
+        if interactive:
+            latest_action = []
+            def onclick(event):
+                inside_circle = False
+                # check if the click was within a circle
+                if event.button == 1:
+                    for i, circle in enumerate(circles):
+                        if circle.contains(event)[0]:
+                            inside_circle = True
+                            # remove the circle from the plot
+                            latest_action.append((circle, i))
+                            circle.remove()
+                            circles.remove(circle)
+                            removed_circles.append(circle)
+                            fig.canvas.draw()
+                            
+                            # update the arrows
+                            for i in range(len(arrows) - 1, -1, -1):
+                                arrows[i].remove()
+                                arrows.pop(i)
+                            
+                            for i in range(len(circles) - 1):
+                                x1, y1 = circles[i].center
+                                x2, y2 = circles[i + 1].center
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.5)
+                                arrows.append(arrow)
+                                ax.add_patch(arrow)
+
+                            fig.canvas.draw()
+                            break
+                    if not inside_circle:
+                        line = ax.axhline(y=event.ydata, color='black')
+                        lines.append(line)
+                        latest_action.append((line, None))
+                        fig.canvas.draw()
+                elif event.button == 3:
+                    if latest_action:
+                        last_action, index = latest_action.pop()
+                        if isinstance(last_action, mpl.patches.Circle):
+                            circles.insert(index, last_action)
+                            removed_circles.remove(last_action)
+                            ax.add_patch(last_action)
+                            # update the arrows
+                            for i in range(len(arrows) - 1, -1, -1):
+                                arrows[i].remove()
+                                arrows.pop(i)
+                            
+                            for i in range(len(circles) - 1):
+                                x1, y1 = circles[i].center
+                                x2, y2 = circles[i + 1].center
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.5)
+                                arrows.append(arrow)
+                                ax.add_patch(arrow)
+
+                            fig.canvas.draw()
+                        elif isinstance(last_action, mpl.lines.Line2D):
+                            last_action.remove()
+                            lines.remove(last_action)
+                            fig.canvas.draw()
+
+            # connect the onclick function to the plot
+            fig.canvas.mpl_connect("button_press_event", onclick)
 
         ax.axis('off')
         plt.show()
