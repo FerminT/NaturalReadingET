@@ -49,8 +49,8 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             # remove the circle from the plot
                             latest_action.append((circle, i, circles_anns[i]))
                             circle.remove(), circles.pop(i)
+                            removed_fixations.append(int(circles_anns[i].get_text()))
                             circles_anns[i].remove(), circles_anns.pop(i)
-                            removed_fixations.append(i)
                             fig.canvas.draw()
                             
                             # update the arrows
@@ -78,7 +78,7 @@ def plot_scanpath(img, fixs_list, interactive=True):
                         if isinstance(last_action, mpl.patches.Circle):
                             circles.insert(index, last_action)
                             circles_anns.insert(index, ann)
-                            removed_fixations.remove(index)
+                            removed_fixations.remove(int(ann.get_text()))
                             ax.add_patch(last_action)
                             ax.add_artist(ann)
                             # update the arrows
