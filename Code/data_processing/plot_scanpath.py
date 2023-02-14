@@ -48,22 +48,25 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             inside_circle = True
                             # remove the circle from the plot
                             latest_action.append((circle, i, circles_anns[i]))
+                            # remove the arrow pointing from and to the circle
+                            if i < len(circles) - 1:
+                                arrows[i].remove()
+                                arrows.pop(i)
+                            if i > 0:
+                                arrows[i - 1].remove()
+                                arrows.pop(i - 1)
+                            
+                            # add new arrow pointing from the previous circle to the next circle
+                            if i > 0 and i < len(circles) - 1:
+                                x1, y1 = circles[i - 1].center
+                                x2, y2 = circles[i + 1].center
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
+                                arrows.insert(i - 1, arrow)
+                                ax.add_patch(arrow)
+                                
                             circle.remove(), circles.pop(i)
                             removed_fixations.append(int(circles_anns[i].get_text()))
                             circles_anns[i].remove(), circles_anns.pop(i)
-                            fig.canvas.draw()
-                            
-                            # update the arrows
-                            for i in range(len(arrows) - 1, -1, -1):
-                                arrows[i].remove()
-                                arrows.pop(i)
-                            
-                            for i in range(len(circles) - 1):
-                                x1, y1 = circles[i].center
-                                x2, y2 = circles[i + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
-                                arrows.append(arrow)
-                                ax.add_patch(arrow)
 
                             fig.canvas.draw()
                             break
@@ -81,16 +84,23 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             removed_fixations.remove(int(ann.get_text()))
                             ax.add_patch(last_action)
                             ax.add_artist(ann)
-                            # update the arrows
-                            for i in range(len(arrows) - 1, -1, -1):
-                                arrows[i].remove()
-                                arrows.pop(i)
                             
-                            for i in range(len(circles) - 1):
-                                x1, y1 = circles[i].center
-                                x2, y2 = circles[i + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
-                                arrows.append(arrow)
+                            # remove the previously added arrow
+                            if index > 0 and index < len(circles) - 1:
+                                arrows[index - 1].remove()
+                                arrows.pop(index)
+                            # restore arrows pointing from and to the circle
+                            if index < len(circles) - 1:
+                                x1, y1 = circles[index].center
+                                x2, y2 = circles[index + 1].center
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[index], alpha=0.2)
+                                arrows.insert(index, arrow)
+                                ax.add_patch(arrow)
+                            if index > 0:
+                                x1, y1 = circles[index - 1].center
+                                x2, y2 = circles[index].center
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[index], alpha=0.2)
+                                arrows.insert(index - 1, arrow)
                                 ax.add_patch(arrow)
 
                             fig.canvas.draw()
@@ -103,8 +113,6 @@ def plot_scanpath(img, fixs_list, interactive=True):
 
         ax.axis('off')
         plt.show()
-        print(removed_fixations)
-        print(lines)
 
 def load_stimuli(item, stimuli_path):
     stimuli_file = stimuli_path / (item + '.mat')
