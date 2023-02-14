@@ -41,11 +41,9 @@ def plot_scanpath(img, fixs_list, interactive=True):
         if interactive:
             latest_action = []
             def onclick(event):
-                inside_circle = False
                 if event.button == 1:
                     for i, circle in enumerate(circles):
                         if circle.contains(event)[0]:
-                            inside_circle = True
                             # remove the circle from the plot
                             latest_action.append((circle, i, circles_anns[i]))
                             # remove the arrow pointing from and to the circle
@@ -70,11 +68,11 @@ def plot_scanpath(img, fixs_list, interactive=True):
 
                             fig.canvas.draw()
                             break
-                    if not inside_circle:
-                        line = ax.axhline(y=event.ydata, color='black')
-                        lines.append(event.ydata)
-                        latest_action.append((line, len(lines) - 1, -1))
-                        fig.canvas.draw()
+                elif event.button == 2:
+                    line = ax.axhline(y=event.ydata, color='black')
+                    lines.append(event.ydata)
+                    latest_action.append((line, len(lines) - 1, -1))
+                    fig.canvas.draw()
                 elif event.button == 3:
                     if latest_action:
                         last_action, index, ann = latest_action.pop()
