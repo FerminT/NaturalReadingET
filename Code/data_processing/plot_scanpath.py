@@ -17,7 +17,7 @@ def plot_scanpath(img, fixs_list, interactive=True):
         cir_rad_min, cir_rad_max = 10, 70
         rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
 
-        circles = []
+        circles, circles_anns = [], []
         for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
             radius = int(10 + rad_per_T * (t - ts.min()))
             circle = mpl.patches.Circle((x, y),
@@ -25,10 +25,9 @@ def plot_scanpath(img, fixs_list, interactive=True):
                                     color=colors[i],
                                     alpha=0.3)
             ax.add_patch(circle)
-            circle_ann = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
-            circles.append(circle)
+            circle_anns = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
+            circles.append(circle), circles_anns.append(circle_anns)
 
-        # plot the arrows connecting the circles
         arrows = []
         for i in range(len(circles) - 1):
             x1, y1 = circles[i].center
@@ -38,21 +37,20 @@ def plot_scanpath(img, fixs_list, interactive=True):
             ax.add_patch(arrow)
 
         lines = []
-        removed_circles = []
+        removed_fixations = []
         if interactive:
             latest_action = []
             def onclick(event):
                 inside_circle = False
-                # check if the click was within a circle
                 if event.button == 1:
                     for i, circle in enumerate(circles):
                         if circle.contains(event)[0]:
                             inside_circle = True
                             # remove the circle from the plot
-                            latest_action.append((circle, i))
-                            circle.remove()
-                            circles.remove(circle)
-                            removed_circles.append(circle)
+                            latest_action.append((circle, i, circles_anns[i]))
+                            circle.remove(), circles.pop(i)
+                            circles_anns[i].remove(), circles_anns.pop(i)
+                            removed_fixations.append(i)
                             fig.canvas.draw()
                             
                             # update the arrows
@@ -63,7 +61,7 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             for i in range(len(circles) - 1):
                                 x1, y1 = circles[i].center
                                 x2, y2 = circles[i + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.5)
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
                                 arrows.append(arrow)
                                 ax.add_patch(arrow)
 
@@ -71,16 +69,18 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             break
                     if not inside_circle:
                         line = ax.axhline(y=event.ydata, color='black')
-                        lines.append(line)
-                        latest_action.append((line, None))
+                        lines.append(event.ydata)
+                        latest_action.append((line, len(lines) - 1, -1))
                         fig.canvas.draw()
                 elif event.button == 3:
                     if latest_action:
-                        last_action, index = latest_action.pop()
+                        last_action, index, ann = latest_action.pop()
                         if isinstance(last_action, mpl.patches.Circle):
                             circles.insert(index, last_action)
-                            removed_circles.remove(last_action)
+                            circles_anns.insert(index, ann)
+                            removed_fixations.remove(index)
                             ax.add_patch(last_action)
+                            ax.add_artist(ann)
                             # update the arrows
                             for i in range(len(arrows) - 1, -1, -1):
                                 arrows[i].remove()
@@ -89,21 +89,22 @@ def plot_scanpath(img, fixs_list, interactive=True):
                             for i in range(len(circles) - 1):
                                 x1, y1 = circles[i].center
                                 x2, y2 = circles[i + 1].center
-                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.5)
+                                arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=0.05, color=colors[i], alpha=0.2)
                                 arrows.append(arrow)
                                 ax.add_patch(arrow)
 
                             fig.canvas.draw()
                         elif isinstance(last_action, mpl.lines.Line2D):
                             last_action.remove()
-                            lines.remove(last_action)
+                            lines.pop(index)
                             fig.canvas.draw()
 
-            # connect the onclick function to the plot
             fig.canvas.mpl_connect("button_press_event", onclick)
 
         ax.axis('off')
         plt.show()
+        print(removed_fixations)
+        print(lines)
 
 def load_stimuli(item, stimuli_path):
     stimuli_file = stimuli_path / (item + '.mat')
