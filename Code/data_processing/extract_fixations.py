@@ -88,6 +88,8 @@ def divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, tri
         fin_time = trial_msgs[trial_msgs['text'].str.contains('fin')].iloc[i]['time']
         screen_fixations = trial_fix[(trial_fix['tStart'] > ini_time) & (trial_fix['tEnd'] < fin_time)]
         screen_saccades  = trial_sacc[(trial_sacc['tStart'] > ini_time) & (trial_sacc['tEnd'] < fin_time)]
+        if screen_fixations.empty: continue
+        
         screen_path = trial_path / f'screen_{screen_id}'
         if not screen_path.exists(): screen_path.mkdir()
         fixations_files = list(sorted(screen_path.glob('fixations*.pkl')))
