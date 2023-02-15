@@ -4,40 +4,45 @@ from scipy.io import loadmat
 import argparse
 import shutil
 import pandas as pd
+import utils
 
-def parse_rawdata(datapath, participant=None, ascii_location='asc', save_path='pkl'):
-    participants = get_dirs(datapath, participant)
-    for participant_path in participants:
-        out_path = participant_path / save_path
-        if not out_path.exists(): out_path.mkdir()
-        save_profile(participant_path, out_path)
-        mat_files = participant_path.glob('*.mat')
-        for mat_file in mat_files:
-            if mat_file.name == 'Test.mat' or mat_file.name == 'metadata.mat':
-                continue
-            print(f'Processing {mat_file}')
-            trial_metadata = loadmat(str(mat_file), simplify_cells=True)['trial']
-            trial_path     = out_path / mat_file.name.split('.')[0]
-            if trial_path.exists(): shutil.rmtree(trial_path)
-            trial_path.mkdir()
-            trial_sequence, _, _ = save_to_pickle(trial_metadata, trial_path)
-            
-            stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-            trial_msgs, trial_fix, trial_sacc = get_eyetracking_data(participant_path / ascii_location, subj_name, stimuli_index)
-            trial_msgs.to_pickle(trial_path / 'et_messages.pkl')
-            
-            save_validation_fixations(trial_msgs, trial_fix, trial_path)
-            divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, trial_path, subj_name)
+""" EyeLink's EDF files are assumed to having been converted to ASCII with edf2asc.exe.
+    This script extracts fixations from those files and proceeds to divide them by screen for each trial.
+    Only one eye is used for fixation extraction, and the eye is chosen based on the calibration results. 
+    Data structures consist of dataframes in pickle format."""
 
-def get_dirs(datapath, participant):
-    if participant:
-        dirs = [datapath / participant]
-        if not dirs[0].exists():
-            raise FileNotFoundError(f'Participant {participant} not found')
-    else:
-        dirs = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
-        
-    return dirs
+def parse_item(item, participant_path, ascii_path, save_path):
+    print(f'Processing {item}')
+    trial_metadata = loadmat(str(item), simplify_cells=True)['trial']
+    trial_path     = save_path / item.name.split('.')[0]
+    if trial_path.exists(): shutil.rmtree(trial_path)
+    trial_path.mkdir()
+    trial_sequence, _, _ = utils.save_structs(trial_metadata['sequence'], 
+                                              trial_metadata['questions_answers'], 
+                                              trial_metadata['synonyms_answers'], 
+                                              trial_path)
+    
+    stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
+    trial_msgs, trial_fix, trial_sacc = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
+    trial_msgs.to_pickle(trial_path / 'et_messages.pkl')
+    
+    save_validation_fixations(trial_msgs, trial_fix, trial_path)
+    divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, trial_path, subj_name)
+
+def parse_participantdata(datapath, participant, ascii_path, save_path):
+    participant_path = datapath / participant
+    out_path = save_path / participant
+    if not out_path.exists(): out_path.mkdir(parents=True)
+    save_profile(participant_path, out_path)
+    items = participant_path.glob('*.mat')
+    for item in items:
+        if item.name == 'Test.mat' or item.name == 'metadata.mat': continue
+        parse_item(item, participant_path, ascii_path, out_path)    
+
+def parse_rawdata(datapath, ascii_path, save_path):
+    participants = utils.get_dirs(datapath)
+    for participant in participants:
+        parse_participantdata(datapath, participant.name, ascii_path, save_path)
 
 def save_profile(participant_path, save_path):
     metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
@@ -103,51 +108,29 @@ def divide_data_by_screen(trial_sequence, trial_msgs, trial_fix, trial_sacc, tri
             sacc_file = screen_path / 'saccades.pkl'
             
         screen_fixations.to_pickle(fix_file), screen_saccades.to_pickle(sacc_file)
-
-def save_to_pickle(trial_metadata, trial_path):
-    trial_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
-    trial_answers  = pd.DataFrame(trial_metadata['questions_answers'])
-    trial_words    = pd.DataFrame(trial_metadata['synonyms_answers'])
-    trial_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
-    trial_answers.to_pickle(trial_path / 'answers.pkl')
-    trial_words.to_pickle(trial_path / 'words.pkl')
-    
-    return trial_sequence, trial_answers, trial_words
-
+        
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
     _, dfMsg, dfFix, dfSacc, _, _ = ParseEyeLinkAsc(asc_file, verbose=False)
     binocular = len(dfFix['eye'].unique()) > 1
     if binocular:
-        best_eye = find_besteye(dfMsg)
+        best_eye = utils.find_besteye(dfMsg)
         dfFix    = dfFix[dfFix['eye'] == best_eye]
         dfSacc   = dfSacc[dfSacc['eye'] == best_eye]
-    dfMsg = filter_msgs(dfMsg)
+    dfMsg = utils.filter_msgs(dfMsg)
     
     return dfMsg, dfFix, dfSacc
 
-def find_besteye(dfMsg, default='R'):
-    val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
-    if 'ABORTED' in val_msgs[0][1]: return default
-    
-    left_index  = int('LEFT' in val_msgs[1][1])
-    right_index = 1 - left_index
-    lefterror_index, righterror_index = val_msgs[left_index][1].split().index('ERROR'), val_msgs[right_index][1].split().index('ERROR')
-    left_error  = float(val_msgs[left_index][1].split()[lefterror_index + 1])
-    right_error = float(val_msgs[right_index][1].split()[righterror_index + 1])
-    
-    return 'L' if left_error < right_error else 'R'
-
-def filter_msgs(dfMsg, cutout='validation'):
-    first_index = dfMsg.index[dfMsg['text'].str.contains(cutout)].tolist()[0]
-    
-    return dfMsg[first_index:]
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Extract fixations from EyeLink .asc file')
-    parser.add_argument('-path', type=str, help='Path where participants data is stored')
+    parser = argparse.ArgumentParser(description='Extract data from EyeLink .asc files and save them to .pkl')
+    parser.add_argument('--path', type=str, default='Data/raw', help='Path where participants data is stored')
+    parser.add_argument('--ascii_path', type=str, default='asc', help='Path where .asc files are stored in a participants folder')
+    parser.add_argument('--save_path', type=str, default='Data/processed/per_participant', help='Path where to save the processed data')
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()
 
     datapath = Path(args.path)
-    parse_rawdata(datapath, args.subj)
+    if not args.subj:
+        parse_rawdata(datapath, args.ascii_path, args.save_path)
+    else:
+        parse_participantdata(datapath, args.subj, args.ascii_path, args.save_path)
