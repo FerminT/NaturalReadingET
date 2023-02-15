@@ -6,47 +6,52 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_scanpath(img, fixs_list, interactive=True):
-    for fixs in fixs_list:
-        xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
+def plot_scanpath(img, lst_fixs, interactive=True):
+    for fixs in lst_fixs:
         fig, ax = plt.subplots()
-        ax.imshow(img, cmap=mpl.colormaps['gray'])
-        
-        cir_rad_min, cir_rad_max = 10, 70
-        rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
-        colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
-        circles, circles_anns = [], []
-        for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
-            radius = int(10 + rad_per_T * (t - ts.min()))
-            circle = mpl.patches.Circle((x, y),
-                                    radius=radius,
-                                    color=colors[i],
-                                    alpha=0.3)
-            ax.add_patch(circle)
-            circle_anns = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
-            circles.append(circle), circles_anns.append(circle_anns)
-
-        arrows = []
-        for i in range(len(circles) - 1):
-            add_arrow(ax, circles[i].center, circles[i + 1].center, colors[i], arrows, i)
-
-        lines = []
-        removed_fixations = []
-        if interactive:
-            last_actions = []
-            def onclick(event):
-                if event.button == 1:
-                    remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations)
-                elif event.button == 2:
-                    add_hline(event, lines, last_actions, ax)
-                elif event.button == 3:
-                    undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations)
-                fig.canvas.draw()
-            fig.canvas.mpl_connect("button_press_event", onclick)
-
-        ax.axis('off')
+        xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
+        draw_scanpath(img, xs, ys, ts, fig, ax, interactive)
         plt.show()
-        lines.sort()
+
+def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
+    """ Given a scanpath, draw on the img using the fig and axes """
+    """ The duration of each fixation is used to determine the size of each circle """
+    ax.imshow(img, cmap=mpl.colormaps['gray'])
+    
+    cir_rad_min, cir_rad_max = 10, 70
+    rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
+    colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
+    circles, circles_anns = [], []
+    for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
+        radius = int(10 + rad_per_T * (t - ts.min()))
+        circle = mpl.patches.Circle((x, y),
+                                radius=radius,
+                                color=colors[i],
+                                alpha=0.3)
+        ax.add_patch(circle)
+        circle_anns = plt.annotate("{}".format(i + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
+        circles.append(circle), circles_anns.append(circle_anns)
+
+    arrows = []
+    for i in range(len(circles) - 1):
+        add_arrow(ax, circles[i].center, circles[i + 1].center, colors[i], arrows, i)
+
+    lines = []
+    removed_fixations = []
+    if interactive:
+        last_actions = []
+        def onclick(event):
+            if event.button == 1:
+                remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations)
+            elif event.button == 2:
+                add_hline(event, lines, last_actions, ax)
+            elif event.button == 3:
+                undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations)
+            fig.canvas.draw()
+        fig.canvas.mpl_connect("button_press_event", onclick)
+
+    ax.axis('off')
+    lines.sort()
 
 def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations):
     if last_actions:
