@@ -1,0 +1,56 @@
+import argparse
+import utils
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from plot_scanpath import draw_scanpath
+from pathlib import Path
+
+def plot_trial(stimuli, data_path):
+    screens, screens_fixations = load_trial(stimuli, data_path)
+    screens_sequence   = utils.load_screensequence(data_path)
+    sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
+    fig, ax = plt.subplots()
+    state = {'sequence_pos': 0}
+    current_seq = state['sequence_pos']
+    current_screenid = screens_sequence[current_seq]
+    xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
+    draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, interactive=False)
+            
+    fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_fixations, ax, fig))
+    plt.show()
+    
+def update_figure(event, state, screens, screens_sequence, sequence_fixations, ax, fig):
+    prev_seq = state['sequence_pos']
+    if event.key == 'right':
+        if prev_seq < len(screens_sequence) - 1:
+            state['sequence_pos'] += 1
+    elif event.key == 'left':
+        if prev_seq > 0:
+            state['sequence_pos'] -= 1
+    current_seq = state['sequence_pos']
+    if prev_seq != current_seq:
+        current_screenid = screens_sequence[current_seq]
+        xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
+        draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, interactive=False)
+    
+def load_trial(stimuli, trial_path):
+    screens_lst = list(range(1, len(stimuli['screens']) + 1))
+    screens, screens_fixations = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
+    for screenid in screens_lst:
+        screens[screenid] = utils.load_stimuli_screen(screenid, stimuli)
+        screens_fixations[screenid] = utils.load_screen_fixations(screenid, trial_path)
+    return screens, screens_fixations
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stimuli_path', type=str, default='Stimuli')
+    parser.add_argument('--data_path', type=str, default='Data/raw')
+    parser.add_argument('--data_format', type=str, default='pkl')
+    parser.add_argument('--subj', type=str, required=True)
+    parser.add_argument('--item', type=str, required=True)
+    args = parser.parse_args()
+    
+    data_path = Path(args.data_path) / args.subj / args.data_format / args.item
+    stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path))
+    
+    plot_trial(stimuli, data_path)

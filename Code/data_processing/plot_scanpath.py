@@ -1,5 +1,5 @@
 from pathlib import Path
-from utils import load_screen_fixations, load_stimuli, load_stimuli_screen
+import utils
 import argparse
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -8,13 +8,14 @@ import numpy as np
 def plot_scanpath(img, lst_fixs, interactive=True):
     for fixs in lst_fixs:
         fig, ax = plt.subplots()
-        xs, ys, ts = fixs['xAvg'].to_numpy(dtype=int), fixs['yAvg'].to_numpy(dtype=int), fixs['duration'].to_numpy()
+        xs, ys, ts = utils.get_fixations(fixs)
         draw_scanpath(img, xs, ys, ts, fig, ax, interactive)
         plt.show()
 
 def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
+    ax.clear()
     ax.imshow(img, cmap=mpl.colormaps['gray'])
     
     cir_rad_min, cir_rad_max = 10, 70
@@ -50,6 +51,7 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
         fig.canvas.mpl_connect("button_press_event", onclick)
 
     ax.axis('off')
+    fig.canvas.draw()
     lines.sort()
 
 def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations):
@@ -111,8 +113,8 @@ if __name__ == '__main__':
 
     subjitem_path = Path(args.data_path) / args.subj / args.data_format / args.item
 
-    stimuli = load_stimuli(args.item, Path(args.stimuli_path))
-    screen  = load_stimuli_screen(args.screenid, stimuli)
-    fixations = load_screen_fixations(args.screenid, subjitem_path)
+    stimuli = utils.load_stimuli(args.item, Path(args.stimuli_path))
+    screen  = utils.load_stimuli_screen(args.screenid, stimuli)
+    fixations = utils.load_screen_fixations(args.screenid, subjitem_path)
     
     plot_scanpath(screen, fixations)

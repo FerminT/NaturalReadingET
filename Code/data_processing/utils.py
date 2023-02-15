@@ -1,6 +1,13 @@
 from scipy.io import loadmat
 import pandas as pd
 
+def get_fixations(df_fix):
+    return df_fix['xAvg'].to_numpy(dtype=int), df_fix['yAvg'].to_numpy(dtype=int), df_fix['duration'].to_numpy()
+
+def load_screensequence(data_path, filename='screen_sequence.pkl'):
+    screen_sequence = pd.read_pickle(data_path / filename)['currentscreenid'].to_numpy()
+    return screen_sequence
+
 def load_stimuli(item, stimuli_path):
     stimuli_file = stimuli_path / (item + '.mat')
     if not stimuli_file.exists():
