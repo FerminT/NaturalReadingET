@@ -30,15 +30,11 @@ def load_screen_fixations(screenid, subjitem_path):
         raise ValueError('No fixations found for screen ' + str(screenid) + ' in ' + str(subjitem_path))
     return screen_fixations
 
-def save_structs(sequence, answers, words, trial_path):
-    df_sequence = pd.DataFrame.from_records(sequence)
-    df_answers  = pd.DataFrame(answers)
-    df_words    = pd.DataFrame(words)
-    df_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
-    df_answers.to_pickle(trial_path / 'answers.pkl')
-    df_words.to_pickle(trial_path / 'words.pkl')
-    
-    return df_sequence, df_answers, df_words
+def save_structs(et_messages, screen_sequence, answers, words, trial_path):
+    et_messages.to_pickle(trial_path / 'et_messages.pkl')
+    screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
+    answers.to_pickle(trial_path / 'answers.pkl')
+    words.to_pickle(trial_path / 'words.pkl')
 
 def find_besteye(dfMsg, default='R'):
     val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
