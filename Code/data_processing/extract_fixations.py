@@ -110,7 +110,8 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, tr
         else:
             fix_file  = screen_path / 'fixations.pkl'
             sacc_file = screen_path / 'saccades.pkl'
-            
+        
+        screen_fixations.reset_index(), screen_saccades.reset_index()
         screen_fixations.to_pickle(fix_file), screen_saccades.to_pickle(sacc_file)
         
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
