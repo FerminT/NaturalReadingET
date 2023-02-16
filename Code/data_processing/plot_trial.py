@@ -44,6 +44,7 @@ def load_trial(stimuli, trial_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli')
     parser.add_argument('--data_path', type=str, default='Data/raw')
     parser.add_argument('--data_format', type=str, default='pkl')
@@ -52,6 +53,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     data_path = Path(args.data_path) / args.subj / args.data_format / args.item
-    stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path))
+    stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path), Path(args.config))
     
     plot_trial(stimuli, data_path)

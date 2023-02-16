@@ -12,11 +12,14 @@ def load_screensequence(data_path, filename='screen_sequence.pkl'):
     screen_sequence = pd.read_pickle(data_path / filename)['currentscreenid'].to_numpy()
     return screen_sequence
 
-def load_stimuli(item, stimuli_path):
+def load_stimuli(item, stimuli_path, config_file):
     stimuli_file = stimuli_path / (item + '.mat')
     if not stimuli_file.exists():
         raise ValueError('Stimuli file does not exist: ' + str(stimuli_file))
     stimuli = loadmat(str(stimuli_file), simplify_cells=True)
+    config  = loadmat(str(config_file), simplify_cells=True)['config']
+    stimuli['config'] = config
+    
     return stimuli
 
 def load_stimuli_screen(screenid, stimuli):
@@ -30,14 +33,12 @@ def load_screen_fixations(screenid, subjitem_path):
         raise ValueError('No fixations found for screen ' + str(screenid) + ' in ' + str(subjitem_path))
     return screen_fixations
 
-def load_screen_linescoords(screenid, stimuli, default_linespacing=55):
+def load_screen_linescoords(screenid, stimuli):
+    linespacing = stimuli['config']['linespacing']
     # line['bbox'] = [x1, y1, x2, y2]
-    screen_linescoords = [line['bbox'][1] for line in stimuli['lines'] if line['screen'] == screenid]
+    screen_linescoords = [line['bbox'][1] - (linespacing // 2) for line in stimuli['lines'] if line['screen'] == screenid]
     # Add additional line to enclose the last line
-    if len(screen_linescoords) > 1:
-        screen_linescoords.append(screen_linescoords[-1] + (screen_linescoords[-1] - screen_linescoords[-2]))
-    else:
-        screen_linescoords.append(screen_linescoords[-1] + default_linespacing)
+    screen_linescoords.append(screen_linescoords[-1] + linespacing)
     return screen_linescoords
 
 def save_structs(et_messages, screen_sequence, answers, words, trial_path):
