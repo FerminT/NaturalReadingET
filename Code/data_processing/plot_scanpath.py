@@ -5,23 +5,24 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_scanpath(img, lst_fixs, interactive=True):
+def plot_scanpath(img, lst_fixs, editable=True):
     for fixs in lst_fixs:
         fig, ax = plt.subplots()
-        xs, ys, ts = utils.get_fixations(fixs)
-        draw_scanpath(img, xs, ys, ts, fig, ax, interactive)
+        draw_scanpath(img, fixs, fig, ax, editable)
         plt.show()
 
-def draw_scanpath(img, xs, ys, ts, fig, ax, hlines=None, interactive=True):
+def draw_scanpath(img, df_fix, fig, ax, hlines=None, editable=True):
+    """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
     ax.clear()
     ax.imshow(img, cmap=mpl.colormaps['gray'])
-    
-    cir_rad_min, cir_rad_max = 10, 70
-    rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
+
+    xs, ys, ts = utils.get_fixations(df_fix)
     colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
     circles, circles_anns = [], []
+    cir_rad_min, cir_rad_max = 10, 70
+    rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
     for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
         radius = int(10 + rad_per_T * (t - ts.min()))
         circle = mpl.patches.Circle((x, y),
@@ -42,7 +43,7 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, hlines=None, interactive=True):
             line = ax.axhline(y=line_coord, color='black', lw=0.5)
             drawn_hlines.append(line)
     removed_fixations = []
-    if interactive:
+    if editable:
         last_actions = []
         def onclick(event):
             if event.button == 1:

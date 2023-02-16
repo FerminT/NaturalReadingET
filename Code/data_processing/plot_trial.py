@@ -9,30 +9,38 @@ def plot_trial(stimuli, data_path):
     screens, screens_fixations, screens_lines = load_trial(stimuli, data_path)
     screens_sequence   = utils.load_screensequence(data_path)
     sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
+    # dict indexed by sequence index, containing screenid, fixations and lines, to allow editing
+    sequence_states = build_sequence_states(sequence_fixations, screens_sequence, screens_lines)
+    
+    state = {'sequence_index': 0}
     fig, ax = plt.subplots()
-    state = {'sequence_pos': 0}
-    current_seq = state['sequence_pos']
-    current_screenid = screens_sequence[current_seq]
-    xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
-    draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, hlines=screens_lines[current_screenid], interactive=False)
+    
+    current_seq = state['sequence_index']
+    screenid, fixations, lines = sequence_states[current_seq]['screenid'], sequence_states[current_seq]['fixations'], sequence_states[current_seq]['lines']
+    draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=False)
 
-    fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_lines, screens_sequence, sequence_fixations, ax, fig))
+    fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig))
     plt.show()
     
-def update_figure(event, state, screens, screens_lines, screens_sequence, sequence_fixations, ax, fig):
-    prev_seq = state['sequence_pos']
+def update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig):
+    prev_seq = state['sequence_index']
     if event.key == 'right':
         if prev_seq < len(screens_sequence) - 1:
-            state['sequence_pos'] += 1
+            state['sequence_index'] += 1
     elif event.key == 'left':
         if prev_seq > 0:
-            state['sequence_pos'] -= 1
-    current_seq = state['sequence_pos']
+            state['sequence_index'] -= 1
+    current_seq = state['sequence_index']
     if prev_seq != current_seq:
-        current_screenid = screens_sequence[current_seq]
-        xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
-        draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, hlines=screens_lines[current_screenid], interactive=False)
-    
+        screenid, fixations, lines = sequence_states[current_seq]['screenid'], sequence_states[current_seq]['fixations'], sequence_states[current_seq]['lines']
+        draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=False)
+
+def build_sequence_states(sequence_fixations, screens_sequence, screens_lines):
+    seq_states = {}
+    for seq, screenid in enumerate(screens_sequence):
+        seq_states[seq] = {'screenid': screenid, 'fixations': sequence_fixations[seq], 'lines': screens_lines[screenid]}
+    return seq_states
+
 def load_trial(stimuli, trial_path):
     screens_lst = list(range(1, len(stimuli['screens']) + 1))
     screens, screens_fixations, screens_lines = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
