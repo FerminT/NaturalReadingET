@@ -39,7 +39,7 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, hlines=None, interactive=True):
     drawn_hlines = []
     if hlines:
         for line_coord in hlines:
-            line = ax.axhline(y=line_coord, color='black')
+            line = ax.axhline(y=line_coord, color='black', lw=0.5)
             drawn_hlines.append(line)
     removed_fixations = []
     if interactive:
@@ -48,7 +48,7 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, hlines=None, interactive=True):
             if event.button == 1:
                 remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations)
             elif event.button == 3:
-                undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations)
+                undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, hlines, removed_fixations)
             fig.canvas.draw()
         fig.canvas.mpl_connect("button_press_event", onclick)
 
