@@ -12,7 +12,7 @@ def plot_scanpath(img, lst_fixs, interactive=True):
         draw_scanpath(img, xs, ys, ts, fig, ax, interactive)
         plt.show()
 
-def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
+def draw_scanpath(img, xs, ys, ts, fig, ax, hlines=None, interactive=True):
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
     ax.clear()
@@ -36,15 +36,17 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
     for i in range(len(circles) - 1):
         add_arrow(ax, circles[i].center, circles[i + 1].center, colors[i], arrows, i)
 
-    lines = []
+    drawn_hlines = []
+    if hlines:
+        for line_coord in hlines:
+            line = ax.axhline(y=line_coord, color='black')
+            drawn_hlines.append(line)
     removed_fixations = []
     if interactive:
         last_actions = []
         def onclick(event):
             if event.button == 1:
                 remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, removed_fixations)
-            elif event.button == 2:
-                add_hline(event, lines, last_actions, ax)
             elif event.button == 3:
                 undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations)
             fig.canvas.draw()
@@ -52,7 +54,6 @@ def draw_scanpath(img, xs, ys, ts, fig, ax, interactive=True):
 
     ax.axis('off')
     fig.canvas.draw()
-    lines.sort()
 
 def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, removed_fixations):
     if last_actions:

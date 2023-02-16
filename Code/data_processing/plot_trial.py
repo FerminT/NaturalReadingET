@@ -6,7 +6,7 @@ from plot_scanpath import draw_scanpath
 from pathlib import Path
 
 def plot_trial(stimuli, data_path):
-    screens, screens_fixations = load_trial(stimuli, data_path)
+    screens, screens_fixations, screens_lines = load_trial(stimuli, data_path)
     screens_sequence   = utils.load_screensequence(data_path)
     sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
     fig, ax = plt.subplots()
@@ -14,12 +14,12 @@ def plot_trial(stimuli, data_path):
     current_seq = state['sequence_pos']
     current_screenid = screens_sequence[current_seq]
     xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
-    draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, interactive=False)
-            
-    fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_fixations, ax, fig))
+    draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, hlines=screens_lines[current_screenid], interactive=False)
+
+    fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_lines, screens_sequence, sequence_fixations, ax, fig))
     plt.show()
     
-def update_figure(event, state, screens, screens_sequence, sequence_fixations, ax, fig):
+def update_figure(event, state, screens, screens_lines, screens_sequence, sequence_fixations, ax, fig):
     prev_seq = state['sequence_pos']
     if event.key == 'right':
         if prev_seq < len(screens_sequence) - 1:
@@ -31,15 +31,16 @@ def update_figure(event, state, screens, screens_sequence, sequence_fixations, a
     if prev_seq != current_seq:
         current_screenid = screens_sequence[current_seq]
         xs, ys, ts = utils.get_fixations(sequence_fixations[current_seq])
-        draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, interactive=False)
+        draw_scanpath(screens[current_screenid], xs, ys, ts, fig, ax, hlines=screens_lines[current_screenid], interactive=False)
     
 def load_trial(stimuli, trial_path):
     screens_lst = list(range(1, len(stimuli['screens']) + 1))
-    screens, screens_fixations = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
+    screens, screens_fixations, screens_lines = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
     for screenid in screens_lst:
+        screens_lines[screenid] = utils.load_screen_linescoords(screenid, stimuli)
         screens[screenid] = utils.load_stimuli_screen(screenid, stimuli)
         screens_fixations[screenid] = utils.load_screen_fixations(screenid, trial_path)
-    return screens, screens_fixations
+    return screens, screens_fixations, screens_lines
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

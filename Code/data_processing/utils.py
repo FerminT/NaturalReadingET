@@ -30,6 +30,16 @@ def load_screen_fixations(screenid, subjitem_path):
         raise ValueError('No fixations found for screen ' + str(screenid) + ' in ' + str(subjitem_path))
     return screen_fixations
 
+def load_screen_linescoords(screenid, stimuli, default_linespacing=55):
+    # line['bbox'] = [x1, y1, x2, y2]
+    screen_linescoords = [line['bbox'][1] for line in stimuli['lines'] if line['screen'] == screenid]
+    # Add additional line to enclose the last line
+    if len(screen_linescoords) > 1:
+        screen_linescoords.append(screen_linescoords[-1] + (screen_linescoords[-1] - screen_linescoords[-2]))
+    else:
+        screen_linescoords.append(screen_linescoords[-1] + default_linespacing)
+    return screen_linescoords
+
 def save_structs(et_messages, screen_sequence, answers, words, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
