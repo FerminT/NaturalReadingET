@@ -1,5 +1,6 @@
 from scipy.io import loadmat
 import pandas as pd
+import shutil
 
 def get_dirs(datapath):
     dirs = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
@@ -11,6 +12,9 @@ def get_fixations(df_fix):
 def load_screensequence(data_path, filename='screen_sequence.pkl'):
     screen_sequence = pd.read_pickle(data_path / filename)['currentscreenid'].to_numpy()
     return screen_sequence
+
+def save_screensequence(screens_sequence, data_path, filename='screen_sequence.pkl'):
+    screens_sequence.to_pickle(data_path / filename)
 
 def load_stimuli(item, stimuli_path, config_file):
     stimuli_file = stimuli_path / (item + '.mat')
@@ -34,6 +38,7 @@ def load_screen_fixations(screenid, subjitem_path):
     return screen_fixations
 
 def load_screen_linescoords(screenid, stimuli):
+    # TODO: load lines if the file exists
     linespacing = stimuli['config']['linespacing']
     # line['bbox'] = [x1, y1, x2, y2]
     screen_linescoords = [line['bbox'][1] - (linespacing // 2) for line in stimuli['lines'] if line['screen'] == screenid]
@@ -41,6 +46,29 @@ def load_screen_linescoords(screenid, stimuli):
     screen_linescoords.append(screen_linescoords[-1] + linespacing)
     return screen_linescoords
 
+def save_trial(screens_fixations, screens_lines, del_seqindices, data_path):    
+    for screen_id in screens_fixations:
+        screen_path = data_path / ('screen_' + str(screen_id))
+        screen_fixations, screen_lines = screens_fixations[screen_id], screens_lines[screen_id]
+        if screen_path.exists(): shutil.rmtree(screen_path)
+        screen_path.mkdir()
+        
+        fix_filename   = 'fixations.pkl'
+        lines_filename = 'lines.pkl'
+        for fixations, lines in zip(screen_fixations, screen_lines):
+            fixations_files = list(sorted(screen_path.glob(f'{fix_filename}*')))
+            # Account for repeated screens (i.e. returning to it)
+            if len(fixations_files):
+                fix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
+                lines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
+            if len(fixations) > 0:
+                fixations.to_pickle(screen_path / fix_filename)
+                lines.to_pickle(screen_path / lines_filename)
+                
+    screen_sequence = load_screensequence(data_path)
+    screen_sequence.drop(del_seqindices, inplace=True)
+    save_screensequence(screen_sequence, data_path)
+    
 def save_structs(et_messages, screen_sequence, answers, words, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')

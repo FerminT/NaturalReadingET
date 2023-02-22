@@ -1,8 +1,9 @@
 import argparse
 import utils
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from plot_scanpath import draw_scanpath
+from tkinter import messagebox
 from pathlib import Path
 
 def plot_trial(stimuli, data_path):
@@ -15,12 +16,26 @@ def plot_trial(stimuli, data_path):
     state = {'sequence_index': 0, 'cid': 0}
     fig, ax = plt.subplots()
     
-    current_seq = state['sequence_index']
-    screenid, fixations, lines = sequence_states[current_seq]['screenid'], sequence_states[current_seq]['fixations'], sequence_states[current_seq]['lines']
+    current_seqid = state['sequence_index']
+    screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
     state['cid'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
 
     fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig))
     plt.show()
+    
+    save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
+    if save_files:
+        # Screens sequence may change (e.g. if all fixations in a screen were deleted)
+        del_seqindeces = [seq_id for seq_id in sequence_states if len(sequence_states[seq_id]['fixations']) == 0]
+        screens_lst = list(range(1, len(stimuli['screens']) + 1))
+        screens_fixations, screens_lines = dict.fromkeys(screens_lst, []), dict.fromkeys(screens_lst, [])
+        for seq_id in sequence_states:
+            screenid = sequence_states[seq_id]['screenid']
+            screens_fixations[screenid].append(sequence_states[seq_id]['fixations'])
+            screens_lines[screenid].append(sequence_states[seq_id]['lines'])
+        utils.save_trial(screens_fixations, screens_lines, del_seqindeces, data_path)
+        messagebox.showinfo(title='Saved', message='Trial saved successfully')
+    
     
 def update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig):
     prev_seq = state['sequence_index']
@@ -28,9 +43,9 @@ def update_figure(event, state, screens, screens_sequence, sequence_states, ax, 
         state['sequence_index'] += 1
     elif event.key == 'left' and prev_seq > 0:
         state['sequence_index'] -= 1
-    current_seq = state['sequence_index']
-    if prev_seq != current_seq:
-        screenid, fixations, lines = sequence_states[current_seq]['screenid'], sequence_states[current_seq]['fixations'], sequence_states[current_seq]['lines']
+    current_seqid = state['sequence_index']
+    if prev_seq != current_seqid:
+        screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
         fig.canvas.mpl_disconnect(state['cid'])
         state['cid'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
 
