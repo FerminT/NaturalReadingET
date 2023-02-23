@@ -44,24 +44,54 @@ def draw_scanpath(img, df_fix, fig, ax, hlines=None, editable=False):
             line = ax.axhline(y=line_coord, color='black', lw=0.5)
             drawn_hlines.append(line)
 
-    cid = 0
+    cids = []
     if editable:
         last_actions = []
         def onclick(event):
             if event.button == 1:
-                remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, df_fix)
+                handle_click(event, drawn_hlines, circles, circles_anns, arrows, ax, colors, last_actions, hlines, df_fix)
             elif event.button == 3:
                 undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, hlines, df_fix)
             fig.canvas.draw()
-        cid = fig.canvas.mpl_connect("button_press_event", onclick)
+        cids.append(fig.canvas.mpl_connect('button_press_event', onclick))
+        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_hline(event, last_actions)))
+        cids.append(fig.canvas.mpl_connect('button_release_event', lambda event: release_hline(event, hlines, last_actions)))
 
     ax.axis('off')
     fig.canvas.draw()
     
-    return cid
+    return cids
 
-def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lines, df_fix):
+def handle_click(event, drawn_hlines, circles, circles_anns, arrows, ax, colors, last_actions, hlines, df_fix):
+    clicked_fixation = remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, df_fix)
+    if not clicked_fixation:
+        select_hline(event, drawn_hlines, last_actions)
+
+def release_hline(event, hlines, last_actions):
+    selected_line, index, y0, is_selected = last_actions[-1]
+    if isinstance(selected_line, mpl.lines.Line2D) and is_selected:
+        hlines[index] = selected_line.get_ydata()[0]
+        last_actions[-1] = (selected_line, index, y0, False)
+        selected_line.figure.canvas.draw()
+
+def move_hline(event, last_actions):
+    if not last_actions: return
+    selected_line, _, y0, is_selected = last_actions[-1]
+    if isinstance(selected_line, mpl.lines.Line2D) and is_selected:
+        dy = event.ydata - y0
+        selected_line.set_ydata([y0 + dy, y0 + dy])
+        # selected_line.figure.canvas.draw()
+        
+def select_hline(event, drawn_hlines, last_actions):
+    for i, line in enumerate(drawn_hlines):
+        if line.contains(event)[0]:
+            y0 = line.get_ydata()[0]
+            last_actions.append((line, i, y0, True))
+            break
+
+def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, hlines, df_fix):
     if last_actions:
+        # TODO: restructure last_actions with a proper class
         last_action, index, ann, fixation = last_actions.pop()
         if isinstance(last_action, mpl.patches.Circle):
             circles.insert(index, last_action)
@@ -77,16 +107,12 @@ def undo_lastaction(last_actions, circles, circles_anns, arrows, ax, colors, lin
                 draw_arrow(ax, circles[index - 1].center, circles[index].center, colors[index], arrows, index - 1)
             if index < len(circles) - 1:
                 draw_arrow(ax, circles[index].center, circles[index + 1].center, colors[index], arrows, index)
-        elif isinstance(last_action, mpl.lines.Line2D):
-            last_action.remove()
-            lines.pop(index)
-
-def add_hline(event, lines, last_actions, ax):
-    line = ax.axhline(y=event.ydata, color='black')
-    lines.append(event.ydata)
-    last_actions.append((line, len(lines) - 1, -1, -1))
+        elif isinstance(last_action, mpl.lines.Line2D) and not fixation:
+            last_action.set_ydata([ann, ann])
+            hlines[index] = ann
 
 def remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actions, df_fix):
+    removed_fix = False
     for i, circle in enumerate(circles):
         if circle.contains(event)[0]:
             fix_index = int(circles_anns[i].get_text()) - 1
@@ -102,7 +128,9 @@ def remove_fixation(event, circles, circles_anns, arrows, ax, colors, last_actio
             circle.remove(), circles.pop(i)
             df_fix.drop(fix_index, inplace=True)
             circles_anns[i].remove(), circles_anns.pop(i)
+            removed_fix = True
             break
+    return removed_fix
 
 def draw_arrow(ax, p1, p2, color, arrows_list, index, alpha=0.2, width=0.05):
     x1, y1 = p1
