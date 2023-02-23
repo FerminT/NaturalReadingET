@@ -13,12 +13,12 @@ def plot_trial(stimuli, data_path):
     # dict indexed by sequence index, containing screenid, fixations and lines, to allow editing
     sequence_states = build_sequence_states(sequence_fixations, screens_sequence, screens_lines)
     
-    state = {'sequence_index': 0, 'cid': 0}
+    state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
     
     current_seqid = state['sequence_index']
     screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
-    state['cid'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
+    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
 
     fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig))
     plt.show()
@@ -46,8 +46,9 @@ def update_figure(event, state, screens, screens_sequence, sequence_states, ax, 
     current_seqid = state['sequence_index']
     if prev_seq != current_seqid:
         screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
-        fig.canvas.mpl_disconnect(state['cid'])
-        state['cid'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
+        for cid in state['cids']:
+            fig.canvas.mpl_disconnect(cid)
+        state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
 
 def build_sequence_states(sequence_fixations, screens_sequence, screens_lines):
     seq_states = {}

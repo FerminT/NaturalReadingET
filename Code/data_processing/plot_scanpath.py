@@ -80,7 +80,7 @@ def move_hline(event, last_actions):
     if isinstance(selected_line, mpl.lines.Line2D) and is_selected:
         dy = event.ydata - y0
         selected_line.set_ydata([y0 + dy, y0 + dy])
-        # selected_line.figure.canvas.draw()
+        selected_line.figure.canvas.draw()
         
 def select_hline(event, drawn_hlines, last_actions):
     for i, line in enumerate(drawn_hlines):
