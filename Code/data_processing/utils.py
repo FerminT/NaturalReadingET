@@ -66,7 +66,7 @@ def save_trial(screens_fixations, screens_lines, del_seqindices, data_path):
                 lines.to_pickle(screen_path / lines_filename)
                 
     screen_sequence = load_screensequence(data_path)
-    screen_sequence.drop(del_seqindices, inplace=True)
+    screen_sequence.drop(index=screen_sequence.iloc[del_seqindices].index(), inplace=True)
     save_screensequence(screen_sequence, data_path)
     
 def save_structs(et_messages, screen_sequence, answers, words, trial_path):
