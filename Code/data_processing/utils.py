@@ -47,23 +47,25 @@ def load_screen_linescoords(screenid, stimuli):
     return screen_linescoords
 
 def save_trial(screens_fixations, screens_lines, del_seqindices, data_path):    
+    fix_filename   = 'fixations.pkl'
+    lines_filename = 'lines.pkl'
     for screen_id in screens_fixations:
         screen_path = data_path / ('screen_' + str(screen_id))
         screen_fixations, screen_lines = screens_fixations[screen_id], screens_lines[screen_id]
         if screen_path.exists(): shutil.rmtree(screen_path)
         screen_path.mkdir()
         
-        fix_filename   = 'fixations.pkl'
-        lines_filename = 'lines.pkl'
+        screenfix_filename = fix_filename
+        screenlines_filename = lines_filename
         for fixations, lines in zip(screen_fixations, screen_lines):
             fixations_files = list(sorted(screen_path.glob(f'{fix_filename}*')))
             # Account for repeated screens (i.e. returning to it)
             if len(fixations_files):
-                fix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
-                lines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
+                screenfix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
+                screenlines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
             if len(fixations) > 0:
-                fixations.to_pickle(screen_path / fix_filename)
-                lines.to_pickle(screen_path / lines_filename)
+                fixations.to_pickle(screen_path / screenfix_filename)
+                pd.DataFrame(lines, columns=['y']).to_pickle(screen_path / screenlines_filename)
                 
     screen_sequence = load_screensequence(data_path)
     screen_sequence.drop(index=screen_sequence.iloc[del_seqindices].index(), inplace=True)

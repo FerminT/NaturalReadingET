@@ -28,7 +28,7 @@ def plot_trial(stimuli, data_path):
         # Screens sequence may change (e.g. if all fixations in a screen were deleted)
         del_seqindeces = [seq_id for seq_id in sequence_states if len(sequence_states[seq_id]['fixations']) == 0]
         screens_lst = list(range(1, len(stimuli['screens']) + 1))
-        screens_fixations, screens_lines = dict.fromkeys(screens_lst, []), dict.fromkeys(screens_lst, [])
+        screens_fixations, screens_lines = {screenid: [] for screenid in screens_lst}, {screenid: [] for screenid in screens_lst}
         for seq_id in sequence_states:
             screenid = sequence_states[seq_id]['screenid']
             screens_fixations[screenid].append(sequence_states[seq_id]['fixations'])
