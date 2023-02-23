@@ -22,7 +22,7 @@ def draw_scanpath(img, df_fix, fig, ax, hlines=None, editable=False):
     colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
     circles, circles_anns = [], []
     cir_rad_min, cir_rad_max = 10, 70
-    rad_per_T = (cir_rad_max - cir_rad_min) / (ts.max() - ts.min())
+    rad_per_T = (cir_rad_max - cir_rad_min) / max((ts.max() - ts.min(), 1))
     for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
         radius = int(10 + rad_per_T * (t - ts.min()))
         circle = mpl.patches.Circle((x, y),
