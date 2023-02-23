@@ -10,7 +10,7 @@ def get_fixations(df_fix):
     return df_fix['xAvg'].to_numpy(dtype=int), df_fix['yAvg'].to_numpy(dtype=int), df_fix['duration'].to_numpy()
 
 def load_screensequence(data_path, filename='screen_sequence.pkl'):
-    screen_sequence = pd.read_pickle(data_path / filename)['currentscreenid'].to_numpy()
+    screen_sequence = pd.read_pickle(data_path / filename)
     return screen_sequence
 
 def save_screensequence(screens_sequence, data_path, filename='screen_sequence.pkl'):
@@ -63,12 +63,12 @@ def save_trial(screens_fixations, screens_lines, del_seqindices, data_path):
             if len(fixations_files):
                 screenfix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
                 screenlines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
-            if len(fixations) > 0:
+            if len(fixations):
                 fixations.to_pickle(screen_path / screenfix_filename)
                 pd.DataFrame(lines, columns=['y']).to_pickle(screen_path / screenlines_filename)
                 
     screen_sequence = load_screensequence(data_path)
-    screen_sequence.drop(index=screen_sequence.iloc[del_seqindices].index(), inplace=True)
+    screen_sequence.drop(index=screen_sequence.iloc[del_seqindices].index, inplace=True)
     save_screensequence(screen_sequence, data_path)
     
 def save_structs(et_messages, screen_sequence, answers, words, trial_path):

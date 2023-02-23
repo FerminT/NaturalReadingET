@@ -8,7 +8,7 @@ from pathlib import Path
 
 def plot_trial(stimuli, data_path):
     screens, screens_fixations, screens_lines = load_trial(stimuli, data_path)
-    screens_sequence   = utils.load_screensequence(data_path)
+    screens_sequence   = utils.load_screensequence(data_path)['currentscreenid'].to_numpy()
     sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
     # dict indexed by sequence index, containing screenid, fixations and lines, to allow editing
     sequence_states = build_sequence_states(sequence_fixations, screens_sequence, screens_lines)
