@@ -15,7 +15,7 @@ def plot_trial(stimuli, data_path):
     
     state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
-    
+    # TODO: add screen id to figure in the top right corner
     current_seqid = state['sequence_index']
     screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
     state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)

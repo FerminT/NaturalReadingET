@@ -11,7 +11,7 @@ def plot_scanpath(img, lst_fixs, editable=True):
         draw_scanpath(img, fixs, fig, ax, editable)
         plt.show()
 
-def draw_scanpath(img, df_fix, fig, ax, hlines=None, editable=False):
+def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, hlines=None, editable=False):
     """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
@@ -21,17 +21,15 @@ def draw_scanpath(img, df_fix, fig, ax, hlines=None, editable=False):
     xs, ys, ts = utils.get_fixations(df_fix)
     colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
     circles, circles_anns = [], []
-    cir_rad_min, cir_rad_max = 10, 70
-    if ts.any():
-        rad_per_T = (cir_rad_max - cir_rad_min) / max((ts.max() - ts.min(), 1))
     for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
-        radius = int(10 + rad_per_T * (t - ts.min()))
+        aug_factor = 1 if t <= min_t else t / min_t
+        radius = int(fix_size * aug_factor)
         circle = mpl.patches.Circle((x, y),
                                 radius=radius,
                                 color=colors[i],
                                 alpha=0.3)
         ax.add_patch(circle)
-        circle_anns = plt.annotate("{}".format(df_fix.iloc[i].name + 1), xy=(x, y + 3), fontsize=10, ha="center", va="center", alpha=0.5)
+        circle_anns = plt.annotate("{}".format(df_fix.iloc[i].name + 1), xy=(x, y + 3), fontsize=ann_size, ha="center", va="center", alpha=0.5)
         circles.append(circle), circles_anns.append(circle_anns)
 
     arrows = []
