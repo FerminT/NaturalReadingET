@@ -11,7 +11,7 @@ import utils
     Only one eye is used for fixation extraction, and the eye is chosen based on the calibration results. 
     Data structures consist of dataframes in pickle format."""
 
-def parse_item(item, participant_path, ascii_path, save_path):
+def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, save_path):
     print(f'Processing {item}')
     trial_metadata = loadmat(str(item), simplify_cells=True)['trial']
     trial_path     = save_path / item.name.split('.')[0]
@@ -23,7 +23,8 @@ def parse_item(item, participant_path, ascii_path, save_path):
     
     save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
-    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name, filter_outliers=True)
+    stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
+    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True)
     
     utils.save_structs(et_messages,
                        screen_sequence,
@@ -31,7 +32,7 @@ def parse_item(item, participant_path, ascii_path, save_path):
                        pd.DataFrame(trial_metadata['synonyms_answers']),
                        trial_path)
 
-def parse_participantdata(datapath, participant, ascii_path, save_path):
+def parse_participantdata(datapath, participant, ascii_path, config_file, stimuli_path, save_path):
     participant_path = datapath / participant
     out_path = save_path / participant
     if not out_path.exists(): out_path.mkdir(parents=True)
@@ -39,12 +40,12 @@ def parse_participantdata(datapath, participant, ascii_path, save_path):
     items = participant_path.glob('*.mat')
     for item in items:
         if item.name == 'Test.mat' or item.name == 'metadata.mat': continue
-        parse_item(item, participant_path, ascii_path, out_path)    
+        parse_item(item, participant_path, ascii_path, config_file, stimuli_path, out_path)    
 
-def parse_rawdata(datapath, ascii_path, save_path):
+def parse_rawdata(datapath, ascii_path, config_file, stimuli_path, save_path):
     participants = utils.get_dirs(datapath)
     for participant in participants:
-        parse_participantdata(datapath, participant.name, ascii_path, save_path)
+        parse_participantdata(datapath, participant.name, ascii_path, config_file, stimuli_path, save_path)
 
 def save_profile(participant_path, save_path):
     metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
@@ -89,7 +90,8 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     
     return point_index == num_points - 1
 
-def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name, filter_outliers=True):
+def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True):
+    fix_filename, sacc_filename, lines_filename = 'fixations.pkl', 'saccades.pkl' 'lines.pkl'
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = et_messages[et_messages['text'].str.contains('ini')].iloc[i]['time']
         fin_time = et_messages[et_messages['text'].str.contains('fin')].iloc[i]['time']
@@ -101,20 +103,19 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, tr
             trial_sequence.drop(i, inplace=True)
             continue
         
-        screen_path = trial_path / f'screen_{screen_id}'
-        if not screen_path.exists(): screen_path.mkdir()
-        fixations_files = list(sorted(screen_path.glob('fixations*.pkl')))
+        screen_path  = utils.get_screenpath(screen_id, trial_path)
+        lines_coords = utils.default_screen_linescoords(screen_id, stimuli)
+        fixations_files = list(sorted(screen_path.glob(f'{fix_filename[:-4]}*')))
+        screenfix_filename, screensacc_filename, screenlines_filename = fix_filename, sacc_filename, lines_filename
         # Account for repeated screens (i.e. returning to it)
         if len(fixations_files):
-            fix_file  = screen_path / f'fixations_{len(fixations_files)}.pkl'
-            sacc_file = screen_path / f'saccades_{len(fixations_files)}.pkl'
-            print('Repeated screen for participant ' + subj_name)
-        else:
-            fix_file  = screen_path / 'fixations.pkl'
-            sacc_file = screen_path / 'saccades.pkl'
+            screenfix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
+            screensacc_filename  = f'{sacc_filename[:-4]}_{len(fixations_files)}.pkl'
+            screenlines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
         
         screen_fixations.reset_index(), screen_saccades.reset_index()
-        screen_fixations.to_pickle(fix_file), screen_saccades.to_pickle(sacc_file)
+        screen_fixations.to_pickle(screen_path / screenfix_filename), screen_saccades.to_pickle(screen_path / screensacc_filename)
+        utils.save_linescoords(lines_coords, screen_path, screenlines_filename)
         
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
@@ -132,12 +133,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract data from EyeLink .asc files and save them to .pkl')
     parser.add_argument('--path', type=str, default='Data/raw', help='Path where participants data is stored')
     parser.add_argument('--ascii_path', type=str, default='asc', help='Path where .asc files are stored in a participants folder')
+    parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat', help='Config file with the stimuli information')
+    parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
     parser.add_argument('--save_path', type=str, default='Data/processed/per_participant', help='Path where to save the processed data')
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()
 
-    datapath = Path(args.path)
+    data_path, stimuli_path = Path(args.path), Path(args.stimuli_path)
     if not args.subj:
-        parse_rawdata(datapath, args.ascii_path, args.save_path)
+        parse_rawdata(data_path, args.ascii_path, args.config, stimuli_path, args.save_path)
     else:
-        parse_participantdata(datapath, args.subj, args.ascii_path, args.save_path)
+        parse_participantdata(data_path, args.subj, args.ascii_path, args.config, stimuli_path, args.save_path)

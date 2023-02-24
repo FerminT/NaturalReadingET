@@ -9,9 +9,10 @@ from pathlib import Path
 def plot_trial(stimuli, data_path):
     screens, screens_fixations, screens_lines = load_trial(stimuli, data_path)
     screens_sequence   = utils.load_screensequence(data_path)['currentscreenid'].to_numpy()
+    sequence_lines     = [screens_lines[screenid].pop() for screenid in screens_sequence]
     sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
     # dict indexed by sequence index, containing screenid, fixations and lines, to allow editing
-    sequence_states = build_sequence_states(sequence_fixations, screens_sequence, screens_lines)
+    sequence_states = build_sequence_states(sequence_fixations, screens_sequence, sequence_lines)
     
     state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
@@ -50,24 +51,23 @@ def update_figure(event, state, screens, screens_sequence, sequence_states, ax, 
             fig.canvas.mpl_disconnect(cid)
         state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
 
-def build_sequence_states(sequence_fixations, screens_sequence, screens_lines):
+def build_sequence_states(sequence_fixations, screens_sequence, sequence_lines):
     seq_states = {}
     for seq, screenid in enumerate(screens_sequence):
-        seq_states[seq] = {'screenid': screenid, 'fixations': sequence_fixations[seq], 'lines': screens_lines[screenid]}
+        seq_states[seq] = {'screenid': screenid, 'fixations': sequence_fixations[seq], 'lines': sequence_lines[seq]}
     return seq_states
 
 def load_trial(stimuli, trial_path):
     screens_lst = list(range(1, len(stimuli['screens']) + 1))
     screens, screens_fixations, screens_lines = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
     for screenid in screens_lst:
-        screens_lines[screenid] = utils.load_screen_linescoords(screenid, stimuli)
+        screens_lines[screenid] = utils.load_screen_linescoords(screenid, trial_path)
         screens[screenid] = utils.load_stimuli_screen(screenid, stimuli)
         screens_fixations[screenid] = utils.load_screen_fixations(screenid, trial_path)
     return screens, screens_fixations, screens_lines
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli')
     parser.add_argument('--data_path', type=str, default='Data/raw')
     parser.add_argument('--data_format', type=str, default='pkl')
@@ -76,6 +76,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     data_path = Path(args.data_path) / args.subj / args.data_format / args.item
-    stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path), Path(args.config))
+    stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path))
     
     plot_trial(stimuli, data_path)

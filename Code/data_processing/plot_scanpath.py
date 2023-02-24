@@ -37,7 +37,7 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, hlin
         draw_arrow(ax, circles[i].center, circles[i + 1].center, colors[i], arrows, i)
 
     drawn_hlines = []
-    if hlines:
+    if hlines is not None:
         for line_coord in hlines:
             line = ax.axhline(y=line_coord, color='black', lw=0.5)
             drawn_hlines.append(line)
