@@ -23,7 +23,7 @@ def parse_item(item, participant_path, ascii_path, save_path):
     
     save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
-    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name)
+    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name, filter_outliers=True)
     
     utils.save_structs(et_messages,
                        screen_sequence,
@@ -89,12 +89,14 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     
     return point_index == num_points - 1
 
-def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name):
+def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, subj_name, filter_outliers=True):
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = et_messages[et_messages['text'].str.contains('ini')].iloc[i]['time']
         fin_time = et_messages[et_messages['text'].str.contains('fin')].iloc[i]['time']
         screen_fixations = trial_fix[(trial_fix['tStart'] > ini_time) & (trial_fix['tEnd'] < fin_time)]
         screen_saccades  = trial_sacc[(trial_sacc['tStart'] > ini_time) & (trial_sacc['tEnd'] < fin_time)]
+        if filter_outliers:
+            screen_fixations = screen_fixations[(screen_fixations['duration'] > 50) & (screen_fixations['duration'] < 1000)]
         if screen_fixations.empty:
             trial_sequence.drop(i, inplace=True)
             continue
