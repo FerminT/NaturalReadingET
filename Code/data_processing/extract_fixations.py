@@ -91,7 +91,7 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     return point_index == num_points - 1
 
 def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True):
-    fix_filename, sacc_filename, lines_filename = 'fixations.pkl', 'saccades.pkl' 'lines.pkl'
+    fix_filename, sacc_filename, lines_filename = 'fixations.pkl', 'saccades.pkl', 'lines.pkl'
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = et_messages[et_messages['text'].str.contains('ini')].iloc[i]['time']
         fin_time = et_messages[et_messages['text'].str.contains('fin')].iloc[i]['time']
@@ -139,8 +139,8 @@ if __name__ == '__main__':
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()
 
-    data_path, stimuli_path = Path(args.path), Path(args.stimuli_path)
+    data_path, stimuli_path, save_path = Path(args.path), Path(args.stimuli_path), Path(args.save_path)
     if not args.subj:
-        parse_rawdata(data_path, args.ascii_path, args.config, stimuli_path, args.save_path)
+        parse_rawdata(data_path, args.ascii_path, args.config, stimuli_path, save_path)
     else:
-        parse_participantdata(data_path, args.subj, args.ascii_path, args.config, stimuli_path, args.save_path)
+        parse_participantdata(data_path, args.subj, args.ascii_path, args.config, stimuli_path, save_path)
