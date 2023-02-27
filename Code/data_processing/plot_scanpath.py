@@ -68,11 +68,12 @@ def handle_click(event, drawn_hlines, circles, circles_anns, arrows, ax, colors,
         select_hline(event, drawn_hlines, last_actions)
 
 def release_hline(event, hlines, last_actions):
-    selected_line, index, y0, is_selected = last_actions[-1]
-    if isinstance(selected_line, mpl.lines.Line2D) and is_selected:
-        hlines[index] = selected_line.get_ydata()[0]
-        last_actions[-1] = (selected_line, index, y0, False)
-        selected_line.figure.canvas.draw()
+    if event.button == 1:
+        selected_line, index, y0, is_selected = last_actions[-1]
+        if isinstance(selected_line, mpl.lines.Line2D) and is_selected:
+            hlines[index] = selected_line.get_ydata()[0]
+            last_actions[-1] = (selected_line, index, y0, False)
+            selected_line.figure.canvas.draw()
 
 def move_hline(event, last_actions):
     if not last_actions: return
@@ -85,7 +86,7 @@ def move_hline(event, last_actions):
 def select_hline(event, drawn_hlines, last_actions):
     for i, line in enumerate(drawn_hlines):
         if line.contains(event)[0]:
-            y0 = line.get_ydata()[0]
+            y0 = line.get_ydata()[0][0]
             last_actions.append((line, i, y0, True))
             break
 
