@@ -15,10 +15,9 @@ def plot_trial(stimuli, data_path):
     
     state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
-    # TODO: add screen id to figure in the top right corner
     current_seqid = state['sequence_index']
     screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
-    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
+    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, title=f'Screen {screenid}', hlines=lines, editable=True)
 
     fig.canvas.mpl_connect('key_press_event', lambda event: update_figure(event, state, screens, screens_sequence, sequence_states, ax, fig))
     plt.show()
@@ -48,7 +47,7 @@ def update_figure(event, state, screens, screens_sequence, sequence_states, ax, 
         screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
         for cid in state['cids']:
             fig.canvas.mpl_disconnect(cid)
-        state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, hlines=lines, editable=True)
+        state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, title=f'Screen {screenid}', hlines=lines, editable=True)
 
 def build_sequence_states(sequence_fixations, screens_sequence, sequence_lines):
     seq_states = {}

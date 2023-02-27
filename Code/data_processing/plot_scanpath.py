@@ -11,12 +11,14 @@ def plot_scanpath(img, lst_fixs, editable=True):
         draw_scanpath(img, fixs, fig, ax, editable)
         plt.show()
 
-def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, hlines=None, editable=False):
+def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, hlines=None, editable=False):
     """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
     ax.clear()
     ax.imshow(img, cmap=mpl.colormaps['gray'])
+    if title:
+        ax.set_title(title)
 
     xs, ys, ts = utils.get_fixations(df_fix)
     colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
