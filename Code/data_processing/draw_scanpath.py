@@ -1,15 +1,6 @@
-from pathlib import Path
 from draw_utils import handles, drawing
 import utils
-import argparse
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-
-def plot_scanpath(img, lst_fixs, editable=True):
-    for fixs in lst_fixs:
-        fig, ax = plt.subplots()
-        draw_scanpath(img, fixs, fig, ax, editable)
-        plt.show()
 
 def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, lines_coords=None, editable=False):
     """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
@@ -36,20 +27,3 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
     fig.canvas.draw()
     
     return cids
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--stimuli_path', type=str, default='Stimuli')
-    parser.add_argument('--data_path', type=str, default='Data/processed/per_participant')
-    parser.add_argument('--subj', type=str, required=True)
-    parser.add_argument('--item', type=str, required=True)
-    parser.add_argument('--screenid', type=int, default=1)
-    args = parser.parse_args()
-
-    subjitem_path = Path(args.data_path) / args.subj / args.item
-
-    stimuli = utils.load_stimuli(args.item, Path(args.stimuli_path))
-    screen  = utils.load_stimuli_screen(args.screenid, stimuli)
-    fixations = utils.load_screen_fixations(args.screenid, subjitem_path)
-    
-    plot_scanpath(screen, fixations)

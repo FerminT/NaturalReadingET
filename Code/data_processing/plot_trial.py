@@ -1,7 +1,7 @@
 import argparse
 import utils
 import matplotlib.pyplot as plt
-from plot_scanpath import draw_scanpath
+from draw_scanpath import draw_scanpath
 from tkinter import messagebox
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-from parse_asc import ParseEyeLinkAsc
+from et_utils import et_utils
 from pathlib import Path
 from scipy.io import loadmat
 import argparse
@@ -19,7 +19,7 @@ def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, sa
     trial_path.mkdir()
     
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-    et_messages, trial_fix, trial_sacc = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
+    trial_fix, trial_sacc, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
     
     save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
@@ -119,15 +119,11 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, tr
         
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, dfMsg, dfFix, dfSacc, _, _ = ParseEyeLinkAsc(asc_file, verbose=False)
-    binocular = len(dfFix['eye'].unique()) > 1
-    if binocular:
-        best_eye = utils.find_besteye(dfMsg)
-        dfFix    = dfFix[dfFix['eye'] == best_eye]
-        dfSacc   = dfSacc[dfSacc['eye'] == best_eye]
-    dfMsg = utils.filter_msgs(dfMsg)
+    _, dfMsg, dfFix, dfSacc, _, _ = et_utils.parse_asc(asc_file, verbose=False)
+    dfFix, dfSacc = et_utils.keep_besteye(dfFix, dfSacc, dfMsg)
+    dfMsg = et_utils.filter_msgs(dfMsg)
     
-    return dfMsg, dfFix, dfSacc
+    return dfFix, dfSacc, dfMsg
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract data from EyeLink .asc files and save them to .pkl')

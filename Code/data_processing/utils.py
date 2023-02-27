@@ -90,20 +90,3 @@ def default_screen_linescoords(screenid, stimuli):
     screen_linescoords.append(screen_linescoords[-1] + linespacing)
     
     return screen_linescoords
-
-def find_besteye(dfMsg, default='R'):
-    val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
-    if 'ABORTED' in val_msgs[0][1]: return default
-    
-    left_index  = int('LEFT' in val_msgs[1][1])
-    right_index = 1 - left_index
-    lefterror_index, righterror_index = val_msgs[left_index][1].split().index('ERROR'), val_msgs[right_index][1].split().index('ERROR')
-    left_error  = float(val_msgs[left_index][1].split()[lefterror_index + 1])
-    right_error = float(val_msgs[right_index][1].split()[righterror_index + 1])
-    
-    return 'L' if left_error < right_error else 'R'
-
-def filter_msgs(dfMsg, cutout='validation'):
-    first_index = dfMsg.index[dfMsg['text'].str.contains(cutout)].tolist()[0]
-    
-    return dfMsg[first_index:]
