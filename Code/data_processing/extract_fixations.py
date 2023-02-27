@@ -113,7 +113,7 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, tr
             screensacc_filename  = f'{sacc_filename[:-4]}_{len(fixations_files)}.pkl'
             screenlines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
         
-        screen_fixations.reset_index(), screen_saccades.reset_index()
+        screen_fixations.reset_index(inplace=True), screen_saccades.reset_index(inplace=True)
         screen_fixations.to_pickle(screen_path / screenfix_filename), screen_saccades.to_pickle(screen_path / screensacc_filename)
         utils.save_linescoords(lines_coords, screen_path, screenlines_filename)
         
