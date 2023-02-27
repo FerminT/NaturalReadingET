@@ -1,7 +1,6 @@
 import argparse
 import utils
 import matplotlib.pyplot as plt
-import numpy as np
 from plot_scanpath import draw_scanpath
 from tkinter import messagebox
 from pathlib import Path
@@ -69,13 +68,12 @@ def load_trial(stimuli, trial_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stimuli_path', type=str, default='Stimuli')
-    parser.add_argument('--data_path', type=str, default='Data/raw')
-    parser.add_argument('--data_format', type=str, default='pkl')
+    parser.add_argument('--data_path', type=str, default='Data/processed/per_participant')
     parser.add_argument('--subj', type=str, required=True)
     parser.add_argument('--item', type=str, required=True)
     args = parser.parse_args()
     
-    data_path = Path(args.data_path) / args.subj / args.data_format / args.item
+    data_path = Path(args.data_path) / args.subj / args.item
     stimuli   = utils.load_stimuli(args.item, Path(args.stimuli_path))
     
     plot_trial(stimuli, data_path)
