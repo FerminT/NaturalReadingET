@@ -13,7 +13,7 @@ def plot_scanpath(img, lst_fixs, editable=True):
         draw_scanpath(img, fixs, fig, ax, editable)
         plt.show()
 
-def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, hlines=None, editable=False):
+def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, lines_coords=None, editable=False):
     """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
     """ Given a scanpath, draw on the img using the fig and axes """
     """ The duration of each fixation is used to determine the size of each circle """
@@ -22,8 +22,25 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
     if title:
         ax.set_title(title)
 
+    circles, colors = draw_circles(ax, df_fix, min_t, fix_size, ann_size)
+    arrows = draw_arrows(ax, circles, colors)
+    hlines = draw_hlines(ax, lines_coords)
+
+    cids = []
+    if editable:
+        last_actions = []
+        cids.append(fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines)))
+        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_hline(event, last_actions)))
+        cids.append(fig.canvas.mpl_connect('button_release_event', lambda event: release_hline(event, lines_coords, last_actions)))
+
+    ax.axis('off')
+    fig.canvas.draw()
+    
+    return cids
+
+def draw_circles(ax, df_fix, min_t, fix_size, ann_size):
     xs, ys, ts = utils.get_fixations(df_fix)
-    colors = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
+    colors  = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
     circles = []
     for i, (x, y, t) in enumerate(zip(xs, ys, ts)):
         aug_factor = 1 if t <= min_t else t / min_t
@@ -37,47 +54,40 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
         annotation = plt.annotate("{}".format(fixation.name + 1), xy=(x, y + 3), fontsize=ann_size, ha="center", va="center", alpha=0.5)
         fix_circle = FixCircle(i, circle, annotation, fixation)
         circles.append(fix_circle)
+    return circles, colors
 
+def draw_arrows(ax, circles, colors):
     arrows = []
     for i in range(len(circles) - 1):
         draw_arrow(ax, circles[i].center(), circles[i + 1].center(), colors[i], arrows, i)
+    return arrows
 
-    drawn_hlines = []
-    if hlines is not None:
-        for i, line_coord in enumerate(hlines):
+def draw_hlines(ax, lines_coords):
+    hlines = []
+    if lines_coords is not None:
+        for i, line_coord in enumerate(lines_coords):
             line2d = ax.axhline(y=line_coord, color='black', lw=0.5)
             line = HLine(i, line2d)
-            drawn_hlines.append(line)
+            hlines.append(line)
+    return hlines
 
-    cids = []
-    if editable:
-        last_actions = []
-        cids.append(fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, hlines, drawn_hlines)))
-        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_hline(event, last_actions)))
-        cids.append(fig.canvas.mpl_connect('button_release_event', lambda event: release_hline(event, hlines, last_actions)))
-
-    ax.axis('off')
-    fig.canvas.draw()
-    
-    return cids
-
-def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, hlines, drawn_hlines):
+def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines):
     if event.button == 1:
-        handle_click(event, drawn_hlines, circles, arrows, ax, colors, last_actions, df_fix)
+        handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix)
     elif event.button == 3:
-        undo_lastaction(last_actions, circles, arrows, ax, colors, hlines, df_fix)
+        undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_fix)
     fig.canvas.draw()
 
-def handle_click(event, drawn_hlines, circles, arrows, ax, colors, last_actions, df_fix):
+def handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix):
     clicked_fixation = remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix)
     if not clicked_fixation:
-        select_hline(event, drawn_hlines, last_actions)
+        select_hline(event, hlines, last_actions)
 
-def release_hline(event, hlines, last_actions):
+def release_hline(event, lines_coords, last_actions):
     if event.button == 1:
         selected_line = last_actions[-1]
         if isinstance(selected_line, HLine) and selected_line.is_selected:
-            hlines[selected_line.id] = selected_line.get_y()
+            lines_coords[selected_line.id] = selected_line.get_y()
             selected_line.desselect()
 
 def move_hline(event, last_actions):
@@ -86,14 +96,14 @@ def move_hline(event, last_actions):
     if isinstance(selected_line, HLine) and selected_line.is_selected:
         selected_line.update_y(event.ydata)
         
-def select_hline(event, drawn_hlines, last_actions):
-    for line in drawn_hlines:
+def select_hline(event, hlines, last_actions):
+    for line in hlines:
         if line.contains(event):
             line.select()
             last_actions.append(line)
             break
 
-def undo_lastaction(last_actions, circles, arrows, ax, colors, hlines, df_fix):
+def undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_fix):
     if last_actions:
         last_action = last_actions.pop()
         if isinstance(last_action, FixCircle):
@@ -113,7 +123,7 @@ def undo_lastaction(last_actions, circles, arrows, ax, colors, hlines, df_fix):
         elif isinstance(last_action, HLine) and not last_action.is_selected:
             line = last_action
             line.restore_y()
-            hlines[line.id] = line.get_y()
+            lines_coords[line.id] = line.get_y()
 
 def remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix):
     removed_fix = False
