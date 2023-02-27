@@ -88,6 +88,8 @@ def default_screen_linescoords(screenid, stimuli):
     screen_linescoords = [line['bbox'][1] - (linespacing // 2) for line in stimuli['lines'] if line['screen'] == screenid]
     # Add additional line to enclose the last line
     screen_linescoords.append(screen_linescoords[-1] + linespacing)
+    
+    return screen_linescoords
 
 def find_besteye(dfMsg, default='R'):
     val_msgs = (dfMsg[dfMsg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
