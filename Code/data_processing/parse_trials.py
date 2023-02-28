@@ -1,10 +1,10 @@
-from et_utils import et_utils
+from .et_utils import et_utils
 from pathlib import Path
 from scipy.io import loadmat
 import argparse
 import shutil
 import pandas as pd
-import utils
+from . import utils
 
 """ EyeLink's EDF files are assumed to having been converted to ASCII with edf2asc.exe.
     This script extracts fixations from those files and proceeds to divide them by screen for each trial.
@@ -16,7 +16,7 @@ def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, sa
     trial_metadata = loadmat(str(item), simplify_cells=True)['trial']
     trial_path     = save_path / item.name.split('.')[0]
     if trial_path.exists(): shutil.rmtree(trial_path)
-    trial_path.mkdir()
+    trial_path.mkdir(parents=True)
     
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
     trial_fix, trial_sacc, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
