@@ -7,11 +7,7 @@ from pathlib import Path
 
 def plot_trial(stimuli, data_path):
     screens, screens_fixations, screens_lines = utils.load_trial(stimuli, data_path)
-    screens_sequence   = utils.load_screensequence(data_path)['currentscreenid'].to_numpy()
-    sequence_lines     = [screens_lines[screenid].pop() for screenid in screens_sequence]
-    sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
-    # dict indexed by sequence index, containing screenid, fixations and lines, to allow editing
-    sequence_states = build_sequence_states(sequence_fixations, screens_sequence, sequence_lines)
+    sequence_states, screens_sequence = build_sequence_states(screens_fixations, screens_lines, data_path)
     
     state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
@@ -23,11 +19,14 @@ def plot_trial(stimuli, data_path):
     if save_files:
         utils.update_and_save_trial(sequence_states, stimuli, data_path)
 
-def build_sequence_states(sequence_fixations, screens_sequence, sequence_lines):
+def build_sequence_states(screens_fixations, screens_lines, data_path):
+    screens_sequence   = utils.load_screensequence(data_path)['currentscreenid'].to_numpy()
+    sequence_lines     = [screens_lines[screenid].pop() for screenid in screens_sequence]
+    sequence_fixations = [screens_fixations[screenid].pop() for screenid in screens_sequence]
     seq_states = {}
     for seq, screenid in enumerate(screens_sequence):
         seq_states[seq] = {'screenid': screenid, 'fixations': sequence_fixations[seq], 'lines': sequence_lines[seq]}
-    return seq_states
+    return seq_states, screens_sequence
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
