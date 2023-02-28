@@ -1,6 +1,18 @@
 from .circle import FixCircle
 from .line import HLine
-from .drawing import draw_arrow
+from . import drawing
+
+def advance_sequence(event, state, screens, screens_sequence, sequence_states, ax, fig):
+    prev_seq = state['sequence_index']
+    if event.key == 'right' and prev_seq < len(screens_sequence) - 1:
+        state['sequence_index'] += 1
+    elif event.key == 'left' and prev_seq > 0:
+        state['sequence_index'] -= 1
+    current_seqid = state['sequence_index']
+    if prev_seq != current_seqid:
+        for cid in state['cids']:
+            fig.canvas.mpl_disconnect(cid)
+        drawing.update_figure(state, fig, ax, screens, sequence_states)
 
 def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines):
     if event.button == 1:
@@ -48,9 +60,9 @@ def undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_
             if index > 0 and index < len(circles) - 1:
                 arrows[index - 1].remove(), arrows.pop(index - 1)
             if index > 0:
-                draw_arrow(ax, circles[index - 1].center(), circles[index].center(), colors[index], arrows, index - 1)
+                drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(), colors[index], arrows, index - 1)
             if index < len(circles) - 1:
-                draw_arrow(ax, circles[index].center(), circles[index + 1].center(), colors[index], arrows, index)
+                drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(), colors[index], arrows, index)
         elif isinstance(last_action, HLine) and not last_action.is_selected:
             line = last_action
             line.restore_y()
@@ -65,7 +77,7 @@ def remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix):
             if i > 0:
                 arrows[i - 1].remove(), arrows.pop(i - 1)
             if i > 0 and i < len(circles) - 1:
-                draw_arrow(ax, circles[i - 1].center(), circles[i + 1].center(), colors[i], arrows, i - 1)
+                drawing.draw_arrow(ax, circles[i - 1].center(), circles[i + 1].center(), colors[i], arrows, i - 1)
             
             last_actions.append(fix_circle)
             fix_circle.remove(), circles.pop(i)

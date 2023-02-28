@@ -1,4 +1,5 @@
 from scipy.io import loadmat
+from tkinter import messagebox
 import pandas as pd
 import shutil
 
@@ -11,11 +12,29 @@ def get_dirs(datapath):
     dirs = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
     return dirs
 
-def get_fixations(df_fix):
-    return df_fix['xAvg'].to_numpy(dtype=int), df_fix['yAvg'].to_numpy(dtype=int), df_fix['duration'].to_numpy()
-
 def save_screensequence(screens_sequence, item_path, filename='screen_sequence.pkl'):
     screens_sequence.to_pickle(item_path / filename)
+    
+def load_trial(stimuli, trial_path):
+    screens_lst = list(range(1, len(stimuli['screens']) + 1))
+    screens, screens_fixations, screens_lines = dict.fromkeys(screens_lst), dict.fromkeys(screens_lst), dict.fromkeys(screens_lst)
+    for screenid in screens_lst:
+        screens_lines[screenid] = load_screen_linescoords(screenid, trial_path)
+        screens[screenid] = load_stimuli_screen(screenid, stimuli)
+        screens_fixations[screenid] = load_screen_fixations(screenid, trial_path)
+    return screens, screens_fixations, screens_lines
+
+def update_and_save_trial(sequence_states, stimuli, trial_path):
+    # Screens sequence may change (e.g. if all fixations in a screen were deleted)
+    del_seqindeces = [seq_id for seq_id in sequence_states if len(sequence_states[seq_id]['fixations']) == 0]
+    screens_lst = list(range(1, len(stimuli['screens']) + 1))
+    screens_fixations, screens_lines = {screenid: [] for screenid in screens_lst}, {screenid: [] for screenid in screens_lst}
+    for seq_id in sequence_states:
+        screenid = sequence_states[seq_id]['screenid']
+        screens_fixations[screenid].append(sequence_states[seq_id]['fixations'])
+        screens_lines[screenid].append(sequence_states[seq_id]['lines'])
+    save_trial(screens_fixations, screens_lines, del_seqindeces, trial_path)
+    messagebox.showinfo(title='Saved', message='Trial saved successfully')
     
 def save_trial(screens_fixations, screens_lines, del_seqindices, item_path):    
     fix_filename   = 'fixations.pkl'

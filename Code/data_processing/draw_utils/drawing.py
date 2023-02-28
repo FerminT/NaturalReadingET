@@ -1,8 +1,40 @@
 from .circle import FixCircle
 from .line import HLine
+from .handles import onclick, move_hline, release_hline
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+def update_figure(state, fig, ax, screens, sequence_states):
+    current_seqid = state['sequence_index']
+    screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
+    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, title=f'Screen {screenid}', lines_coords=lines, editable=True)
+
+def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, lines_coords=None, editable=False):
+    """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """
+    """ Given a scanpath, draw on the img using the fig and axes """
+    """ The duration of each fixation is used to determine the size of each circle """
+    ax.clear()
+    ax.imshow(img, cmap=mpl.colormaps['gray'])
+    if title:
+        ax.set_title(title)
+
+    xs, ys, ts = df_fix['xAvg'].to_numpy(dtype=int), df_fix['yAvg'].to_numpy(dtype=int), df_fix['duration'].to_numpy()
+    circles, colors = draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size)
+    arrows = draw_arrows(ax, circles, colors)
+    hlines = draw_hlines(ax, lines_coords)
+
+    cids = []
+    if editable:
+        last_actions = []
+        cids.append(fig.canvas.mpl_connect('button_press_event', lambda event: onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines)))
+        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_hline(event, last_actions)))
+        cids.append(fig.canvas.mpl_connect('button_release_event', lambda event: release_hline(event, lines_coords, last_actions)))
+
+    ax.axis('off')
+    fig.canvas.draw()
+    
+    return cids
 
 def draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size):
     colors  = mpl.colormaps['rainbow'](np.linspace(0, 1, xs.shape[0]))
