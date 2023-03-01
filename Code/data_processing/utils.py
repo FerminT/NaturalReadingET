@@ -32,6 +32,22 @@ def load_flags(trials, datapath, filename='flags.pkl'):
         else:
             raise ValueError('Flags not found for trial', trial)
     return flags
+
+def load_questions(questions_file, item):
+    all_questions = loadmat(questions_file, simplify_cells=True)['stimuli_questions']
+    questions, possible_answers = [], []
+    for item_dict in all_questions:
+        if item_dict['title'] == item:
+            questions = list(item_dict['questions'])
+            possible_answers = list(item_dict['possible_answers'])
+    if not questions:
+        raise ValueError('Questions not found for item', item)
+    
+    return questions, possible_answers
+
+def load_answers(trial_path, filename):
+    answers = pd.read_pickle(trial_path / filename)
+    return list(answers[0].to_numpy())
     
 def load_trial(stimuli, trial_path):
     screens_lst = list(range(1, len(stimuli['screens']) + 1))

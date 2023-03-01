@@ -2,7 +2,7 @@ from pathlib import Path
 from Code.data_processing import parse_trials, utils
 import argparse
 
-def select_trial(raw_path, ascii_path, config, stimuli_path, data_path, subj):
+def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
     subj_datapath = Path(data_path) / subj
     subj_rawpath  = Path(raw_path) / subj
     if not subj_rawpath.exists():
@@ -20,7 +20,7 @@ def select_trial(raw_path, ascii_path, config, stimuli_path, data_path, subj):
     subj_profile     = utils.load_profile(subj_datapath)
     available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
     trials_flags     = utils.load_flags(available_trials, subj_datapath)
-    print('Participant: ', subj_profile['name'][0], '| Reading level: ', subj_profile['reading_level'][0])
+    print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
     for i in range(len(available_trials)):
         status = parse_flags(trials_flags[available_trials[i]])
         print(f'{i+1}. {available_trials[i]} {status}')
@@ -29,7 +29,45 @@ def select_trial(raw_path, ascii_path, config, stimuli_path, data_path, subj):
         print('Invalid choice. Please enter a number between 1 and', len(subj_rawitems))
         choice = input('Enter the item number to edit: ')
 
-    print('You selected:', subj_rawitems[int(choice)-1])
+    chosen_item = available_trials[int(choice) - 1]
+    trial_flags = trials_flags[chosen_item]
+    trial_path  = subj_datapath / chosen_item
+    print('\n' + chosen_item)
+    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
+    for i in range(len(actions)):
+        print(f'{i+1}. {actions[i]}')
+    choice = input()
+    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(actions):
+        print('Invalid choice. Please enter a number between 1 and', len(actions))
+        choice = input()
+    
+    breakpoint()
+    handle_action(chosen_item, actions[int(choice) - 1], questions, trial_flags, trial_path)
+
+def handle_action(item, action, questions_file, trial_flags, trial_path):
+    if action == 'Questions answers':
+        wrong_answers = read_questions_and_answers(questions_file, item, trial_path)
+        trial_flags['wrong_answers'] = wrong_answers
+    elif action == 'Words associations':
+        pass
+    elif action == 'Edit screens':
+        pass
+    elif action == 'Exit':
+        exit()
+        
+def read_questions_and_answers(questions_file, item, trial_path):
+    questions, possible_answers = utils.load_questions(questions_file, item)
+    answers = utils.load_answers(trial_path, filename='answers.pkl')
+    for i in range(len(questions)):
+        print(f'{i+1}. {questions[i]} ({possible_answers[i]})')
+        print(f'      {answers[i]}')
+    
+    wrong_answers = input('Number of wrong answers: ')
+    while not wrong_answers.isdigit() or int(wrong_answers) < 0 or int(wrong_answers) > len(questions):
+        print('Invalid choice. Please enter a number between 0 and', len(questions))
+        wrong_answers = input('Number of wrong answers: ')
+    
+    return int(wrong_answers)
 
 def parse_flags(flags):
     trial_status = ''
@@ -45,9 +83,10 @@ if __name__ == '__main__':
     parser.add_argument('--raw', type=str, default='Data/raw', help='Path where participants raw data is stored in ASCII format')
     parser.add_argument('--ascii_path', type=str, default='asc', help='Path where .asc files are stored in a participants folder')
     parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat', help='Config file with the stimuli information')
+    parser.add_argument('--questions', type=str, default='Metadata/stimuli_questions.mat', help='Questions and possible answers file for each stimuli')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
     parser.add_argument('--data', type=str, default='Data/processed/by_participant', help='Path where the processed data is stored in pkl format')
     parser.add_argument('--subj', type=str, help='Participant\'s name', required=True)
     args = parser.parse_args()
     
-    select_trial(args.raw, args.ascii_path, args.config, args.stimuli_path, args.data, args.subj)
+    select_trial(args.raw, args.ascii_path, args.config, args.questions, args.stimuli_path, args.data, args.subj)
