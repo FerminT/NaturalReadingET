@@ -3,6 +3,10 @@ from tkinter import messagebox
 import pandas as pd
 import shutil
 
+def reorder(trials, stimuli_order):
+    ordered_trials = [trial for trial in stimuli_order if trial in trials]
+    return ordered_trials
+
 def get_screenpath(screenid, item_path):
     screen_path = item_path / ('screen_' + str(screenid))
     if not screen_path.exists(): screen_path.mkdir()
@@ -14,6 +18,20 @@ def get_dirs(datapath):
 
 def save_screensequence(screens_sequence, item_path, filename='screen_sequence.pkl'):
     screens_sequence.to_pickle(item_path / filename)
+    
+def load_profile(profile_path, filename='profile.pkl'):
+    profile = pd.read_pickle(profile_path / filename)
+    return profile
+
+def load_flags(trials, datapath, filename='flags.pkl'):
+    flags = dict.fromkeys(trials)
+    for trial in trials:
+        trial_flags = datapath / trial / filename
+        if (trial_flags).exists():
+            flags[trial] = pd.read_pickle(trial_flags)
+        else:
+            raise ValueError('Flags not found for trial', trial)
+    return flags
     
 def load_trial(stimuli, trial_path):
     screens_lst = list(range(1, len(stimuli['screens']) + 1))
