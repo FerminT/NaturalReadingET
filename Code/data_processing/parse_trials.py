@@ -34,25 +34,25 @@ def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, sa
                        pd.DataFrame(flags, index=[0]),
                        trial_path)
 
-def parse_participantdata(datapath, participant, ascii_path, config_file, stimuli_path, save_path):
-    participant_path = datapath / participant
+def parse_participantdata(raw_path, participant, ascii_path, config_file, stimuli_path, save_path):
+    participant_path = raw_path / participant
     out_path = save_path / participant
-    if not out_path.exists(): out_path.mkdir(parents=True)
     save_profile(participant_path, out_path)
     items = participant_path.glob('*.mat')
     for item in items:
         if item.name == 'Test.mat' or item.name == 'metadata.mat': continue
         parse_item(item, participant_path, ascii_path, config_file, stimuli_path, out_path)    
 
-def parse_rawdata(datapath, ascii_path, config_file, stimuli_path, save_path):
-    participants = utils.get_dirs(datapath)
+def parse_rawdata(raw_path, ascii_path, config_file, stimuli_path, save_path):
+    participants = utils.get_dirs(raw_path)
     for participant in participants:
-        parse_participantdata(datapath, participant.name, ascii_path, config_file, stimuli_path, save_path)
+        parse_participantdata(raw_path, participant.name, ascii_path, config_file, stimuli_path, save_path)
 
-def save_profile(participant_path, save_path):
-    metafile = loadmat(str(participant_path / 'metadata.mat'), simplify_cells=True)
+def save_profile(participant_rawpath, save_path):
+    metafile = loadmat(str(participant_rawpath / 'metadata.mat'), simplify_cells=True)
     stimuli_order = list(metafile['shuffled_stimuli'][1:].astype(str))
     profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])], 'stimuli_order': [stimuli_order]}
+    if not save_path.exists(): save_path.mkdir(parents=True)
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
     
 def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56, error_margin=30):
@@ -134,8 +134,8 @@ if __name__ == '__main__':
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()
 
-    data_path, stimuli_path, save_path = Path(args.path), Path(args.stimuli_path), Path(args.save_path)
+    raw_path, stimuli_path, save_path = Path(args.path), Path(args.stimuli_path), Path(args.save_path)
     if not args.subj:
-        parse_rawdata(data_path, args.ascii_path, args.config, stimuli_path, save_path)
+        parse_rawdata(raw_path, args.ascii_path, args.config, stimuli_path, save_path)
     else:
-        parse_participantdata(data_path, args.subj, args.ascii_path, args.config, stimuli_path, save_path)
+        parse_participantdata(raw_path, args.subj, args.ascii_path, args.config, stimuli_path, save_path)

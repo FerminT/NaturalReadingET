@@ -1,21 +1,21 @@
 from pathlib import Path
-from Code.data_processing.parse_trials import parse_item
+from Code.data_processing import parse_trials
 import argparse
 
 def select_trial(raw_path, ascii_path, config, stimuli_path, data_path, subj):
     subj_datapath = Path(data_path) / subj
     subj_rawpath  = Path(raw_path) / subj
     if not subj_rawpath.exists():
-        print('Participant raw data not found.')
-        return
+        raise ValueError('Participant not found')
     subj_rawitems = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if not item.name in ['Test.mat', 'metadata.mat']]
     if subj_datapath.exists():
         subj_processeditems = [item.name for item in subj_datapath.iterdir() if item.is_dir()]
         missing_items = [item for item in subj_rawitems if item not in subj_processeditems]
     else:
         missing_items = subj_rawitems
+        parse_trials.save_profile(subj_rawpath, subj_datapath)
     for rawitem in missing_items:
-        parse_item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, Path(stimuli_path), subj_datapath)
+        parse_trials.parse_item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, Path(stimuli_path), subj_datapath)
         
     print('Available items:')
     for i in range(len(subj_rawitems)):
