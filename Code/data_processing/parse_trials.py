@@ -21,15 +21,17 @@ def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, sa
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
     trial_fix, trial_sacc, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
     
-    save_validation_fixations(et_messages, trial_fix, trial_path)
+    val_results = save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
     stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
     divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True)
     
+    flags = {'edited': 0, 'firstval_iswrong': val_results[0], 'lastval_iswrong': val_results[1], 'wrong_answers': 0}
     utils.save_structs(et_messages,
                        screen_sequence,
                        pd.DataFrame(trial_metadata['questions_answers']),
                        pd.DataFrame(trial_metadata['synonyms_answers']),
+                       pd.DataFrame(flags, index=[0]),
                        trial_path)
 
 def parse_participantdata(datapath, participant, ascii_path, config_file, stimuli_path, save_path):
@@ -53,7 +55,7 @@ def save_profile(participant_path, save_path):
     profile  = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])], 'stimuli_order': [stimuli_order]}
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
     
-def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56):
+def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56, error_margin=30):
     val_msgs = et_messages[et_messages['text'].str.contains(val_legend)]
     fin_msgindex = et_messages[et_messages['text'].str.contains('termina experimento')].index[0]
     first_val = val_msgs.loc[:fin_msgindex]
@@ -63,20 +65,17 @@ def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='va
     last_valfix  = trial_fix[(trial_fix['tStart'] >= last_val.iloc[0]['time']) & (trial_fix['tEnd'] <= last_val.iloc[-1]['time'] + 500)]
     
     points_coords = val_msgs['text'].str.extract(r'(\d+),(\d+)').astype(int)[:num_points].to_numpy()
-    firstval_iscorrect = check_validation_fixations(first_valfix, points_coords, num_points, points_area)
-    lastval_iscorrect  = check_validation_fixations(last_valfix, points_coords, num_points, points_area)
-
-    if not firstval_iscorrect:
-        print('Validation error at the beginning of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
-    if not lastval_iscorrect:
-        print('Validation error at the end of trial for participant', trial_path.parents[1].name, 'in trial', trial_path.name)
+    firstval_iscorrect = check_validation_fixations(first_valfix, points_coords, num_points, points_area, error_margin)
+    lastval_iscorrect  = check_validation_fixations(last_valfix, points_coords, num_points, points_area, error_margin)
         
     val_path = trial_path / 'validation'
     if not val_path.exists(): val_path.mkdir()
     first_valfix.to_pickle(val_path / 'first.pkl')
     last_valfix.to_pickle(val_path / 'last.pkl')
     
-def check_validation_fixations(fixations, points_coords, num_points, points_area, error_margin=30):
+    return (firstval_iscorrect, lastval_iscorrect)
+    
+def check_validation_fixations(fixations, points_coords, num_points, points_area, error_margin):
     """ For each fixation, check if it is inside the area of the point.
         As we only advance the point index once we find a fixation inside the area,
         the validation is correct only if the point index matches the number of points - 1. """

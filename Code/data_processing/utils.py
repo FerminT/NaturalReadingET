@@ -64,11 +64,12 @@ def save_trial(screens_fixations, screens_lines, del_seqindices, item_path):
 def save_linescoords(lines, screen_path, filename='lines.pkl'):
     pd.DataFrame(lines, columns=['y']).to_pickle(screen_path / filename)
 
-def save_structs(et_messages, screen_sequence, answers, words, trial_path):
+def save_structs(et_messages, screen_sequence, answers, words, flags, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
     answers.to_pickle(trial_path / 'answers.pkl')
     words.to_pickle(trial_path / 'words.pkl')
+    flags.to_pickle(trial_path / 'flags.pkl')
     
 def load_screensequence(item_path, filename='screen_sequence.pkl'):
     screen_sequence = pd.read_pickle(item_path / filename)
