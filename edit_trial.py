@@ -50,9 +50,11 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
     elif action == 'Words associations':
         read_words_associations(questions_file, item, trial_path)
     elif action == 'Edit screens':
-        plot.trial(stimuli, trial_path, editable=True)
+        trial_flags['edited'] = plot.trial(stimuli, trial_path, editable=True) or trial_flags['edited']
     elif action == 'Exit':
         exit()
+    
+    utils.update_flags(trial_flags, trial_path)
 
 def read_words_associations(questions_file, item, trial_path):
     _, _, words = utils.load_questions_and_words(questions_file, item)
@@ -80,7 +82,7 @@ def read_questions_and_answers(questions_file, item, trial_path):
 def parse_flags(flags):
     trial_status = ''
     if flags['edited'][0]: trial_status += '\u2705'
-    wrong_validations = flags['firstval_iswrong'][0] + flags['lastval_iswrong'][0]
+    wrong_validations = int(flags['firstval_iswrong'][0]) + int(flags['lastval_iswrong'][0])
     if wrong_validations > 0:
         trial_status += '\u26A0\uFE0F' + str(int(wrong_validations))
     if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0])

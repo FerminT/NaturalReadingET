@@ -18,6 +18,8 @@ def trial(stimuli, trial_path, editable=False):
     save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
     if save_files:
         utils.update_and_save_trial(sequence_states, stimuli, trial_path)
+    
+    return save_files
 
 def build_sequence_states(screens_fixations, screens_lines, trial_path):
     screens_sequence   = utils.load_screensequence(trial_path)['currentscreenid'].to_numpy()

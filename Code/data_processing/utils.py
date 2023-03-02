@@ -20,8 +20,10 @@ def save_screensequence(screens_sequence, item_path, filename='screen_sequence.p
     screens_sequence.to_pickle(item_path / filename)
     
 def load_profile(profile_path, filename='profile.pkl'):
-    profile = pd.read_pickle(profile_path / filename)
-    return profile
+    return pd.read_pickle(profile_path / filename)
+
+def update_flags(trial_flags, trial_path, filename='flags.pkl'):
+    trial_flags.to_pickle(trial_path / filename)
 
 def load_flags(trials, datapath, filename='flags.pkl'):
     flags = dict.fromkeys(trials)
