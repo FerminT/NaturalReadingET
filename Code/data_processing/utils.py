@@ -33,17 +33,18 @@ def load_flags(trials, datapath, filename='flags.pkl'):
             raise ValueError('Flags not found for trial', trial)
     return flags
 
-def load_questions(questions_file, item):
-    all_questions = loadmat(questions_file, simplify_cells=True)['stimuli_questions']
-    questions, possible_answers = [], []
-    for item_dict in all_questions:
+def load_questions_and_words(questions_file, item):
+    all_questionswords = loadmat(questions_file, simplify_cells=True)['stimuli_questions']
+    questions, possible_answers, words = [], [], []
+    for item_dict in all_questionswords:
         if item_dict['title'] == item:
             questions = list(item_dict['questions'])
             possible_answers = list(item_dict['possible_answers'])
-    if not questions:
-        raise ValueError('Questions not found for item', item)
+            words = list(item_dict['words'])
+    if not questions or not words:
+        raise ValueError('Questions/words not found for item', item)
     
-    return questions, possible_answers
+    return questions, possible_answers, words
 
 def load_answers(trial_path, filename):
     answers = pd.read_pickle(trial_path / filename)

@@ -41,22 +41,29 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
         print('Invalid choice. Please enter a number between 1 and', len(actions))
         choice = input()
     
-    breakpoint()
     handle_action(chosen_item, actions[int(choice) - 1], questions, trial_flags, trial_path)
 
 def handle_action(item, action, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
-        wrong_answers = read_questions_and_answers(questions_file, item, trial_path)
-        trial_flags['wrong_answers'] = wrong_answers
+        trial_flags['wrong_answers'] = read_questions_and_answers(questions_file, item, trial_path)
     elif action == 'Words associations':
-        pass
+        read_words_associations(questions_file, item, trial_path)
     elif action == 'Edit screens':
         pass
     elif action == 'Exit':
         exit()
-        
+
+def read_words_associations(questions_file, item, trial_path):
+    _, _, words = utils.load_questions_and_words(questions_file, item)
+    answers = utils.load_answers(trial_path, filename='words.pkl')
+    for i in range(len(words)):
+        print(f'{i+1}. {words[i]}')
+        print(f'      {answers[i]}')
+    
+    input('Press enter to continue...')
+
 def read_questions_and_answers(questions_file, item, trial_path):
-    questions, possible_answers = utils.load_questions(questions_file, item)
+    questions, possible_answers, _ = utils.load_questions_and_words(questions_file, item)
     answers = utils.load_answers(trial_path, filename='answers.pkl')
     for i in range(len(questions)):
         print(f'{i+1}. {questions[i]} ({possible_answers[i]})')
