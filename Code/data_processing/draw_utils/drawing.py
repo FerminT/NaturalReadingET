@@ -5,10 +5,10 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-def update_figure(state, fig, ax, screens, sequence_states):
+def update_figure(state, fig, ax, screens, sequence_states, editable):
     current_seqid = state['sequence_index']
     screenid, fixations, lines = sequence_states[current_seqid]['screenid'], sequence_states[current_seqid]['fixations'], sequence_states[current_seqid]['lines']
-    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, title=f'Screen {screenid}', lines_coords=lines, editable=True)
+    state['cids'] = draw_scanpath(screens[screenid], fixations, fig, ax, title=f'Screen {screenid}', lines_coords=lines, editable=editable)
 
 def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, title=None, lines_coords=None, editable=False):
     """ df_fix: pd.DataFrame with columns: ['xAvg', 'yAvg', 'duration'] """

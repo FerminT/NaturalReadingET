@@ -2,7 +2,7 @@ from .circle import FixCircle
 from .line import HLine
 from . import drawing
 
-def advance_sequence(event, state, screens, screens_sequence, sequence_states, ax, fig):
+def advance_sequence(event, state, screens, screens_sequence, sequence_states, ax, fig, editable):
     prev_seq = state['sequence_index']
     if event.key == 'right' and prev_seq < len(screens_sequence) - 1:
         state['sequence_index'] += 1
@@ -12,7 +12,7 @@ def advance_sequence(event, state, screens, screens_sequence, sequence_states, a
     if prev_seq != current_seqid:
         for cid in state['cids']:
             fig.canvas.mpl_disconnect(cid)
-        drawing.update_figure(state, fig, ax, screens, sequence_states)
+        drawing.update_figure(state, fig, ax, screens, sequence_states, editable)
 
 def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines):
     if event.button == 1:

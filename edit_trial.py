@@ -1,5 +1,5 @@
 from pathlib import Path
-from Code.data_processing import parse_trials, utils
+from Code.data_processing import parse_trials, plot_trial, utils
 import argparse
 
 def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
@@ -15,7 +15,7 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
         missing_items = subj_rawitems
         parse_trials.save_profile(subj_rawpath, subj_datapath)
     for rawitem in missing_items:
-        parse_trials.parse_item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, Path(stimuli_path), subj_datapath)
+        parse_trials.parse_item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
     
     subj_profile     = utils.load_profile(subj_datapath)
     available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
@@ -32,6 +32,7 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     chosen_item = available_trials[int(choice) - 1]
     trial_flags = trials_flags[chosen_item]
     trial_path  = subj_datapath / chosen_item
+    stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
     print('\n' + chosen_item)
     actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
     for i in range(len(actions)):
@@ -41,15 +42,15 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
         print('Invalid choice. Please enter a number between 1 and', len(actions))
         choice = input()
     
-    handle_action(chosen_item, actions[int(choice) - 1], questions, trial_flags, trial_path)
+    handle_action(chosen_item, actions[int(choice) - 1], stimuli, questions, trial_flags, trial_path)
 
-def handle_action(item, action, questions_file, trial_flags, trial_path):
+def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
         trial_flags['wrong_answers'] = read_questions_and_answers(questions_file, item, trial_path)
     elif action == 'Words associations':
         read_words_associations(questions_file, item, trial_path)
     elif action == 'Edit screens':
-        pass
+        plot_trial.plot_trial(stimuli, trial_path, editable=True)
     elif action == 'Exit':
         exit()
 
@@ -96,4 +97,4 @@ if __name__ == '__main__':
     parser.add_argument('--subj', type=str, help='Participant\'s name', required=True)
     args = parser.parse_args()
     
-    select_trial(args.raw, args.ascii_path, args.config, args.questions, args.stimuli_path, args.data, args.subj)
+    select_trial(args.raw, args.ascii_path, args.config, args.questions, Path(args.stimuli_path), args.data, args.subj)
