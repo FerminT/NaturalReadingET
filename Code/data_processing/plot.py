@@ -5,7 +5,7 @@ from . import utils
 from tkinter import messagebox
 from pathlib import Path
 
-def plot_trial(stimuli, trial_path, editable=False):
+def trial(stimuli, trial_path, editable=False):
     screens, screens_fixations, screens_lines = utils.load_trial(stimuli, trial_path)
     sequence_states, screens_sequence = build_sequence_states(screens_fixations, screens_lines, trial_path)
     

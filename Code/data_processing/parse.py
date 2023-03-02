@@ -11,7 +11,7 @@ from . import utils
     Only one eye is used for fixation extraction, and the eye is chosen based on the calibration results. 
     Data structures consist of dataframes in pickle format."""
 
-def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, save_path):
+def item(item, participant_path, ascii_path, config_file, stimuli_path, save_path):
     print(f'Processing {item}')
     trial_metadata = loadmat(str(item), simplify_cells=True)['trial']
     trial_path     = save_path / item.name.split('.')[0]
@@ -34,19 +34,19 @@ def parse_item(item, participant_path, ascii_path, config_file, stimuli_path, sa
                        pd.DataFrame(flags, index=[0]),
                        trial_path)
 
-def parse_participantdata(raw_path, participant, ascii_path, config_file, stimuli_path, save_path):
+def participantdata(raw_path, participant, ascii_path, config_file, stimuli_path, save_path):
     participant_path = raw_path / participant
     out_path = save_path / participant
     save_profile(participant_path, out_path)
     items = participant_path.glob('*.mat')
     for item in items:
         if item.name == 'Test.mat' or item.name == 'metadata.mat': continue
-        parse_item(item, participant_path, ascii_path, config_file, stimuli_path, out_path)    
+        item(item, participant_path, ascii_path, config_file, stimuli_path, out_path)    
 
-def parse_rawdata(raw_path, ascii_path, config_file, stimuli_path, save_path):
+def rawdata(raw_path, ascii_path, config_file, stimuli_path, save_path):
     participants = utils.get_dirs(raw_path)
     for participant in participants:
-        parse_participantdata(raw_path, participant.name, ascii_path, config_file, stimuli_path, save_path)
+        participantdata(raw_path, participant.name, ascii_path, config_file, stimuli_path, save_path)
 
 def save_profile(participant_rawpath, save_path):
     metafile = loadmat(str(participant_rawpath / 'metadata.mat'), simplify_cells=True)
@@ -136,6 +136,6 @@ if __name__ == '__main__':
 
     raw_path, stimuli_path, save_path = Path(args.path), Path(args.stimuli_path), Path(args.save_path)
     if not args.subj:
-        parse_rawdata(raw_path, args.ascii_path, args.config, stimuli_path, save_path)
+        rawdata(raw_path, args.ascii_path, args.config, stimuli_path, save_path)
     else:
-        parse_participantdata(raw_path, args.subj, args.ascii_path, args.config, stimuli_path, save_path)
+        participantdata(raw_path, args.subj, args.ascii_path, args.config, stimuli_path, save_path)

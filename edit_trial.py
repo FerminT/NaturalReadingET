@@ -1,5 +1,5 @@
 from pathlib import Path
-from Code.data_processing import parse_trials, plot_trial, utils
+from Code.data_processing import parse, plot, utils
 import argparse
 
 def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
@@ -13,9 +13,9 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
         missing_items = [item for item in subj_rawitems if item not in subj_processeditems]
     else:
         missing_items = subj_rawitems
-        parse_trials.save_profile(subj_rawpath, subj_datapath)
+        parse.save_profile(subj_rawpath, subj_datapath)
     for rawitem in missing_items:
-        parse_trials.parse_item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
+        parse.item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
     
     subj_profile     = utils.load_profile(subj_datapath)
     available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
@@ -50,7 +50,7 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
     elif action == 'Words associations':
         read_words_associations(questions_file, item, trial_path)
     elif action == 'Edit screens':
-        plot_trial.plot_trial(stimuli, trial_path, editable=True)
+        plot.trial(stimuli, trial_path, editable=True)
     elif action == 'Exit':
         exit()
 
@@ -82,7 +82,7 @@ def parse_flags(flags):
     if flags['edited'][0]: trial_status += '\u2705'
     wrong_validations = flags['firstval_iswrong'][0] + flags['lastval_iswrong'][0]
     if wrong_validations > 0:
-        trial_status += '\u26A0\uFE0F' + str(wrong_validations)
+        trial_status += '\u26A0\uFE0F' + str(int(wrong_validations))
     if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0])
     return trial_status
 
