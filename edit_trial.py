@@ -2,12 +2,17 @@ from pathlib import Path
 from Code.data_processing import parse, plot, utils
 import argparse
 
+def list_participants(raw_path):
+    participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
+    chosen_participant = list_options(participants, prompt='Choose a participant:')
+    
+    return participants[chosen_participant]
+
 def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
     subj_datapath, subj_rawpath = Path(data_path) / subj, Path(raw_path) / subj
     if not subj_rawpath.exists(): raise ValueError('Participant not found')
     
-    subj_profile = utils.load_profile(subj_datapath)
-    subj_items   = load_subj_trials(subj_rawpath, subj_profile['stimuli_order'][0], ascii_path, config, stimuli_path, subj_datapath)
+    subj_profile, subj_items = load_subj_trials(subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
     trials_flags = utils.load_flags(subj_items, subj_datapath)
     
     main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
@@ -92,7 +97,7 @@ def read_questions_and_answers(questions_file, item, trial_path):
     
     return int(wrong_answers)
 
-def load_subj_trials(subj_rawpath, trial_order, ascii_path, config, stimuli_path, data_path):
+def load_subj_trials(subj_rawpath, ascii_path, config, stimuli_path, data_path):
     subj_items = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if not item.name in ['Test.mat', 'metadata.mat']]
     if data_path.exists():
         subj_processeditems = [item.name for item in data_path.iterdir() if item.is_dir()]
@@ -102,9 +107,10 @@ def load_subj_trials(subj_rawpath, trial_order, ascii_path, config, stimuli_path
         parse.save_profile(subj_rawpath, data_path)
     for rawitem in missing_items:
         parse.item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, data_path)
-    subj_items = utils.reorder(subj_items, trial_order)
+    subj_profile = utils.load_profile(data_path)
+    subj_items   = utils.reorder(subj_items, subj_profile['stimuli_order'][0])
     
-    return subj_items
+    return subj_items, subj_profile
 
 def parse_flags(flags):
     trial_status = ''
@@ -127,7 +133,12 @@ if __name__ == '__main__':
     parser.add_argument('--questions', type=str, default='Metadata/stimuli_questions.mat', help='Questions and possible answers file for each stimuli')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
     parser.add_argument('--data', type=str, default='Data/processed/by_participant', help='Path where the processed data is stored in pkl format')
-    parser.add_argument('--subj', type=str, help='Participant\'s name', required=True)
+    parser.add_argument('--subj', type=str, help='Participant\'s name')
     args = parser.parse_args()
+    stimuli_path, data_path, raw_path = Path(args.stimuli_path), Path(args.data), Path(args.raw)
     
-    select_trial(args.raw, args.ascii_path, args.config, args.questions, Path(args.stimuli_path), args.data, args.subj)
+    if args.subj:
+        select_trial(raw_path, args.ascii_path, args.config, args.questions, stimuli_path, data_path, args.subj)
+    else:
+        subj = list_participants(raw_path)
+        select_trial(raw_path, args.ascii_path, args.config, args.questions, stimuli_path, data_path, subj)
