@@ -29,8 +29,10 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     print('\n' + chosen_item)
     actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
     action = actions[list_options(actions, '')]
-    
-    handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
+    while action != 'Exit':
+        handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
+        print('\n' + chosen_item)
+        action = actions[list_options(actions, '')]
 
 def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
