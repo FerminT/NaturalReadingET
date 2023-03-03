@@ -21,28 +21,16 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
     trials_flags     = utils.load_flags(available_trials, subj_datapath)
     print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
-    for i in range(len(available_trials)):
-        status = parse_flags(trials_flags[available_trials[i]])
-        print(f'{i+1}. {available_trials[i]} {status}')
-    choice = input('Enter the item number to edit: ')
-    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(subj_rawitems):
-        print('Invalid choice. Please enter a number between 1 and', len(subj_rawitems))
-        choice = input('Enter the item number to edit: ')
-
-    chosen_item = available_trials[int(choice) - 1]
+    options = [available_trials[i] + ' ' + parse_flags(trials_flags[available_trials[i]]) for i in range(len(available_trials))]
+    chosen_item = available_trials[list_options(options, 'Enter the item number to edit: ')]
     trial_flags = trials_flags[chosen_item]
     trial_path  = subj_datapath / chosen_item
     stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
     print('\n' + chosen_item)
     actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
-    for i in range(len(actions)):
-        print(f'{i+1}. {actions[i]}')
-    choice = input()
-    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(actions):
-        print('Invalid choice. Please enter a number between 1 and', len(actions))
-        choice = input()
+    action = actions[list_options(actions, '')]
     
-    handle_action(chosen_item, actions[int(choice) - 1], stimuli, questions, trial_flags, trial_path)
+    handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
 
 def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
@@ -55,6 +43,16 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
         exit()
     
     utils.update_flags(trial_flags, trial_path)
+    
+def list_options(options, prompt):
+    for i in range(len(options)):
+        print(f'{i+1}. {options[i]}')
+    choice = input(prompt)
+    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(options):
+        print('Invalid choice. Please enter a number between 1 and', len(options))
+        choice = input(prompt)
+    
+    return int(choice) - 1
 
 def read_words_associations(questions_file, item, trial_path):
     _, _, words = utils.load_questions_and_words(questions_file, item)
@@ -84,7 +82,7 @@ def parse_flags(flags):
     if flags['edited'][0]: trial_status += '\u2705'
     wrong_validations = int(flags['firstval_iswrong'][0]) + int(flags['lastval_iswrong'][0])
     if wrong_validations > 0:
-        trial_status += '\u26A0\uFE0F' + str(int(wrong_validations))
+        trial_status += '\u26A0\uFE0F' + str(wrong_validations)
     if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0])
     return trial_status
 
