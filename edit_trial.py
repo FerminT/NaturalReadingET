@@ -12,7 +12,7 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     subj_datapath, subj_rawpath = Path(data_path) / subj, Path(raw_path) / subj
     if not subj_rawpath.exists(): raise ValueError('Participant not found')
     
-    subj_profile, subj_items = load_subj_trials(subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
+    subj_items, subj_profile = load_subj_trials(subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
     trials_flags = utils.load_flags(subj_items, subj_datapath)
     
     main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
@@ -123,6 +123,7 @@ def parse_flags(flags):
     if wrong_validations > 0:
         trial_status += '\u26A0\uFE0F' + str(wrong_validations) + ' '
     if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0]) + ' '
+    
     return trial_status
 
 if __name__ == '__main__':
