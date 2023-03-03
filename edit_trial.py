@@ -7,14 +7,13 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     if not subj_rawpath.exists(): raise ValueError('Participant not found')
     
     subj_profile = utils.load_profile(subj_datapath)
-    subj_items   = load_subj_trials(subj_rawpath, subj_profile['stimuli_order'][0], ascii_path, config, stimuli_path, data_path)
+    subj_items   = load_subj_trials(subj_rawpath, subj_profile['stimuli_order'][0], ascii_path, config, stimuli_path, subj_datapath)
     trials_flags = utils.load_flags(subj_items, subj_datapath)
     
     main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
     
 def main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
-    options = [subj_items[i] + ' ' + parse_flags(trials_flags[subj_items[i]]) for i in range(len(subj_items))]
-    options += ['Exit']
+    options = items_list(subj_items, trials_flags)
     chosen_option = print_mainmenu(subj_profile, options)
     while chosen_option != len(options) - 1:
         chosen_item = subj_items[chosen_option]
@@ -22,10 +21,17 @@ def main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_pat
         trial_path  = subj_datapath / chosen_item
         stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
         trial_menu(chosen_item, trial_flags, trial_path, stimuli, questions)
+        options = items_list(subj_items, trials_flags)
         chosen_option = print_mainmenu(subj_profile, options)
 
+def items_list(subj_items, trials_flags):
+    options = [subj_items[i] + ' ' + parse_flags(trials_flags[subj_items[i]]) for i in range(len(subj_items))]
+    options += ['Exit']
+    
+    return options
+
 def trial_menu(item, trial_flags, trial_path, stimuli, questions):
-    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
+    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Flag as wrong', 'Exit']
     print('\n' + item)
     action = actions[list_options(actions, '')]
     while action != 'Exit':
@@ -46,6 +52,8 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
         read_words_associations(questions_file, item, trial_path)
     elif action == 'Edit screens':
         trial_flags['edited'] = plot.trial(stimuli, trial_path, editable=True) or trial_flags['edited']
+    elif action == 'Flag as wrong':
+        trial_flags['iswrong'] = not trial_flags['iswrong'][0]
     elif action == 'Exit':
         exit()
     
@@ -88,7 +96,7 @@ def load_subj_trials(subj_rawpath, trial_order, ascii_path, config, stimuli_path
     subj_items = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if not item.name in ['Test.mat', 'metadata.mat']]
     if data_path.exists():
         subj_processeditems = [item.name for item in data_path.iterdir() if item.is_dir()]
-        missing_items = [item for item in data_path if item not in subj_processeditems]
+        missing_items = [item for item in subj_items if item not in subj_processeditems]
     else:
         missing_items = subj_items
         parse.save_profile(subj_rawpath, data_path)
@@ -100,11 +108,15 @@ def load_subj_trials(subj_rawpath, trial_order, ascii_path, config, stimuli_path
 
 def parse_flags(flags):
     trial_status = ''
-    if flags['edited'][0]: trial_status += '\u2705'
+    if flags['edited'][0]:
+        if flags['iswrong'][0]:
+            trial_status += '\u2757 '
+        else:
+            trial_status += '\u2705 '
     wrong_validations = int(flags['firstval_iswrong'][0]) + int(flags['lastval_iswrong'][0])
     if wrong_validations > 0:
-        trial_status += '\u26A0\uFE0F' + str(wrong_validations)
-    if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0])
+        trial_status += '\u26A0\uFE0F' + str(wrong_validations) + ' '
+    if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0]) + ' '
     return trial_status
 
 if __name__ == '__main__':

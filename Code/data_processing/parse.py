@@ -26,7 +26,7 @@ def item(item, participant_path, ascii_path, config_file, stimuli_path, save_pat
     stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
     divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True)
     
-    flags = {'edited': False, 'firstval_iswrong': not(val_results[0]), 'lastval_iswrong': not(val_results[1]), 'wrong_answers': 0}
+    flags = {'edited': False, 'firstval_iswrong': not(val_results[0]), 'lastval_iswrong': not(val_results[1]), 'wrong_answers': 0, 'iswrong': False}
     utils.save_structs(et_messages,
                        screen_sequence,
                        pd.DataFrame(trial_metadata['questions_answers']),
