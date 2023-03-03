@@ -22,17 +22,22 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     trials_flags     = utils.load_flags(available_trials, subj_datapath)
     print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
     options = [available_trials[i] + ' ' + parse_flags(trials_flags[available_trials[i]]) for i in range(len(available_trials))]
-    chosen_item = available_trials[list_options(options, 'Enter the item number to edit: ')]
-    trial_flags = trials_flags[chosen_item]
-    trial_path  = subj_datapath / chosen_item
-    stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
-    print('\n' + chosen_item)
-    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
-    action = actions[list_options(actions, '')]
-    while action != 'Exit':
-        handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
+    options += ['Exit']
+    chosen_option = list_options(options, 'Enter the item number to edit: ')
+    while chosen_option != len(options) - 1:
+        chosen_item = available_trials[chosen_option]
+        trial_flags = trials_flags[chosen_item]
+        trial_path  = subj_datapath / chosen_item
+        stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
         print('\n' + chosen_item)
+        actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
         action = actions[list_options(actions, '')]
+        while action != 'Exit':
+            handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
+            print('\n' + chosen_item)
+            action = actions[list_options(actions, '')]
+        print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
+        chosen_option = list_options(options, 'Enter the item number to edit: ')
 
 def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
