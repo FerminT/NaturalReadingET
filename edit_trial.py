@@ -3,32 +3,21 @@ from Code.data_processing import parse, plot, utils
 import argparse
 
 def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
-    subj_datapath = Path(data_path) / subj
-    subj_rawpath  = Path(raw_path) / subj
-    if not subj_rawpath.exists():
-        raise ValueError('Participant not found')
-    subj_rawitems = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if not item.name in ['Test.mat', 'metadata.mat']]
-    if subj_datapath.exists():
-        subj_processeditems = [item.name for item in subj_datapath.iterdir() if item.is_dir()]
-        missing_items = [item for item in subj_rawitems if item not in subj_processeditems]
-    else:
-        missing_items = subj_rawitems
-        parse.save_profile(subj_rawpath, subj_datapath)
-    for rawitem in missing_items:
-        parse.item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, subj_datapath)
+    subj_datapath, subj_rawpath = Path(data_path) / subj, Path(raw_path) / subj
+    if not subj_rawpath.exists(): raise ValueError('Participant not found')
     
-    subj_profile     = utils.load_profile(subj_datapath)
-    available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
-    trials_flags     = utils.load_flags(available_trials, subj_datapath)
+    subj_profile = utils.load_profile(subj_datapath)
+    subj_items   = load_subj_trials(subj_rawpath, subj_profile['stimuli_order'][0], ascii_path, config, stimuli_path, data_path)
+    trials_flags = utils.load_flags(subj_items, subj_datapath)
     
-    main_menu(available_trials, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
+    main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
     
-def main_menu(available_trials, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
-    options = [available_trials[i] + ' ' + parse_flags(trials_flags[available_trials[i]]) for i in range(len(available_trials))]
+def main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
+    options = [subj_items[i] + ' ' + parse_flags(trials_flags[subj_items[i]]) for i in range(len(subj_items))]
     options += ['Exit']
     chosen_option = print_mainmenu(subj_profile, options)
     while chosen_option != len(options) - 1:
-        chosen_item = available_trials[chosen_option]
+        chosen_item = subj_items[chosen_option]
         trial_flags = trials_flags[chosen_item]
         trial_path  = subj_datapath / chosen_item
         stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
@@ -94,6 +83,20 @@ def read_questions_and_answers(questions_file, item, trial_path):
         wrong_answers = input('Number of wrong answers: ')
     
     return int(wrong_answers)
+
+def load_subj_trials(subj_rawpath, trial_order, ascii_path, config, stimuli_path, data_path):
+    subj_items = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if not item.name in ['Test.mat', 'metadata.mat']]
+    if data_path.exists():
+        subj_processeditems = [item.name for item in data_path.iterdir() if item.is_dir()]
+        missing_items = [item for item in data_path if item not in subj_processeditems]
+    else:
+        missing_items = subj_items
+        parse.save_profile(subj_rawpath, data_path)
+    for rawitem in missing_items:
+        parse.item(subj_rawpath / f'{rawitem}.mat', subj_rawpath, ascii_path, config, stimuli_path, data_path)
+    subj_items = utils.reorder(subj_items, trial_order)
+    
+    return subj_items
 
 def parse_flags(flags):
     trial_status = ''
