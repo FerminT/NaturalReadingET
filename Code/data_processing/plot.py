@@ -40,4 +40,4 @@ if __name__ == '__main__':
     
     trial_path = Path(args.trial_path) / args.subj / args.item
     stimuli = utils.load_stimuli(args.item, Path(args.stimuli_path))
-    plot_trial(stimuli, trial_path)
+    trial(stimuli, trial_path)
