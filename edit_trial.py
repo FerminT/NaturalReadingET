@@ -20,24 +20,35 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     subj_profile     = utils.load_profile(subj_datapath)
     available_trials = utils.reorder(subj_rawitems, subj_profile['stimuli_order'][0])
     trials_flags     = utils.load_flags(available_trials, subj_datapath)
-    print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
+    
+    main_menu(available_trials, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
+    
+def main_menu(available_trials, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
     options = [available_trials[i] + ' ' + parse_flags(trials_flags[available_trials[i]]) for i in range(len(available_trials))]
     options += ['Exit']
-    chosen_option = list_options(options, 'Enter the item number to edit: ')
+    chosen_option = print_mainmenu(subj_profile, options)
     while chosen_option != len(options) - 1:
         chosen_item = available_trials[chosen_option]
         trial_flags = trials_flags[chosen_item]
         trial_path  = subj_datapath / chosen_item
         stimuli     = utils.load_stimuli(chosen_item, stimuli_path)
-        print('\n' + chosen_item)
-        actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
+        trial_menu(chosen_item, trial_flags, trial_path, stimuli, questions)
+        chosen_option = print_mainmenu(subj_profile, options)
+
+def trial_menu(item, trial_flags, trial_path, stimuli, questions):
+    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Exit']
+    print('\n' + item)
+    action = actions[list_options(actions, '')]
+    while action != 'Exit':
+        handle_action(item, action, stimuli, questions, trial_flags, trial_path)
+        print('\n' + item)
         action = actions[list_options(actions, '')]
-        while action != 'Exit':
-            handle_action(chosen_item, action, stimuli, questions, trial_flags, trial_path)
-            print('\n' + chosen_item)
-            action = actions[list_options(actions, '')]
-        print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
-        chosen_option = list_options(options, 'Enter the item number to edit: ')
+
+def print_mainmenu(subj_profile, options):
+    print('Participant:', subj_profile['name'][0], '| Reading level:', subj_profile['reading_level'][0])
+    chosen_option = list_options(options, 'Enter the item number to edit: ')
+    
+    return chosen_option
 
 def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path):
     if action == 'Questions answers':
