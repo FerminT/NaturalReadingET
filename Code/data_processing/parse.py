@@ -19,12 +19,12 @@ def item(item, participant_path, ascii_path, config_file, stimuli_path, save_pat
     trial_path.mkdir(parents=True)
     
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-    trial_fix, trial_sacc, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
+    trial_fix, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
     
     val_results = save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
     stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
-    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True)
+    divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_path, stimuli, filter_outliers=True)
     
     flags = {'edited': False, 'firstval_iswrong': not(val_results[0]), 'lastval_iswrong': not(val_results[1]), 'wrong_answers': 0, 'iswrong': False}
     utils.save_structs(et_messages,
@@ -89,13 +89,12 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     
     return point_index == num_points - 1
 
-def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, trial_path, stimuli, filter_outliers=True):
-    fix_filename, sacc_filename, lines_filename = 'fixations.pkl', 'saccades.pkl', 'lines.pkl'
+def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_path, stimuli, filter_outliers=True):
+    fix_filename, lines_filename = 'fixations.pkl', 'lines.pkl'
     for i, screen_id in enumerate(trial_sequence['currentscreenid']):
         ini_time = et_messages[et_messages['text'].str.contains('ini')].iloc[i]['time']
         fin_time = et_messages[et_messages['text'].str.contains('fin')].iloc[i]['time']
         screen_fixations = trial_fix[(trial_fix['tStart'] > ini_time) & (trial_fix['tEnd'] < fin_time)]
-        screen_saccades  = trial_sacc[(trial_sacc['tStart'] > ini_time) & (trial_sacc['tEnd'] < fin_time)]
         if filter_outliers:
             screen_fixations = screen_fixations[(screen_fixations['duration'] > 50) & (screen_fixations['duration'] < 1000)]
         if screen_fixations.empty:
@@ -105,24 +104,23 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_sacc, tr
         screen_path  = utils.get_screenpath(screen_id, trial_path)
         lines_coords = utils.default_screen_linescoords(screen_id, stimuli)
         fixations_files = list(sorted(screen_path.glob(f'{fix_filename[:-4]}*')))
-        screenfix_filename, screensacc_filename, screenlines_filename = fix_filename, sacc_filename, lines_filename
+        screenfix_filename, screenlines_filename = fix_filename, lines_filename
         # Account for repeated screens (i.e. returning to it)
         if len(fixations_files):
             screenfix_filename   = f'{fix_filename[:-4]}_{len(fixations_files)}.pkl'
-            screensacc_filename  = f'{sacc_filename[:-4]}_{len(fixations_files)}.pkl'
             screenlines_filename = f'{lines_filename[:-4]}_{len(fixations_files)}.pkl'
         
-        screen_fixations.reset_index(inplace=True), screen_saccades.reset_index(inplace=True)
-        screen_fixations.to_pickle(screen_path / screenfix_filename), screen_saccades.to_pickle(screen_path / screensacc_filename)
+        screen_fixations.reset_index(inplace=True)
+        screen_fixations.to_pickle(screen_path / screenfix_filename)
         utils.save_linescoords(lines_coords, screen_path, screenlines_filename)
         
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, dfMsg, dfFix, dfSacc, _, _ = et_utils.parse_asc(asc_file, verbose=False)
-    dfFix, dfSacc = et_utils.keep_besteye(dfFix, dfSacc, dfMsg)
+    _, dfMsg, dfFix, _, _, _ = et_utils.parse_asc(asc_file, verbose=False)
+    dfFix = et_utils.keep_besteye(dfFix, dfMsg)
     dfMsg = et_utils.filter_msgs(dfMsg)
     
-    return dfFix, dfSacc, dfMsg
+    return dfFix, dfMsg
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract data from EyeLink .asc files and save them to .pkl')

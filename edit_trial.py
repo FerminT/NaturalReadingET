@@ -120,7 +120,7 @@ def parse_flags(flags):
     return trial_status
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Edit a trial from a given participant')
+    parser = argparse.ArgumentParser(description='Edit trials from a given participant')
     parser.add_argument('--raw', type=str, default='Data/raw', help='Path where participants raw data is stored in ASCII format')
     parser.add_argument('--ascii_path', type=str, default='asc', help='Path where .asc files are stored in a participants folder')
     parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat', help='Config file with the stimuli information')

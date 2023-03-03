@@ -150,10 +150,9 @@ def filter_msgs(dfMsg, cutout='validation'):
 def is_binocular(dfFix):
     return len(dfFix['eye'].unique()) > 1
 
-def keep_besteye(dfFix, dfSacc, dfMsg, default='R'):
+def keep_besteye(dfFix, dfMsg, default='R'):
     if is_binocular(dfFix):
         best_eye = find_besteye(dfMsg, default)
         dfFix = dfFix[dfFix['eye'] == best_eye]
-        dfSacc = dfSacc[dfSacc['eye'] == best_eye]
     
-    return dfFix, dfSacc
+    return dfFix
