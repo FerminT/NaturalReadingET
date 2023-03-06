@@ -5,7 +5,7 @@ import argparse
 
 def list_participants(raw_path):
     participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
-    chosen_participant = list_options(participants, prompt='Choose a participant:')
+    chosen_participant = list_options(participants, prompt='Choose a participant: ')
 
     return participants[chosen_participant]
 
@@ -110,8 +110,8 @@ def read_questions_and_answers(questions_file, item, trial_path):
 
 
 def load_subj_trials(subj_rawpath, ascii_path, config, stimuli_path, data_path):
-    subj_items = [item.name[:-4] for item in subj_rawpath.glob('*.mat') if
-                  not item.name in ['Test.mat', 'metadata.mat']]
+    subj_items = [item.name[:-4] for item in subj_rawpath.glob('*.mat')
+                  if item.name not in ['Test.mat', 'metadata.mat']]
     if data_path.exists():
         subj_processeditems = [item.name for item in data_path.iterdir() if item.is_dir()]
         missing_items = [item for item in subj_items if item not in subj_processeditems]
@@ -135,8 +135,9 @@ def parse_flags(flags):
             trial_status += '\u2705 '
     wrong_validations = int(flags['firstval_iswrong'][0]) + int(flags['lastval_iswrong'][0])
     if wrong_validations > 0:
-        trial_status += '\u26A0\uFE0F' + str(wrong_validations) + ' '
-    if flags['wrong_answers'][0]: trial_status += '\u274C' + str(flags['wrong_answers'][0]) + ' '
+        trial_status += '\u26A0\uFE0F ' + str(wrong_validations) + ' '
+    if flags['wrong_answers'][0]:
+        trial_status += '\u274C ' + str(flags['wrong_answers'][0]) + ' '
 
     return trial_status
 
