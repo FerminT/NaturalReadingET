@@ -16,6 +16,7 @@ def trial(stimuli, trial_path, editable=False):
     fig.canvas.mpl_connect('key_press_event', lambda event: handles.advance_sequence(event, state, screens,
                                                                                      screens_sequence, sequence_states,
                                                                                      ax, fig, editable))
+    plt.tight_layout()
     plt.show()
 
     save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
