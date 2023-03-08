@@ -153,7 +153,7 @@ def load_screen_fixations(screenid, item_path):
 def load_screen_linescoords(screenid, item_path):
     screen_path = get_screenpath(screenid, item_path)
     lines_files = screen_path.glob('lines*.pkl')
-    screen_lines = [pd.read_pickle(lines_file).to_numpy() for lines_file in lines_files]
+    screen_lines = [pd.read_pickle(lines_file).to_numpy() for lines_file in sorted(lines_files, reverse=True)]
     return screen_lines
 
 
