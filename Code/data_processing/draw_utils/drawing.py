@@ -60,7 +60,7 @@ def draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size):
                                     alpha=0.3)
         ax.add_patch(circle)
         fixation = df_fix.iloc[i]
-        annotation = plt.annotate("{}".format(fixation.name + 1), xy=(x, y + 3), fontsize=ann_size, ha="center",
+        annotation = plt.annotate("{}".format(fixation.name + 1), xy=(x, y), fontsize=ann_size, ha="center",
                                   va="center", alpha=0.5)
         fix_circle = FixCircle(i, circle, annotation, fixation)
         circles.append(fix_circle)
