@@ -21,7 +21,6 @@ def item(item, participant_path, ascii_path, config_file, stimuli_path, save_pat
 
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
     trial_fix, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
-
     val_results = save_validation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
     stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
@@ -132,7 +131,7 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_path, st
 
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, df_msg, df_fix, _, _, _ = et_utils.parse_asc(asc_file, verbose=False)
+    _, df_msg, df_fix, _, _, _ = et_utils.parse_asc(asc_file, verbose=True)
     df_fix = et_utils.keep_besteye(df_fix, df_msg)
     df_msg = et_utils.filter_msgs(df_msg)
 
