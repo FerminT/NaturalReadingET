@@ -145,8 +145,6 @@ def load_screen_fixations(screenid, item_path):
     screen_path = get_screenpath(screenid, item_path)
     fixations_files = screen_path.glob('fixations*.pkl')
     screen_fixations = [pd.read_pickle(fix_file) for fix_file in sorted(fixations_files, reverse=True)]
-    if not screen_fixations:
-        raise ValueError('No fixations found for screen ' + str(screenid) + ' in ' + str(item_path))
     return screen_fixations
 
 
