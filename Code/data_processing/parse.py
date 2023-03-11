@@ -131,7 +131,7 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_path, st
 
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
-    _, df_msg, df_fix, _, _, _ = et_utils.parse_asc(asc_file, verbose=True)
+    _, df_msg, df_fix, _, _, _ = et_utils.parse_asc(asc_file, verbose=False)
     df_fix = et_utils.keep_besteye(df_fix, df_msg)
     df_msg = et_utils.filter_msgs(df_msg)
 
