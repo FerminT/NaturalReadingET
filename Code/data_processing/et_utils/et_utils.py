@@ -195,7 +195,7 @@ def extract_valpoints(df_msg, best_eye, legend='VALIDATE', npoints=9):
     points = [msg.split('at')[1].split('OFFSET')[0].split(',') for msg in valpoints_msg]
     regexp = r'(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*pix'
     offsets = [re.findall(regexp, msg.split('at')[1].split('OFFSET')[1]) for msg in valpoints_msg]
-    offsets = [(float(offset[0]), float[offset[1]]) for offset in offsets]
+    offsets = [(float(offset[0][0]), float(offset[0][1])) for offset in offsets]
     points = [(int(point[0]), int(point[1])) for point in points]
     valpoints = pd.DataFrame(points, columns=['x', 'y']).astype(int)
     valoffsets = pd.DataFrame(offsets, columns=['x', 'y']).astype(float)
