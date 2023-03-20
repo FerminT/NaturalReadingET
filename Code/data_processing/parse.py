@@ -20,14 +20,17 @@ def item(item, participant_path, ascii_path, config_file, stimuli_path, save_pat
     trial_path.mkdir(parents=True)
 
     stimuli_index, subj_name = trial_metadata['stimuli_index'], trial_metadata['subjname']
-    trial_fix, et_messages = get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
-    val_results = save_validation_fixations(et_messages, trial_fix, trial_path)
+    trial_fix, et_messages, cal_points, val_points, val_offsets =\
+        get_eyetracking_data(participant_path / ascii_path, subj_name, stimuli_index)
+    utils.save_calibrationdata(cal_points, val_points, val_offsets, trial_path)
+
+    manualval_results = save_manualvalidation_fixations(et_messages, trial_fix, trial_path)
     screen_sequence = pd.DataFrame.from_records(trial_metadata['sequence'])
     stimuli = utils.load_stimuli(item.name[:-4], stimuli_path, config_file)
     divide_data_by_screen(screen_sequence, et_messages, trial_fix, trial_path, stimuli, filter_outliers=True)
 
-    flags = {'edited': False, 'firstval_iswrong': not (val_results[0]), 'lastval_iswrong': not (val_results[1]),
-             'wrong_answers': 0, 'iswrong': False}
+    flags = {'edited': False, 'firstval_iswrong': not (manualval_results[0]),
+             'lastval_iswrong': not (manualval_results[1]), 'wrong_answers': 0, 'iswrong': False}
     utils.save_structs(et_messages,
                        screen_sequence,
                        pd.DataFrame(trial_metadata['questions_answers']),
@@ -61,8 +64,8 @@ def save_profile(participant_rawpath, save_path):
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
 
 
-def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56,
-                              error_margin=30):
+def save_manualvalidation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56,
+                                    error_margin=30):
     val_msgs = et_messages[et_messages['text'].str.contains(val_legend)]
     fin_msgindex = et_messages[et_messages['text'].str.contains('termina experimento')].index[0]
     first_val = val_msgs.loc[:fin_msgindex]
@@ -77,8 +80,9 @@ def save_validation_fixations(et_messages, trial_fix, trial_path, val_legend='va
     firstval_iscorrect = check_validation_fixations(first_valfix, points_coords, num_points, points_area, error_margin)
     lastval_iscorrect = check_validation_fixations(last_valfix, points_coords, num_points, points_area, error_margin)
 
-    val_path = trial_path / 'validation'
-    if not val_path.exists(): val_path.mkdir()
+    val_path = trial_path / 'manual_validation'
+    if not val_path.exists():
+        val_path.mkdir()
     first_valfix.to_pickle(val_path / 'first.pkl')
     last_valfix.to_pickle(val_path / 'last.pkl')
 
@@ -132,10 +136,12 @@ def divide_data_by_screen(trial_sequence, et_messages, trial_fix, trial_path, st
 def get_eyetracking_data(asc_path, subj_name, stimuli_index):
     asc_file = asc_path / f'{subj_name}_{stimuli_index}.asc'
     _, df_msg, df_fix, _, _, _ = et_utils.parse_asc(asc_file, verbose=False)
-    df_fix = et_utils.keep_besteye(df_fix, df_msg)
+    df_fix, best_eye = et_utils.keep_besteye(df_fix, df_msg)
+    cal_points = et_utils.extract_calpoints(df_msg, best_eye)
+    val_points, val_offsets = et_utils.extract_valpoints(df_msg, best_eye)
     df_msg = et_utils.filter_msgs(df_msg)
 
-    return df_fix, df_msg
+    return df_fix, df_msg, cal_points, val_points, val_offsets
 
 
 if __name__ == '__main__':

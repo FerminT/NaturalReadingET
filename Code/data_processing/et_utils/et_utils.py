@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import regex as re
 import time
 
 
@@ -164,8 +165,39 @@ def is_binocular(df_fix):
 
 
 def keep_besteye(df_fix, df_msg, default='R'):
+    best_eye = default
     if is_binocular(df_fix):
         best_eye = find_besteye(df_msg, default)
         df_fix = df_fix[df_fix['eye'] == best_eye]
 
-    return df_fix
+    return df_fix, best_eye
+
+
+def extract_calpoints(df_msg, best_eye, legend='Calibration points', npoints=9):
+    calpoints_msg = df_msg[df_msg['text'].str.contains(legend)]
+    if len(calpoints_msg) >= 2:
+        calpoints_msgidx = calpoints_msg.iloc[-2].name if best_eye == 'L' else calpoints_msg.iloc[-1].name
+    else:
+        calpoints_msgidx = calpoints_msg.iloc[0].name
+    calpoints = df_msg.loc[calpoints_msgidx + 1:calpoints_msgidx + npoints]['text'].to_numpy()
+    calpoints = [list(map(lambda x: float(x.replace(',', '')), msg.split()[1:3])) for msg in calpoints]
+    calpoints = pd.DataFrame(calpoints, columns=['x', 'y'])
+
+    return calpoints
+
+
+def extract_valpoints(df_msg, best_eye, legend='VALIDATE', npoints=9):
+    valpoints_msg = df_msg[df_msg['text'].str.contains(legend)]
+    if len(valpoints_msg) > npoints:
+        besteye_legend = 'RIGHT' if best_eye == 'R' else 'LEFT'
+        valpoints_msg = valpoints_msg[valpoints_msg['text'].str.contains(besteye_legend)]
+    valpoints_msg = valpoints_msg['text'].to_numpy()
+    points = [msg.split('at')[1].split('OFFSET')[0].split(',') for msg in valpoints_msg]
+    regexp = r'(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*pix'
+    offsets = [re.findall(regexp, msg.split('at')[1].split('OFFSET')[1]) for msg in valpoints_msg]
+    offsets = [(float(offset[0]), float[offset[1]]) for offset in offsets]
+    points = [(int(point[0]), int(point[1])) for point in points]
+    valpoints = pd.DataFrame(points, columns=['x', 'y']).astype(int)
+    valoffsets = pd.DataFrame(offsets, columns=['x', 'y']).astype(float)
+
+    return valpoints, valoffsets

@@ -112,6 +112,14 @@ def save_linescoords(lines, screen_path, filename='lines.pkl'):
     pd.DataFrame(lines, columns=['y']).to_pickle(screen_path / filename)
 
 
+def save_calibrationdata(cal_points, val_points, val_offsets, trial_path):
+    save_path = trial_path / 'calibration'
+    if not save_path.exists():
+        save_path.mkdir()
+    cal_points.to_pickle(save_path / 'cal_points.pkl')
+    val_points.to_pickle(save_path / 'val_points.pkl'), val_offsets.to_pickle(save_path / 'val_offsets.pkl')
+
+
 def save_structs(et_messages, screen_sequence, answers, words, flags, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
