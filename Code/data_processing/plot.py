@@ -35,6 +35,8 @@ def calibration(trial_path, calibration_path='calibration', manualval_path='manu
                drawing.screen(manualval_points), drawing.screen(manualval_points)]
     # Plot the calibration grid relative to the screen centre
     cal_fixs = cal_points + (screens[0].shape[1] / 2, screens[0].shape[0] / 2)
+    cal_augfactor = (cal_fixs - cal_fixs.iloc[0]) * 2
+    cal_fixs += cal_augfactor
     val_fixs = val_points + val_offsets
     cal_fixs['duration'] = 1
     val_fixs['duration'] = 1
