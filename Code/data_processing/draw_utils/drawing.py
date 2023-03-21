@@ -1,6 +1,7 @@
 from .circle import FixCircle
 from .line import HLine
 from .handles import onclick, move_hline, release_hline
+from PIL import Image, ImageDraw
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -90,3 +91,15 @@ def draw_arrow(ax, p1, p2, color, arrows_list, index, alpha=0.2, width=0.05):
     arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=width, color=color, alpha=alpha)
     arrows_list.insert(index, arrow)
     ax.add_patch(arrow)
+
+
+def screen(points=[], point_size=14, height=1080, width=1920, color='grey'):
+    """ Draw an empty image with the given points """
+    img = Image.new('RGB', (width, height), color=color)
+    draw = ImageDraw.Draw(img)
+    if len(points):
+        xs, ys = points['x'].to_numpy(), points['y'].to_numpy()
+        for x, y in zip(xs, ys):
+            draw.ellipse((x - point_size, y - point_size, x + point_size, y + point_size), fill='black')
+
+    return np.array(img)

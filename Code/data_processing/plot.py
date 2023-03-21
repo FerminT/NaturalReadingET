@@ -1,5 +1,6 @@
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 from .draw_utils import drawing, handles
 from . import utils
 from tkinter import messagebox
@@ -24,6 +25,34 @@ def trial(stimuli, trial_path, editable=False):
         utils.update_and_save_trial(sequence_states, stimuli, trial_path)
 
     return save_files
+
+
+def calibration(trial_path, calibration_path='calibration', manualval_path='manual_validation'):
+    cal_points, val_points, val_offsets = utils.load_calibrationdata(trial_path / calibration_path)
+    manualval_fixs, manualval_points = utils.load_manualvaldata(trial_path / manualval_path, trial_path)
+
+    screens = [drawing.screen(), drawing.screen(val_points),
+               drawing.screen(manualval_points), drawing.screen(manualval_points)]
+    # Plot the calibration grid relative to the screen centre
+    cal_fixs = np.array(screens[0].shape[:2]) / 2 + cal_points
+    val_fixs = val_points + val_offsets
+    cal_fixs['duration'] = 1
+    val_fixs['duration'] = 1
+    fixations = [cal_fixs, val_fixs, manualval_fixs[0], manualval_fixs[1]]
+    fixations = [df_fix.rename(columns={'x': 'xAvg', 'y': 'yAvg'}) for df_fix in fixations]
+    screens_id = list(range(len(screens)))
+    sequence_states = {}
+    for screen_id in screens_id:
+        sequence_states[screen_id] = {'screenid': screen_id, 'fixations': fixations[screen_id], 'lines': []}
+
+    state = {'sequence_index': 0, 'cids': []}
+    fig, ax = plt.subplots()
+    drawing.update_figure(state, fig, ax, screens, sequence_states, editable=False)
+    fig.canvas.mpl_connect('key_press_event', lambda event: handles.advance_sequence(event, state, screens,
+                                                                                     screens_id, sequence_states,
+                                                                                     ax, fig, editable=False))
+    plt.tight_layout()
+    plt.show()
 
 
 def build_sequence_states(screens_fixations, screens_lines, trial_path):

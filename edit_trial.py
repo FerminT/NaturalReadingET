@@ -42,7 +42,7 @@ def items_list(subj_items, trials_flags):
 
 
 def trial_menu(item, trial_flags, trial_path, stimuli, questions):
-    actions = ['Questions answers', 'Words associations', 'Edit screens', 'Flag as wrong', 'Exit']
+    actions = ['Questions answers', 'Words associations', 'Plot calibration', 'Edit screens', 'Flag as wrong', 'Exit']
     print('\n' + item)
     action = actions[list_options(actions, '')]
     while action != 'Exit':
@@ -63,6 +63,8 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
         trial_flags['wrong_answers'] = read_questions_and_answers(questions_file, item, trial_path)
     elif action == 'Words associations':
         read_words_associations(questions_file, item, trial_path)
+    elif action == 'Plot calibration':
+        plot.calibration(trial_path)
     elif action == 'Edit screens':
         trial_flags['edited'] = plot.trial(stimuli, trial_path, editable=True) or trial_flags['edited']
     elif action == 'Flag as wrong':

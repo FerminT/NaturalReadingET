@@ -64,8 +64,8 @@ def save_profile(participant_rawpath, save_path):
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
 
 
-def save_manualvalidation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9, points_area=56,
-                                    error_margin=30):
+def save_manualvalidation_fixations(et_messages, trial_fix, trial_path, val_legend='validation', num_points=9,
+                                    points_area=56, error_margin=30):
     val_msgs = et_messages[et_messages['text'].str.contains(val_legend)]
     fin_msgindex = et_messages[et_messages['text'].str.contains('termina experimento')].index[0]
     first_val = val_msgs.loc[:fin_msgindex]
@@ -76,7 +76,7 @@ def save_manualvalidation_fixations(et_messages, trial_fix, trial_path, val_lege
     last_valfix = trial_fix[
         (trial_fix['tStart'] >= last_val.iloc[0]['time']) & (trial_fix['tEnd'] <= last_val.iloc[-1]['time'] + 500)]
 
-    points_coords = val_msgs['text'].str.extract(r'(\d+),(\d+)').astype(int)[:num_points].to_numpy()
+    points_coords = utils.get_points_coords(val_msgs, num_points)
     firstval_iscorrect = check_validation_fixations(first_valfix, points_coords, num_points, points_area, error_margin)
     lastval_iscorrect = check_validation_fixations(last_valfix, points_coords, num_points, points_area, error_margin)
 

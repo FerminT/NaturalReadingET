@@ -29,6 +29,10 @@ def load_profile(profile_path, filename='profile.pkl'):
     return pd.read_pickle(profile_path / filename)
 
 
+def load_pickle(path, filename):
+    return pd.read_pickle(path / filename)
+
+
 def update_flags(trial_flags, trial_path, filename='flags.pkl'):
     trial_flags.to_pickle(trial_path / filename)
 
@@ -120,6 +124,14 @@ def save_calibrationdata(cal_points, val_points, val_offsets, trial_path):
     val_points.to_pickle(save_path / 'val_points.pkl'), val_offsets.to_pickle(save_path / 'val_offsets.pkl')
 
 
+def load_calibrationdata(calibration_path):
+    cal_points = load_pickle(calibration_path, 'cal_points.pkl')
+    val_points = load_pickle(calibration_path, 'val_points.pkl')
+    val_offsets = load_pickle(calibration_path, 'val_offsets.pkl')
+
+    return cal_points, val_points, val_offsets
+
+
 def save_structs(et_messages, screen_sequence, answers, words, flags, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
@@ -171,3 +183,18 @@ def default_screen_linescoords(screenid, stimuli):
     screen_linescoords.append(screen_linescoords[-1] + linespacing)
 
     return screen_linescoords
+
+
+def get_points_coords(val_msgs, num_points):
+    points = val_msgs['text'].str.extract(r'(\d+),(\d+)').astype(int)[:num_points]
+    points.columns = ['x', 'y']
+    return points
+
+
+def load_manualvaldata(manualval_path, trial_path):
+    et_msgs = load_pickle(trial_path, 'et_messages.pkl')
+    val_msgs = et_msgs[et_msgs['text'].str.contains('validation')]
+    manualval_points = get_points_coords(val_msgs, num_points=9)
+    manualval_fixs = [load_pickle(manualval_path, 'first.pkl'), load_pickle(manualval_path, 'last.pkl')]
+
+    return manualval_fixs, manualval_points
