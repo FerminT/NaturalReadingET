@@ -34,10 +34,10 @@ def show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, quest
 
 def main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
     options = items_list(subj_items, trials_flags)
-    chosen_option = print_mainmenu(subj_profile, options)
-    while chosen_option != len(options) - 1:
-        options = show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_option)
-        chosen_option = print_mainmenu(subj_profile, options)
+    chosen_item = print_mainmenu(subj_profile, options)
+    while chosen_item != len(options) - 1:
+        options = show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_item)
+        chosen_item = print_mainmenu(subj_profile, options)
 
 
 def items_list(subj_items, trials_flags):
