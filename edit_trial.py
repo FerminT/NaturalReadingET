@@ -3,13 +3,6 @@ from Code.data_processing import parse, plot, utils
 import argparse
 
 
-def list_participants(raw_path):
-    participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
-    chosen_participant = list_options(participants, prompt='Choose a participant: ')
-
-    return participants[chosen_participant]
-
-
 def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_path, subj):
     subj_datapath, subj_rawpath = Path(data_path) / subj, Path(raw_path) / subj
     if not subj_rawpath.exists():
@@ -21,16 +14,29 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
 
 
+def list_participants(raw_path):
+    participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
+    chosen_participant = list_options(participants, prompt='Choose a participant: ')
+
+    return participants[chosen_participant]
+
+
+def show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_option):
+    chosen_item = subj_items[chosen_option]
+    trial_flags = trials_flags[chosen_item]
+    trial_path = subj_datapath / chosen_item
+    stimuli = utils.load_stimuli(chosen_item, stimuli_path)
+    trial_menu(chosen_item, trial_flags, trial_path, stimuli, questions)
+    updated_options = items_list(subj_items, trials_flags)
+
+    return updated_options
+
+
 def main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions):
     options = items_list(subj_items, trials_flags)
     chosen_option = print_mainmenu(subj_profile, options)
     while chosen_option != len(options) - 1:
-        chosen_item = subj_items[chosen_option]
-        trial_flags = trials_flags[chosen_item]
-        trial_path = subj_datapath / chosen_item
-        stimuli = utils.load_stimuli(chosen_item, stimuli_path)
-        trial_menu(chosen_item, trial_flags, trial_path, stimuli, questions)
-        options = items_list(subj_items, trials_flags)
+        options = show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_option)
         chosen_option = print_mainmenu(subj_profile, options)
 
 
