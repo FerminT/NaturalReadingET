@@ -1,16 +1,12 @@
 import argparse
 import matplotlib.pyplot as plt
-import numpy as np
 from .draw_utils import drawing, handles
 from . import utils
 from tkinter import messagebox
 from pathlib import Path
 
 
-def trial(stimuli, trial_path, editable=False):
-    screens, screens_fixations, screens_lines = utils.load_trial(stimuli, trial_path)
-    sequence_states, screens_sequence = build_sequence_states(screens_fixations, screens_lines, trial_path)
-
+def sequence(screens, screens_sequence, sequence_states, editable):
     state = {'sequence_index': 0, 'cids': []}
     fig, ax = plt.subplots()
     drawing.update_figure(state, fig, ax, screens, sequence_states, editable)
@@ -20,9 +16,16 @@ def trial(stimuli, trial_path, editable=False):
     plt.tight_layout()
     plt.show()
 
-    save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
-    if save_files:
-        utils.update_and_save_trial(sequence_states, stimuli, trial_path)
+
+def trial(stimuli, trial_path, editable=False):
+    screens, screens_fixations, screens_lines = utils.load_trial(stimuli, trial_path)
+    sequence_states, screens_sequence = build_sequence_states(screens_fixations, screens_lines, trial_path)
+
+    sequence(screens, screens_sequence, sequence_states, editable)
+    if editable:
+        save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
+        if save_files:
+            utils.update_and_save_trial(sequence_states, stimuli, trial_path)
 
     return save_files
 
@@ -34,27 +37,16 @@ def calibration(trial_path, calibration_path='calibration', manualval_path='manu
     screens = [drawing.screen(), drawing.screen(val_points),
                drawing.screen(manualval_points), drawing.screen(manualval_points)]
     # Plot the calibration grid relative to the screen centre
-    cal_fixs = cal_points + (screens[0].shape[1] / 2, screens[0].shape[0] / 2)
-    cal_augfactor = (cal_fixs - cal_fixs.iloc[0]) * 2
-    cal_fixs += cal_augfactor
-    val_fixs = val_points + val_offsets
-    cal_fixs['duration'] = 1
-    val_fixs['duration'] = 1
+    cal_fixs, val_fixs = utils.add_offsets(cal_points, val_points, val_offsets, screens[0].shape[:2])
+
     fixations = [cal_fixs, val_fixs, manualval_fixs[0], manualval_fixs[1]]
     fixations = [df_fix.rename(columns={'x': 'xAvg', 'y': 'yAvg'}) for df_fix in fixations]
-    screens_id = list(range(len(screens)))
-    sequence_states = {}
-    for screen_id in screens_id:
-        sequence_states[screen_id] = {'screenid': screen_id, 'fixations': fixations[screen_id], 'lines': []}
 
-    state = {'sequence_index': 0, 'cids': []}
-    fig, ax = plt.subplots()
-    drawing.update_figure(state, fig, ax, screens, sequence_states, editable=False)
-    fig.canvas.mpl_connect('key_press_event', lambda event: handles.advance_sequence(event, state, screens,
-                                                                                     screens_id, sequence_states,
-                                                                                     ax, fig, editable=False))
-    plt.tight_layout()
-    plt.show()
+    screens_id = list(range(len(screens)))
+    sequence_states = {screen_id: {'screenid': screen_id, 'fixations': fixations[screen_id], 'lines': []}
+                       for screen_id in screens_id}
+
+    sequence(screens, screens_id, sequence_states, editable=False)
 
 
 def build_sequence_states(screens_fixations, screens_lines, trial_path):

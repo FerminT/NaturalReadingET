@@ -198,3 +198,14 @@ def load_manualvaldata(manualval_path, trial_path):
     manualval_fixs = [load_pickle(manualval_path, 'first.pkl'), load_pickle(manualval_path, 'last.pkl')]
 
     return manualval_fixs, manualval_points
+
+
+def add_offsets(cal_points, val_points, val_offsets, screen_size):
+    cal_fixs = cal_points + (screen_size[1] / 2, screen_size[0] / 2)
+    cal_augfactor = (cal_fixs - cal_fixs.iloc[0]) * 2
+    cal_fixs += cal_augfactor
+    val_fixs = val_points + val_offsets
+    cal_fixs['duration'] = 1
+    val_fixs['duration'] = 1
+
+    return cal_fixs, val_fixs
