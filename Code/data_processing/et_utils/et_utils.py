@@ -175,12 +175,14 @@ def keep_besteye(df_fix, df_msg, default='R'):
 
 def extract_calpoints(df_msg, best_eye, legend='Calibration points', npoints=9):
     calpoints_msg = df_msg[df_msg['text'].str.contains(legend)]
-    if len(calpoints_msg) >= 2:
-        calpoints_msgidx = calpoints_msg.iloc[-2].name if best_eye == 'L' else calpoints_msg.iloc[-1].name
-    else:
-        calpoints_msgidx = calpoints_msg.iloc[0].name
-    calpoints = df_msg.loc[calpoints_msgidx + 1:calpoints_msgidx + npoints]['text'].to_numpy()
-    calpoints = [list(map(lambda x: float(x.replace(',', '')), msg.split()[1:3])) for msg in calpoints]
+    calpoints = []
+    if not calpoints_msg.empty:
+        if len(calpoints_msg) >= 2:
+            calpoints_msgidx = calpoints_msg.iloc[-2].name if best_eye == 'L' else calpoints_msg.iloc[-1].name
+        else:
+            calpoints_msgidx = calpoints_msg.iloc[0].name
+        calpoints = df_msg.loc[calpoints_msgidx + 1:calpoints_msgidx + npoints]['text'].to_numpy()
+        calpoints = [list(map(lambda x: float(x.replace(',', '')), msg.split()[1:3])) for msg in calpoints]
     calpoints = pd.DataFrame(calpoints, columns=['x', 'y'])
 
     return calpoints
