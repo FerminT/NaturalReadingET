@@ -96,8 +96,8 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     fix_coords = fixations.loc[:, ['xAvg', 'yAvg']].astype(int).to_numpy()
     point_index = 0
     for (x, y) in fix_coords:
-        lower_bound, upper_bound = points_coords[point_index] - (points_area + error_margin), points_coords[
-            point_index] + (points_area + error_margin)
+        lower_bound = points_coords.iloc[point_index] - (points_area + error_margin)
+        upper_bound = points_coords.iloc[point_index] + (points_area + error_margin)
         if x in range(lower_bound[0], upper_bound[0]) and y in range(lower_bound[1], upper_bound[1]):
             point_index += 1
             if point_index == num_points - 1:
