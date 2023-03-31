@@ -27,8 +27,7 @@ def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines
 
 
 def handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix):
-    clicked_fixation = select_fixation(event, circles, last_actions)
-    # clicked_fixation = remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix)
+    clicked_fixation = select_fixation(event, circles, arrows, last_actions)
     if not clicked_fixation:
         select_hline(event, hlines, last_actions)
 
