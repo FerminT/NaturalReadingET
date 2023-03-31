@@ -49,11 +49,6 @@ def move_object(event, last_actions):
     selected_object = last_actions[-1]
     if selected_object.is_selected:
         selected_object.update_coords(event.xdata, event.ydata)
-        # if isinstance(selected_object, FixCircle):
-        #     selected_object.circle.center = event.xdata, event.ydata
-        #     selected_object.ann.xy = event.xdata, event.ydata
-        # elif isinstance(selected_object, HLine):
-        #     selected_object.update_y(event.ydata)
 
 
 def select_hline(event, hlines, last_actions):
@@ -88,11 +83,11 @@ def undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_
             if index > 0:
                 if index >= len(circles):
                     index = len(circles) - 1
-                drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(), colors[index], arrows,
-                                   index - 1)
+                new_arrow = drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(), colors[index])
+                arrows.insert(index - 1, new_arrow)
             if index < len(circles) - 1:
-                drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(), colors[index], arrows,
-                                   index)
+                new_arrow = drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(), colors[index])
+                arrows.insert(index, new_arrow)
         elif isinstance(last_action, HLine) and not last_action.is_selected:
             line = last_action
             line.restore_y()
@@ -108,8 +103,8 @@ def remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix):
             if i > 0:
                 arrows[i - 1].remove(), arrows.pop(i - 1)
             if 0 < i < len(circles) - 1:
-                drawing.draw_arrow(ax, circles[i - 1].center(), circles[i + 1].center(), colors[i], arrows, i - 1)
-
+                new_arrow = drawing.draw_arrow(ax, circles[i - 1].center(), circles[i + 1].center(), colors[i])
+                arrows.insert(i - 1, new_arrow)
             last_actions.append(fix_circle)
             fix_circle.remove(), circles.pop(i)
             df_fix.drop(fix_circle.fix_name(), inplace=True)

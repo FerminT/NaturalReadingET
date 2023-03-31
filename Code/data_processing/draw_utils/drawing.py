@@ -69,9 +69,7 @@ def draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size):
 
 
 def draw_arrows(ax, circles, colors):
-    arrows = []
-    for i in range(len(circles) - 1):
-        draw_arrow(ax, circles[i].center(), circles[i + 1].center(), colors[i], arrows, i)
+    arrows = [draw_arrow(ax, circles[i].center(), circles[i + 1].center(), colors[i]) for i in range(len(circles) - 1)]
     return arrows
 
 
@@ -85,12 +83,12 @@ def draw_hlines(ax, lines_coords):
     return hlines
 
 
-def draw_arrow(ax, p1, p2, color, arrows_list, index, alpha=0.2, width=0.05):
+def draw_arrow(ax, p1, p2, color, alpha=0.2, width=0.05):
     x1, y1 = p1
     x2, y2 = p2
     arrow = mpl.patches.Arrow(x1, y1, x2 - x1, y2 - y1, width=width, color=color, alpha=alpha)
-    arrows_list.insert(index, arrow)
     ax.add_patch(arrow)
+    return arrow
 
 
 def screen(points=[], point_size=14, height=1080, width=1920, color='grey'):
