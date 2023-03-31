@@ -19,30 +19,41 @@ def advance_sequence(event, state, screens, screens_sequence, sequence_states, a
 def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines_coords, hlines):
     if event.button == 1:
         handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix)
+    elif event.button == 2:
+        remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix)
     elif event.button == 3:
         undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_fix)
     fig.canvas.draw()
 
 
 def handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix):
-    clicked_fixation = remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix)
+    clicked_fixation = select_fixation(event, circles, last_actions)
+    # clicked_fixation = remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix)
     if not clicked_fixation:
         select_hline(event, hlines, last_actions)
 
 
-def release_hline(event, lines_coords, last_actions):
+def release_object(event, lines_coords, df_fix, last_actions):
     if event.button == 1 and last_actions:
-        selected_line = last_actions[-1]
-        if isinstance(selected_line, HLine) and selected_line.is_selected:
-            lines_coords[selected_line.id] = selected_line.get_y()
-            selected_line.desselect()
+        selected_object = last_actions[-1]
+        if selected_object.is_selected:
+            if isinstance(selected_object, FixCircle):
+                selected_object.desselect(df_fix)
+            else:
+                selected_object.desselect(lines_coords)
 
 
-def move_hline(event, last_actions):
-    if not last_actions: return
-    selected_line = last_actions[-1]
-    if isinstance(selected_line, HLine) and selected_line.is_selected:
-        selected_line.update_y(event.ydata)
+def move_object(event, last_actions):
+    if not last_actions:
+        return
+    selected_object = last_actions[-1]
+    if selected_object.is_selected:
+        selected_object.update_coords(event.xdata, event.ydata)
+        # if isinstance(selected_object, FixCircle):
+        #     selected_object.circle.center = event.xdata, event.ydata
+        #     selected_object.ann.xy = event.xdata, event.ydata
+        # elif isinstance(selected_object, HLine):
+        #     selected_object.update_y(event.ydata)
 
 
 def select_hline(event, hlines, last_actions):
@@ -53,10 +64,18 @@ def select_hline(event, hlines, last_actions):
             break
 
 
+def select_fixation(event, circles, last_actions):
+    for circle in circles:
+        if circle.contains(event):
+            circle.select()
+            last_actions.append(circle)
+            return circle
+
+
 def undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_fix):
     if last_actions:
         last_action = last_actions.pop()
-        if isinstance(last_action, FixCircle):
+        if isinstance(last_action, FixCircle) and last_action.was_removed:
             fix_circle = last_action
             index = fix_circle.id
             circles.insert(index, fix_circle)

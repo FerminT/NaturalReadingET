@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class HLine:
     def __init__(self, id, line):
         self.id = id
@@ -13,11 +14,15 @@ class HLine:
     def select(self):
         self.is_selected = True
         self.prev_y = self.get_y()
-        
-        
-    def desselect(self):
+
+    def desselect(self, lines_coords):
+        lines_coords[self.id] = self.get_y()
         self.is_selected = False
-    
+
+    def update_coords(self, x, y):
+        self.line.set_ydata([y, y])
+        self.draw_canvas()
+
     def update_y(self, y):
         self.line.set_ydata([y, y])
         self.draw_canvas()

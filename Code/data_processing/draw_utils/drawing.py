@@ -1,6 +1,6 @@
 from .circle import FixCircle
 from .line import HLine
-from .handles import onclick, move_hline, release_hline
+from .handles import onclick, move_object, release_object
 from PIL import Image, ImageDraw
 import numpy as np
 import matplotlib as mpl
@@ -39,9 +39,9 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
         cids.append(fig.canvas.mpl_connect('button_press_event',
                                            lambda event: onclick(event, circles, arrows, fig, ax, colors, last_actions,
                                                                  df_fix, lines_coords, hlines)))
-        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_hline(event, last_actions)))
+        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_object(event, last_actions)))
         cids.append(fig.canvas.mpl_connect('button_release_event',
-                                           lambda event: release_hline(event, lines_coords, last_actions)))
+                                           lambda event: release_object(event, lines_coords, df_fix, last_actions)))
 
     ax.axis('off')
     fig.canvas.draw()
