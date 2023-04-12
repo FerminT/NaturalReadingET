@@ -9,9 +9,12 @@ function answers = show_questions(title, stimuli_questions, mode)
 
     answers = {};
     for qindex = 1:length(questions)
-        prompt   = questions(qindex);
+        prompt   = strcat('\fontsize{15} ', questions(qindex));
         dlgtitle = 'Pregunta de comprensión';
-        reply    = inputdlg(prompt, dlgtitle);
+        dims = 1;
+        definput = {''};
+        opts.Interpreter = 'tex';
+        reply    = inputdlg(prompt, dlgtitle, dims, definput, opts);
         answers  = [answers reply];
     end
 end
