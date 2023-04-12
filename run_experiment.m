@@ -20,7 +20,9 @@ function run_experiment()
     subjfile = fullfile(SAVE_PATH, 'metadata.mat');
     loaded_metadata = false;
     if exist(subjfile, 'file') > 0
-        load_metadata = questdlg('Se encontro informacion previa del participante. Cargar el archivo?', 'Experimento previo');
+        opts.Interpreter = 'tex';
+        opts.Default = 'Yes';
+        load_metadata = questdlg('\fontsize{15} Se encontro informacion previa del participante. Cargar el archivo?', 'Experimento previo', opts);
         if strcmp(load_metadata, 'Yes')
             load(subjfile)
             loaded_metadata = true;
@@ -94,13 +96,14 @@ function [initials, reading_level, use_eyetracker] =  initial_questions()
     reading_level = '';
     use_eyetracker = 0;
     
-    prompt = {'Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
-        'Del 1 al 10, que tan frecuentemente lee? (10 = mas de una hora al dia)', ...
-        'Usar el eyetracker? (Y/N)'};
+    prompt = {'\fontsize{13} Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
+        '\fontsize{13} Del 1 al 10, que tan frecuentemente lee? (10 = mas de una hora al dia)', ...
+        '\fontsize{13} Usar el eyetracker? (Y/N)'};
     dlgtitle = 'Metadata';
-    dims     = [1 40];
+    dims     = [1 60];
     definput = {'', '', 'Y'};
-    answer = inputdlg(prompt, dlgtitle, dims, definput);
+    opts.Interpreter = 'tex';
+    answer = inputdlg(prompt, dlgtitle, dims, definput, opts);
     if isempty(answer)
         return
     else
