@@ -114,10 +114,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
         sca
         disp(ME) 
         returncontrol()
-        disp('Hubo un error en run_experiment')
-    
-        finish_eyetracking(use_eyetracker)
-        keyboard
+        disp('Hubo un error en run_trial')
+        finish_eyetracking(use_eyetracker);
+        keyboard;
     end
     
     disp('Listo!')
@@ -173,7 +172,7 @@ function eyetrackerptr = initeyetracker(filename, screens, stimuli_config)
 end
 
 function finish_eyetracking(use_eyetracker)
-    if use_eyetracker
+    if use_eyetracker && Eyelink('isconnected')
        Eyelink('Command', 'clear_screen 0');
        eyelink_end
     end
