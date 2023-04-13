@@ -17,8 +17,8 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
     disp(['Usamos el texto ' title])
     
     Screen('Preference', 'SkipSyncTests', 1);
-    Screen('Preference', 'VisualDebuglevel', 3); % remove presentation screen
-    Screen('Preference', 'Verbosity', 1); % remove warnings
+    Screen('Preference', 'VisualDebuglevel', 0); % remove presentation screen
+    Screen('Preference', 'Verbosity', 0); % remove warnings
 
     try
         eyelink_filename = strcat(subjname, '_', num2str(stimuli_index));
