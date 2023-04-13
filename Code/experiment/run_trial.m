@@ -103,7 +103,9 @@ function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli
 
         if exit_status == 2
             trial.questions_answers = show_questions(title, stimuli_questions, 'questions');
-            uiwait(msgbox('Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.'))
+            opts.Interpreter = 'tex';
+            opts.WindowStyle = 'modal';
+            uiwait(msgbox('\fontsize{13} Se presentaran palabras. Escribi la primera palabra que se te venga a la mente.', 'Fin del cuento', opts))
             trial.synonyms_answers  = show_questions(title, stimuli_questions, 'synonyms');
         
             trial_filename = fullfile(save_path, title);

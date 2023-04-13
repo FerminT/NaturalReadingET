@@ -72,11 +72,15 @@ function run_experiment()
                 
     end
 
+    opts.Interpreter = 'tex';
+    opts.WindowStyle = 'modal';
     if stimuli_index > length(shuffled_stimuli)
-        msgbox('Experimento terminado!')
+        uiwait(msgbox('\fontsize{13} Experimento terminado!', 'Fin del experimento', opts))
     else
-        msgbox('Experimento interrumpido. Se guardo el estado de la/el participante')
+        uiwait(msgbox('\fontsize{13} Experimento interrumpido. Se guardo el estado de la/el participante', 'Fin del experimento', opts))
     end
+    
+    exit();
 end
 
 function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
