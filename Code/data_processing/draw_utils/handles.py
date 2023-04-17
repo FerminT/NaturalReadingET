@@ -42,17 +42,19 @@ def release_object(event, lines_coords, df_fix, last_actions):
                 selected_object.desselect(lines_coords)
 
 
-def update_arrows(ax, arrows, circles, index):
-    if 0 <= index < len(circles) - 1:
-        arrows[index].remove(), arrows.pop(index)
-        new_arrow = drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(),
-                                       circles[index].color())
-        arrows.insert(index, new_arrow)
+def update_arrows(ax, arrows, circles, index, remove_current=True):
     if index > 0:
-        arrows[index - 1].remove(), arrows.pop(index - 1)
+        if remove_current:
+            arrows[index - 1].remove(), arrows.pop(index - 1)
         new_arrow = drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(),
                                        circles[index - 1].color())
         arrows.insert(index - 1, new_arrow)
+    if index < len(circles) - 1:
+        if remove_current:
+            arrows[index].remove(), arrows.pop(index)
+        new_arrow = drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(),
+                                       circles[index].color())
+        arrows.insert(index, new_arrow)
 
 
 def move_object(event, ax, arrows, circles, last_actions):
@@ -93,14 +95,7 @@ def undo_lastaction(last_actions, circles, arrows, ax, lines_coords, df_fix):
 
             if 0 < index < len(circles) - 1:
                 arrows[index - 1].remove(), arrows.pop(index - 1)
-            if index > 0:
-                new_arrow = drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(),
-                                               fix_circle.color())
-                arrows.insert(index - 1, new_arrow)
-            if index < len(circles) - 1:
-                new_arrow = drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(),
-                                               fix_circle.color())
-                arrows.insert(index, new_arrow)
+            update_arrows(ax, arrows, circles, index, remove_current=False)
         elif isinstance(last_action, HLine) and not last_action.is_selected:
             line = last_action
             line.restore_y()
