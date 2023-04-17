@@ -29,17 +29,18 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
         ax.set_title(title)
 
     xs, ys, ts = df_fix['xAvg'].to_numpy(dtype=int), df_fix['yAvg'].to_numpy(dtype=int), df_fix['duration'].to_numpy()
-    circles, colors = draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size)
-    arrows = draw_arrows(ax, circles, colors)
+    circles = draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size)
+    arrows = draw_arrows(ax, circles)
     hlines = draw_hlines(ax, lines_coords)
 
     cids = []
     if editable:
         last_actions = []
         cids.append(fig.canvas.mpl_connect('button_press_event',
-                                           lambda event: onclick(event, circles, arrows, fig, ax, colors, last_actions,
+                                           lambda event: onclick(event, circles, arrows, fig, ax, last_actions,
                                                                  df_fix, lines_coords, hlines)))
-        cids.append(fig.canvas.mpl_connect('motion_notify_event', lambda event: move_object(event, last_actions)))
+        cids.append(fig.canvas.mpl_connect('motion_notify_event',
+                                           lambda event: move_object(event, arrows, last_actions)))
         cids.append(fig.canvas.mpl_connect('button_release_event',
                                            lambda event: release_object(event, lines_coords, df_fix, last_actions)))
 
@@ -65,11 +66,12 @@ def draw_circles(ax, xs, ys, ts, df_fix, min_t, fix_size, ann_size):
                                   va="center", alpha=0.5)
         fix_circle = FixCircle(i, circle, annotation, fixation)
         circles.append(fix_circle)
-    return circles, colors
+    return circles
 
 
-def draw_arrows(ax, circles, colors):
-    arrows = [draw_arrow(ax, circles[i].center(), circles[i + 1].center(), colors[i]) for i in range(len(circles) - 1)]
+def draw_arrows(ax, circles):
+    arrows = [draw_arrow(ax, circles[i].center(), circles[i + 1].center(), circles[i].color())
+              for i in range(len(circles) - 1)]
     return arrows
 
 

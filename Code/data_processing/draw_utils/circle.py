@@ -23,12 +23,15 @@ class FixCircle:
         self.is_selected = False
         df_fix.loc[self.fix_name(), ['xAvg', 'yAvg']] = self.center()
 
-    def update_coords(self, x, y):
+    def update_coords(self, x, y, arrows):
         self.circle.center = x, y
         self.ann.set_position((x, y))
+
         self.draw_canvas()
 
-    def remove(self):
+    def remove(self, circles, df_fix):
+        circles.pop(self.id)
+        df_fix.drop(self.fix_name(), inplace=True)
         self.circle.remove()
         self.ann.remove()
         self.was_removed = True
@@ -39,3 +42,12 @@ class FixCircle:
 
     def draw_canvas(self):
         self.circle.figure.canvas.draw()
+
+    def restore(self, circles, ax, df_fix):
+        circles.insert(self.id, self)
+        self.add_to_axes(ax)
+        df_fix.loc[self.fix_name()] = self.fixation
+        df_fix.sort_index(inplace=True)
+
+    def color(self):
+        return self.circle.get_facecolor()

@@ -19,7 +19,7 @@ class HLine:
         lines_coords[self.id] = self.get_y()
         self.is_selected = False
 
-    def update_coords(self, x, y):
+    def update_coords(self, x, y, arrows):
         self.line.set_ydata([y, y])
         self.draw_canvas()
 
