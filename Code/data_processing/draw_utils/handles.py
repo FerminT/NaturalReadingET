@@ -27,7 +27,7 @@ def onclick(event, circles, arrows, fig, ax, colors, last_actions, df_fix, lines
 
 
 def handle_click(event, hlines, circles, arrows, ax, colors, last_actions, df_fix):
-    clicked_fixation = select_fixation(event, circles, arrows, last_actions)
+    clicked_fixation = select_fixation(event, circles, last_actions)
     if not clicked_fixation:
         select_hline(event, hlines, last_actions)
 
@@ -72,6 +72,8 @@ def undo_lastaction(last_actions, circles, arrows, ax, colors, lines_coords, df_
         if isinstance(last_action, FixCircle) and last_action.was_removed:
             fix_circle = last_action
             index = fix_circle.id
+            for circle in circles[index:]:
+                circle.id += 1
             circles.insert(index, fix_circle)
             fix_circle.add_to_axes(ax)
             df_fix.loc[fix_circle.fix_name()] = fix_circle.fixation
@@ -106,6 +108,8 @@ def remove_fixation(event, circles, arrows, ax, colors, last_actions, df_fix):
                 arrows.insert(i - 1, new_arrow)
             last_actions.append(fix_circle)
             fix_circle.remove(), circles.pop(i)
+            for circle in circles[fix_circle.id:]:
+                circle.id -= 1
             df_fix.drop(fix_circle.fix_name(), inplace=True)
             removed_fix = True
             break
