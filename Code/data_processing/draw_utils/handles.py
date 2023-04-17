@@ -42,12 +42,28 @@ def release_object(event, lines_coords, df_fix, last_actions):
                 selected_object.desselect(lines_coords)
 
 
-def move_object(event, arrows, last_actions):
+def update_arrows(ax, arrows, circles, index):
+    if 0 <= index < len(circles) - 1:
+        arrows[index].remove(), arrows.pop(index)
+        new_arrow = drawing.draw_arrow(ax, circles[index].center(), circles[index + 1].center(),
+                                       circles[index].color())
+        arrows.insert(index, new_arrow)
+    if index > 0:
+        arrows[index - 1].remove(), arrows.pop(index - 1)
+        new_arrow = drawing.draw_arrow(ax, circles[index - 1].center(), circles[index].center(),
+                                       circles[index - 1].color())
+        arrows.insert(index - 1, new_arrow)
+
+
+def move_object(event, ax, arrows, circles, last_actions):
     if not last_actions:
         return
     selected_object = last_actions[-1]
     if selected_object.is_selected:
-        selected_object.update_coords(event.xdata, event.ydata, arrows)
+        selected_object.update_coords(event.xdata, event.ydata)
+        if isinstance(selected_object, FixCircle):
+            update_arrows(ax, arrows, circles, selected_object.id)
+        selected_object.draw_canvas()
 
 
 def select_hline(event, hlines, last_actions):

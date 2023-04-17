@@ -40,7 +40,7 @@ def draw_scanpath(img, df_fix, fig, ax, ann_size=8, fix_size=15, min_t=250, titl
                                            lambda event: onclick(event, circles, arrows, fig, ax, last_actions,
                                                                  df_fix, lines_coords, hlines)))
         cids.append(fig.canvas.mpl_connect('motion_notify_event',
-                                           lambda event: move_object(event, arrows, last_actions)))
+                                           lambda event: move_object(event, ax, arrows, circles, last_actions)))
         cids.append(fig.canvas.mpl_connect('button_release_event',
                                            lambda event: release_object(event, lines_coords, df_fix, last_actions)))
 

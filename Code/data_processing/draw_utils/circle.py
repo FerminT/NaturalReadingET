@@ -23,11 +23,9 @@ class FixCircle:
         self.is_selected = False
         df_fix.loc[self.fix_name(), ['xAvg', 'yAvg']] = self.center()
 
-    def update_coords(self, x, y, arrows):
+    def update_coords(self, x, y):
         self.circle.center = x, y
         self.ann.set_position((x, y))
-
-        self.draw_canvas()
 
     def remove(self, circles, df_fix):
         circles.pop(self.id)
