@@ -204,7 +204,7 @@ def add_offsets(cal_points, val_points, val_offsets, screen_size):
     cal_fixs = cal_points
     if not cal_points.empty:
         cal_fixs += (screen_size[1] / 2, screen_size[0] / 2)
-        cal_augfactor = (cal_fixs - cal_fixs.iloc[0]) * 2
+        cal_augfactor = (cal_fixs - cal_fixs.iloc[0]) * 5
         cal_fixs += cal_augfactor
     val_fixs = val_points + val_offsets
     cal_fixs['duration'] = 1
