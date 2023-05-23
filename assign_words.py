@@ -28,12 +28,23 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                 if screen_counter[screen_id] > 0:
                     fix_filename = f'fixations_{screen_counter[screen_id]}.pkl'
                     lines_filename = f'lines_{screen_counter[screen_id]}.pkl'
-                screen_counter[screen_id] += 1
                 fixations = pd.read_pickle(screen_dir / fix_filename)
-                lines_pos = pd.read_pickle(screen_dir / lines_filename)
+                lines_pos = pd.read_pickle(screen_dir / lines_filename).sort_values('y')['y'].to_numpy()
                 for line_number, line in enumerate(screens_lines[screen_id]):
                     words = line['text'].split()
-                    line_fixations = fixations[fixations['yAvg'].between(lines_pos[line_number], lines_pos[line_number + 1])]
+                    spaces_pos = line['spaces_pos']
+                    line_fixations = fixations[fixations['yAvg'].between(lines_pos[line_number],
+                                                                         lines_pos[line_number + 1],
+                                                                         inclusive='left')]
+                    # Check if first screen fixation hasn't been removed yet
+                    if exclude_firstfix and line_fixations.iloc[0].name == 0:
+                        line_fixations.drop([0], inplace=True)
+                    if exclude_lastfix and line_fixations.iloc[-1].name == len(fixations) - 1:
+                        line_fixations.drop([len(fixations) - 1], inplace=True)
+
+                screen_counter[screen_id] += 1
+
+
     return
 
 
