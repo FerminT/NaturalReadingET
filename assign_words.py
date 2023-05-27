@@ -22,6 +22,7 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                 continue
             screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
             screen_counter = {screen_id: 0 for screen_id in screen_sequence.unique()}
+            screens_lines_fix = {screen_id: [] for screen_id in screen_sequence.unique()}
             for screen_id in screen_sequence:
                 screen_dir = trial_path / f'screen_{screen_id}'
                 fix_filename, lines_filename = 'fixations.pkl', 'lines.pkl'
@@ -33,6 +34,7 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                 for line_number, line in enumerate(screens_lines[screen_id]):
                     words = line['text'].split()
                     spaces_pos = line['spaces_pos']
+                    words_fixations = {word: {} for word in words}
                     line_fixations = fixations[fixations['yAvg'].between(lines_pos[line_number],
                                                                          lines_pos[line_number + 1],
                                                                          inclusive='left')]
@@ -41,10 +43,33 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                         line_fixations.drop([0], inplace=True)
                     if exclude_lastfix and line_fixations.iloc[-1].name == len(fixations) - 1:
                         line_fixations.drop([len(fixations) - 1], inplace=True)
+                    if len(line_fixations) == 0:
+                        continue
+                    for i in range(len(spaces_pos) - 1):
+                        word_fixations = line_fixations[line_fixations['xAvg'].between(spaces_pos[i],
+                                                                                       spaces_pos[i + 1],
+                                                                                       inclusive='left')]
+                        if len(word_fixations) == 0:
+                            continue
+                        word_fixations = word_fixations[['index', 'duration', 'xAvg']]
+                        word_fixations = word_fixations.rename(columns={'index': 'fixid', 'xAvg': 'x'})
+                        word_fixations.reset_index(names=['num'], inplace=True)
+                        # Shift x to start at 0
+                        word_fixations['x'] -= spaces_pos[i]
+
+                        word = words[i]
+                        words_fixations[word] = word_fixations.to_dict(orient='list')
+                    if screen_counter[screen_id] > 0:
+                        # Returning screen, append values
+                        for word in words_fixations:
+                            word_prev_fix = screens_lines_fix[screen_id][line_number][word]
+                            for key in word_prev_fix:
+                                word_prev_fix[key].extend(words_fixations[word][key])
+                    else:
+                        screens_lines_fix[screen_id].append(words_fixations)
 
                 screen_counter[screen_id] += 1
-
-
+            # Save trial fixations (screens_lines_fix)
     return
 
 
