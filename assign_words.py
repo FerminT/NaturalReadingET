@@ -6,7 +6,10 @@ import argparse
 
 def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exclude_firstfix=True, exclude_lastfix=True):
     items = [item for item in items_path.glob('*.mat') if item.name != 'Test.mat']
-    subjects = [subj for subj in data_path.iterdir() if subj.is_dir()]
+    if data_path.name != 'by_participant':
+        subjects = [data_path]
+    else:
+        subjects = [subj for subj in data_path.iterdir() if subj.is_dir()]
     cfg = loadmat(stimuli_cfg, simplify_cells=True)['config']
     for item in items:
         item_cfg = loadmat(str(item), simplify_cells=True)
@@ -79,7 +82,10 @@ if __name__ == '__main__':
     parser.add_argument('--cfg', type=str, default='Metadata/stimuli_config.mat')
     parser.add_argument('--data', type=str, default='Data/processed/by_participant')
     parser.add_argument('--save_path', type=str, default='Data/processed/by_item')
+    parser.add_argument('--subj', type=str, default='all')
     args = parser.parse_args()
 
     stimuli_path, data_path, save_path = Path(args.stimuli), Path(args.data), Path(args.save_path)
+    if args.subj != 'all':
+        data_path = data_path / args.subj
     assign_fixations_to_words(stimuli_path, data_path, args.cfg, save_path)
