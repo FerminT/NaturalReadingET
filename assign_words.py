@@ -1,10 +1,11 @@
 from pathlib import Path
 from scipy.io import loadmat
 import pandas as pd
+import numpy as np
 import argparse
 
 
-def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exclude_firstfix=True, exclude_lastfix=True):
+def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path):
     items = [item for item in items_path.glob('*.mat') if item.name != 'Test.mat']
     if data_path.name != 'by_participant':
         subjects = [data_path]
@@ -24,8 +25,9 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
             if not trial_path.exists():
                 continue
             screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
-            screen_counter = {screen_id: 0 for screen_id in screen_sequence.unique()}
-            screens_lines_fix = {screen_id: [] for screen_id in screen_sequence.unique()}
+            screen_counter = {screen_id: 0 for screen_id in np.unique(screen_sequence)}
+            # Each screen has a list of lines, each line has a dict of words with their fixations
+            screens_lines_fix = {screen_id: [] for screen_id in np.unique(screen_sequence)}
             for screen_id in screen_sequence:
                 screen_dir = trial_path / f'screen_{screen_id}'
                 fix_filename, lines_filename = 'fixations.pkl', 'lines.pkl'
@@ -41,13 +43,14 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                     line_fixations = fixations[fixations['yAvg'].between(lines_pos[line_number],
                                                                          lines_pos[line_number + 1],
                                                                          inclusive='left')]
-                    # Check if first screen fixation hasn't been removed yet
-                    if exclude_firstfix and line_fixations.iloc[0].name == 0:
-                        line_fixations.drop([0], inplace=True)
-                    if exclude_lastfix and line_fixations.iloc[-1].name == len(fixations) - 1:
-                        line_fixations.drop([len(fixations) - 1], inplace=True)
-                    if len(line_fixations) == 0:
-                        continue
+                    if not line_fixations.empty:
+                        # Check if first screen fixation hasn't been removed yet
+                        if line_fixations.iloc[0].name == 0:
+                            line_fixations = line_fixations.drop([0])
+                        # Remove last fixation if it's the last fixation of the screen
+                        if not line_fixations.empty and line_fixations.iloc[-1].name == len(fixations) - 1:
+                            line_fixations = line_fixations.drop([len(fixations) - 1])
+
                     for i in range(len(spaces_pos) - 1):
                         word_fixations = line_fixations[line_fixations['xAvg'].between(spaces_pos[i],
                                                                                        spaces_pos[i + 1],
@@ -56,7 +59,7 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                             continue
                         word_fixations = word_fixations[['index', 'duration', 'xAvg']]
                         word_fixations = word_fixations.rename(columns={'index': 'fixid', 'xAvg': 'x'})
-                        word_fixations.reset_index(names=['num'], inplace=True)
+                        word_fixations.reset_index(inplace=True)
                         # Shift x to start at 0
                         word_fixations['x'] -= spaces_pos[i]
 
@@ -65,9 +68,10 @@ def assign_fixations_to_words(items_path, data_path, stimuli_cfg, save_path, exc
                     if screen_counter[screen_id] > 0:
                         # Returning screen, append values
                         for word in words_fixations:
-                            word_prev_fix = screens_lines_fix[screen_id][line_number][word]
-                            for key in word_prev_fix:
-                                word_prev_fix[key].extend(words_fixations[word][key])
+                            if len(words_fixations[word]) > 0:
+                                word_prev_fix = screens_lines_fix[screen_id][line_number][word]
+                                for key in word_prev_fix:
+                                    word_prev_fix[key].extend(words_fixations[word][key])
                     else:
                         screens_lines_fix[screen_id].append(words_fixations)
 
