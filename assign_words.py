@@ -17,7 +17,7 @@ def assign_fixations_to_words(items_path, subjects, save_path):
 
 
 def process_item(item, subjects, screens_lines, item_savepath):
-    screens_text = {screenid: [line['text'] for line in screens_lines[screenid]] for screenid in screens_lines}
+    screens_text = {int(screenid): [line['text'] for line in screens_lines[screenid]] for screenid in screens_lines}
     utils.save_json(screens_text, item_savepath, 'screens_text.json')
     for subject in subjects:
         trial_path = subject / item.name[:-4]
