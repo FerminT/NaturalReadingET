@@ -1,6 +1,7 @@
 from scipy.io import loadmat
 from tkinter import messagebox
 import pandas as pd
+import json
 import shutil
 
 
@@ -86,6 +87,11 @@ def update_and_save_trial(sequence_states, stimuli, trial_path):
     messagebox.showinfo(title='Saved', message='Trial saved successfully')
 
 
+def save_json(dict_, save_path, filename):
+    with (save_path / filename).open('w') as file:
+        json.dump(dict_, file, indent=4)
+
+
 def save_trial(screens_fixations, screens_lines, del_seqindices, item_path):
     fix_filename = 'fixations.pkl'
     lines_filename = 'lines.pkl'
@@ -124,20 +130,20 @@ def save_calibrationdata(cal_points, val_points, val_offsets, trial_path):
     val_points.to_pickle(save_path / 'val_points.pkl'), val_offsets.to_pickle(save_path / 'val_offsets.pkl')
 
 
-def load_calibrationdata(calibration_path):
-    cal_points = load_pickle(calibration_path, 'cal_points.pkl')
-    val_points = load_pickle(calibration_path, 'val_points.pkl')
-    val_offsets = load_pickle(calibration_path, 'val_offsets.pkl')
-
-    return cal_points, val_points, val_offsets
-
-
 def save_structs(et_messages, screen_sequence, answers, words, flags, trial_path):
     et_messages.to_pickle(trial_path / 'et_messages.pkl')
     screen_sequence.to_pickle(trial_path / 'screen_sequence.pkl')
     answers.to_pickle(trial_path / 'answers.pkl')
     words.to_pickle(trial_path / 'words.pkl')
     flags.to_pickle(trial_path / 'flags.pkl')
+
+
+def load_calibrationdata(calibration_path):
+    cal_points = load_pickle(calibration_path, 'cal_points.pkl')
+    val_points = load_pickle(calibration_path, 'val_points.pkl')
+    val_offsets = load_pickle(calibration_path, 'val_offsets.pkl')
+
+    return cal_points, val_points, val_offsets
 
 
 def load_screensequence(item_path, filename='screen_sequence.pkl'):

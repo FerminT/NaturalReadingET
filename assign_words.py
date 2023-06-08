@@ -18,11 +18,12 @@ def assign_fixations_to_words(items_path, subjects, save_path):
 def process_item(item, subjects, screens_lines, item_savepath):
     for subject in subjects:
         trial_path = subject / item.name[:-4]
+        item_savepath = item_savepath / subject.name
         if not (trial_path.exists() and trial_is_processed(subject, item)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fixations_by_word = process_subj_trial(trial_path, screen_sequence, screens_lines)
-        # TODO: Save trial fixations (trial_fixations_by_word)
+        save_trial_word_fixations(trial_fixations_by_word, item_savepath)
 
 
 def process_subj_trial(trial_path, screen_sequence, screens_lines):
@@ -101,6 +102,17 @@ def trial_is_processed(subject, item):
     trial_flags = utils.load_flags([item_name], subject)
 
     return trial_flags[item_name]['edited'][0]
+
+
+def save_trial_word_fixations(trial_fixations_by_word, item_savepath):
+    item_savepath.mkdir(parents=True, exist_ok=True)
+    for screen_id in trial_fixations_by_word:
+        screen_savepath = item_savepath / f'screen_{screen_id}'
+        screen_savepath.mkdir(exist_ok=True)
+        for line_number, line in enumerate(trial_fixations_by_word[screen_id]):
+            line_filename = f'line_{line_number + 1}.json'
+            line_fixations = trial_fixations_by_word[screen_id][line_number]
+            utils.save_json(line_fixations, screen_savepath, line_filename)
 
 
 def load_screen_data(trial_path, screen_id, screen_counter):
