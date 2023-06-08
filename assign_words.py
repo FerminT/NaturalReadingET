@@ -11,11 +11,14 @@ def assign_fixations_to_words(items_path, subjects, save_path):
     for item in items:
         screens_lines = load_lines_by_screen(item)
         item_savepath = save_path / item.name[:-4]
+        item_savepath.mkdir(exist_ok=True, parents=True)
 
         process_item(item, subjects, screens_lines, item_savepath)
 
 
 def process_item(item, subjects, screens_lines, item_savepath):
+    screens_text = {screenid: [line['text'] for line in screens_lines[screenid]] for screenid in screens_lines}
+    utils.save_json(screens_text, item_savepath, 'screens_text.json')
     for subject in subjects:
         trial_path = subject / item.name[:-4]
         item_savepath = item_savepath / subject.name
@@ -29,7 +32,7 @@ def process_item(item, subjects, screens_lines, item_savepath):
 def process_subj_trial(trial_path, screen_sequence, screens_lines):
     # Keep track of returning screens
     screen_counter = {screen_id: 0 for screen_id in np.unique(screen_sequence)}
-    # Each screen has a list of lines, each line has a dict of words with their fixations
+    # Each screen has a list of lines, each line has a dictionary of fixations for each word
     trial_fixations_by_word = {screen_id: [] for screen_id in np.unique(screen_sequence)}
     for screen_id in screen_sequence:
         fixations, lines_pos = load_screen_data(trial_path, screen_id, screen_counter)
@@ -62,7 +65,7 @@ def get_line_fixations(fixations, line_number, lines_pos):
 
 
 def assign_line_fixations_to_words(words, line_fixations, spaces_pos):
-    words_fixations = {word: {} for word in words}
+    words_fixations = [{} for word in words]
     for i in range(len(spaces_pos) - 1):
         word_fixations = line_fixations[line_fixations['xAvg'].between(spaces_pos[i],
                                                                        spaces_pos[i + 1],
@@ -75,8 +78,7 @@ def assign_line_fixations_to_words(words, line_fixations, spaces_pos):
         # Shift x to start at 0
         word_fixations['x'] -= spaces_pos[i]
 
-        word = words[i]
-        words_fixations[word] = word_fixations.to_dict(orient='list')
+        words_fixations[i] = word_fixations.to_dict(orient='list')
 
     return words_fixations
 
@@ -90,11 +92,14 @@ def update_screen_fixations(line_number, words_fixations, counter, screen_fixati
 
 
 def update_line_fixations(line_number, words_fixations, screen_fixations):
-    for word in words_fixations:
-        if len(words_fixations[word]) > 0:
-            word_prev_fix = screen_fixations[line_number][word]
-            for key in word_prev_fix:
-                word_prev_fix[key].extend(words_fixations[word][key])
+    for idx, word_fixations in enumerate(words_fixations):
+        if len(word_fixations) > 0:
+            word_prev_fix = screen_fixations[line_number][idx]
+            if len(word_prev_fix) > 0:
+                for key in word_prev_fix:
+                    word_prev_fix[key].extend(words_fixations[idx][key])
+            else:
+                screen_fixations[line_number][idx] = words_fixations[idx]
 
 
 def trial_is_processed(subject, item):
@@ -105,10 +110,9 @@ def trial_is_processed(subject, item):
 
 
 def save_trial_word_fixations(trial_fixations_by_word, item_savepath):
-    item_savepath.mkdir(parents=True, exist_ok=True)
     for screen_id in trial_fixations_by_word:
         screen_savepath = item_savepath / f'screen_{screen_id}'
-        screen_savepath.mkdir(exist_ok=True)
+        screen_savepath.mkdir(exist_ok=True, parents=True)
         for line_number, line in enumerate(trial_fixations_by_word[screen_id]):
             line_filename = f'line_{line_number + 1}.json'
             line_fixations = trial_fixations_by_word[screen_id][line_number]
@@ -132,7 +136,8 @@ def load_lines_by_screen(item):
     lines, num_screens = item_cfg['lines'], len(item_cfg['screens'])
     screens_lines = {screen_id: [] for screen_id in range(1, num_screens + 1)}
     for line in lines:
-        screens_lines[line['screen']].append(line)
+        screens_lines[line['screen']].append({'text': line['text'],
+                                              'spaces_pos': line['spaces_pos']})
 
     return screens_lines
 
