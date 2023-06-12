@@ -21,12 +21,12 @@ def process_item(item, subjects, screens_lines, item_savepath):
     utils.save_json(screens_text, item_savepath, 'screens_text.json')
     for subject in subjects:
         trial_path = subject / item.name[:-4]
-        item_savepath = item_savepath / subject.name
+        subj_savepath = item_savepath / subject.name
         if not (trial_path.exists() and trial_is_processed(subject, item)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fixations_by_word = process_subj_trial(trial_path, screen_sequence, screens_lines)
-        save_trial_word_fixations(trial_fixations_by_word, item_savepath)
+        save_trial_word_fixations(trial_fixations_by_word, subj_savepath)
 
 
 def process_subj_trial(trial_path, screen_sequence, screens_lines):
