@@ -34,6 +34,11 @@ def load_pickle(path, filename):
     return pd.read_pickle(path / filename)
 
 
+def load_json(path, filename):
+    with (path / filename).open('r') as file:
+        return json.load(file)
+
+
 def update_flags(trial_flags, trial_path, filename='flags.pkl'):
     trial_flags.to_pickle(trial_path / filename)
 
