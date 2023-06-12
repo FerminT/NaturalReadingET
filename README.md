@@ -44,4 +44,53 @@ There is a correlation between *minimizing dialogues* and *minimizing unfrequent
 * Each item is a *block*. After each block, a one minute break and eye-tracker calibration follows.
 * Eye-tracker calibration is validated by the presentation of points positioned in the corners of where stimuli is displayed.
 ## Participants
-In this first iteration of the experiment, data from 16 participants were collected, where 7 of them completed the two sessions.
+In this first iteration of the experiment, data from 15 participants were collected, where 7 of them completed the two sessions.
+### Data structure
+* The *by_participant* directory contains the fixations and (horizontal) lines for each trial done by a given subject, divided by the item's screens.
+* *by_item* contains the fixations assigned to words, organized by lines for each item's screens.
+* The MATLAB files in *raw* contain trial metadata, such as questions answers, stimuli order, and reading skills.
+
+```
+Data/
+├── processed/
+│   ├── by_item/
+│   │   ├── item_1
+│   │   ├── ...
+│   │   └── item_m/
+│   │       ├── screen_1
+│   │       ├── ...
+│   │       └── screen_k/
+│   │           ├── participant_1
+│   │           ├── ...
+│   │           └── participant_n/
+│   │               ├── line_1.json
+│   │               ├── ...
+│   │               └── line_p.json
+│   └── by_participant/
+│       ├── participant_1
+│       ├── ...
+│       └── participant_n/
+│           ├── item_1
+│           ├── ...
+│           └── item_m/
+│               ├── screen_1
+│               ├── ...
+│               └── screen_k/
+│                   ├── fixations.pkl
+│                   └── lines.pkl
+└── raw/
+    ├── participant_1
+    ├── ...
+    └── participant_n/
+        ├── item_1.mat
+        ├── ...
+        ├── item_m.mat
+        ├── asc/
+        │   ├── participant_n_1.asc
+        │   ├── ...
+        │   └── participant_n_m.asc
+        └── edf/
+            ├── participant_n_1.edf
+            ├── ...
+            └── participant_n_m.edf
+```
