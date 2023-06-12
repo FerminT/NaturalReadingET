@@ -22,7 +22,7 @@ def process_item(item, subjects, screens_lines, item_savepath):
     for subject in subjects:
         trial_path = subject / item.name[:-4]
         subj_savepath = item_savepath / subject.name
-        if not (trial_path.exists() and trial_is_processed(subject, item)):
+        if not (trial_path.exists() and trial_is_correct(subject, item)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fixations_by_word = process_subj_trial(trial_path, screen_sequence, screens_lines)
@@ -102,11 +102,11 @@ def update_line_fixations(line_number, words_fixations, screen_fixations):
                 screen_fixations[line_number][idx] = words_fixations[idx]
 
 
-def trial_is_processed(subject, item):
+def trial_is_correct(subject, item):
     item_name = item.name[:-4]
     trial_flags = utils.load_flags([item_name], subject)
 
-    return trial_flags[item_name]['edited'][0]
+    return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
 
 
 def save_trial_word_fixations(trial_fixations_by_word, item_savepath):
