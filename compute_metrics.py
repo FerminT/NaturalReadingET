@@ -37,9 +37,9 @@ def compute_metrics(items, save_file, chars_mapping):
                                 break
                             fixation_counter += 1
                         if word not in metrics_by_word:
-                            metrics_by_word[word] = {'total_fixations': fixation_counter}
+                            metrics_by_word[word] = fixation_counter
                         else:
-                            metrics_by_word[word]['total_fixations'] += fixation_counter
+                            metrics_by_word[word] += fixation_counter
     utils.save_json(metrics_by_word, save_file.parent, save_file.name)
 
 
