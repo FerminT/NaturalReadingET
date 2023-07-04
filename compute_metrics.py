@@ -2,7 +2,7 @@ from Code.data_processing import utils
 from pathlib import Path
 import argparse
 
-WEIRD_CHARS = ['¿', '?', '¡', '!', '“', '”', '—', '«', '.']  # Excluded '(', ')' and ',', ';', ':'
+WEIRD_CHARS = ['¿', '?', '¡', '!', '“', '”', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»'
 CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
              'Á': 'A', 'É': 'E', 'I': 'I', 'Ó': 'O', 'Ú': 'U',
              '(': '', ')': '', ';': '', ',': '', ':': ''}
