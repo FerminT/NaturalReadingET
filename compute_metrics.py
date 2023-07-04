@@ -3,11 +3,11 @@ from pathlib import Path
 from assign_fix_to_words import assign_fixations_to_words
 import argparse
 
-WEIRD_CHARS = ['¿', '?', '¡', '!', '“', '”', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»'
+WEIRD_CHARS = ['¿', '?', '¡', '!', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
 CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
              'Á': 'A', 'É': 'E', 'I': 'I', 'Ó': 'O', 'Ú': 'U',
-             '(': '', ')': '', ';': '', ',': '', ':': '',
-             '—': '', '«': '', '»': ''}
+             '—': '', '«': '', '»': '', '“': '', '”': '', '‘': '', '’': '', '\'': '', '\"': '',
+             '(': '', ')': '', ';': '', ',': '', ':': ''}
 
 
 def compute_metrics(items, save_file, chars_mapping):
@@ -24,7 +24,7 @@ def compute_metrics(items, save_file, chars_mapping):
                     line_words = line.split()
                     for word_pos, word in enumerate(line_words):
                         word_fixations = line_fixations[word_pos]
-                        if has_no_fixations(word_fixations) or has_weird_chars(word) or\
+                        if has_no_fixations(word_fixations) or has_weird_chars(word) or \
                                 is_first_word(word_pos) or is_last_word(word_pos, line_words):
                             continue
                         word = word.lower().translate(chars_mapping)
