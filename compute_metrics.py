@@ -1,5 +1,6 @@
 from Code.data_processing import utils
 from pathlib import Path
+from assign_fix_to_words import assign_fixations_to_words
 import argparse
 
 WEIRD_CHARS = ['¿', '?', '¡', '!', '“', '”', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»'
@@ -60,12 +61,21 @@ def has_no_fixations(word_fixations):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute metrics based on words fixations')
-    parser.add_argument('--data_path', type=str, default='Data/processed/by_item')
+    parser.add_argument('--data_path', type=str, default='Data/processed/by_item',
+                        help='Where items\' fixations by word are stored')
+    parser.add_argument('--stimuli', type=str, default='Stimuli',
+                        help='Stimuli path. Used only for assigning fixations to words')
+    parser.add_argument('--trials_path', type=str, default='Data/processed/by_participant',
+                        help='Path to trials data. Used only for assigning fixations to words')
     parser.add_argument('--save_file', type=str, default='Data/processed/metrics.json')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
     data_path, save_file = Path(args.data_path), Path(args.save_file)
+    if not data_path.exists():
+        subj_paths = utils.get_dirs(Path(args.trials_path))
+        assign_fixations_to_words(Path(args.stimuli), subj_paths, data_path)
+
     if args.item != 'all':
         item_paths = [data_path / args.item]
     else:
