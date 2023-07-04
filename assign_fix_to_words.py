@@ -7,8 +7,10 @@ import argparse
 
 
 def assign_fixations_to_words(items_path, subjects, save_path):
+    print('Assigning fixations to words...')
     items = [item for item in items_path.glob('*.mat') if item.name != 'Test.mat']
     for item in items:
+        print(f'Processing {item.name} trials')
         screens_lines = load_lines_by_screen(item)
         item_savepath = save_path / item.name[:-4]
         item_savepath.mkdir(exist_ok=True, parents=True)
