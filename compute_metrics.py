@@ -22,9 +22,8 @@ def compute_metrics(items, save_file, chars_mapping):
                     line_words = line.split()
                     for word_pos, word in enumerate(line_words):
                         word_fixations = line_fixations[word_pos]
-                        is_first_word, is_last_word = word_pos == 0, word_pos == len(line_words) - 1
-                        has_weird_chars = any(char in word for char in WEIRD_CHARS)
-                        if len(word_fixations) == 0 or has_weird_chars or is_first_word or is_last_word:
+                        if has_no_fixations(word_fixations) or has_weird_chars(word) or\
+                                is_first_word(word_pos):
                             continue
                         word = word.lower().translate(chars_mapping)
                         fixation_counter = 0
@@ -41,6 +40,22 @@ def compute_metrics(items, save_file, chars_mapping):
                         else:
                             metrics_by_word[word] += fixation_counter
     utils.save_json(metrics_by_word, save_file.parent, save_file.name)
+
+
+def is_first_word(word_pos):
+    return word_pos == 0
+
+
+def is_last_word(word_pos, line_nwords):
+    return word_pos == len(line_nwords) - 1
+
+
+def has_weird_chars(word):
+    return any(char in word for char in WEIRD_CHARS)
+
+
+def has_no_fixations(word_fixations):
+    return len(word_fixations) == 0
 
 
 if __name__ == '__main__':
