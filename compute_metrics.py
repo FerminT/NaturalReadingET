@@ -24,6 +24,7 @@ def process_item_screens(screens_text, item, metrics_by_word, chars_mapping):
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
+        # TODO: Save word metrics by screen, respecting the order of the words (as in assign_fix_to_words.py)
         for trial in trials:
             compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping)
 
