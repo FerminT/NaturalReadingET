@@ -14,34 +14,48 @@ def compute_metrics(items, save_file, chars_mapping):
     metrics_by_word = {}
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
-        for screenid in screens_text:
-            screen_text = screens_text[screenid]
-            screen_path = item / f'screen_{screenid}'
-            trials = utils.get_dirs(screen_path)
-            for trial in trials:
-                for num_line, line in enumerate(screen_text):
-                    line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
-                    line_words = line.split()
-                    for word_pos, word in enumerate(line_words):
-                        word_fixations = line_fixations[word_pos]
-                        if has_no_fixations(word_fixations) or has_weird_chars(word) or \
-                                is_first_word(word_pos) or is_last_word(word_pos, line_words):
-                            continue
-                        word = word.lower().translate(chars_mapping)
-                        fixation_counter = 0
-                        for fixation in word_fixations['index']:
-                            # Count consecutive fixations on the word
-                            # This discards inter-word regressions, but counts intra-word regressions
-                            if fixation_counter == 0:
-                                prev_fix = fixation
-                            elif fixation != prev_fix + 1:
-                                break
-                            fixation_counter += 1
-                        if word not in metrics_by_word:
-                            metrics_by_word[word] = fixation_counter
-                        else:
-                            metrics_by_word[word] += fixation_counter
+        process_item_screens(screens_text, item, metrics_by_word, chars_mapping)
+
     utils.save_json(metrics_by_word, save_file.parent, save_file.name)
+
+
+def process_item_screens(screens_text, item, metrics_by_word, chars_mapping):
+    for screenid in screens_text:
+        screen_text = screens_text[screenid]
+        screen_path = item / f'screen_{screenid}'
+        trials = utils.get_dirs(screen_path)
+        for trial in trials:
+            compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping)
+
+
+def compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping):
+    for num_line, line in enumerate(screen_text):
+        line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
+        line_words = line.split()
+        for word_pos, word in enumerate(line_words):
+            word_fixations = line_fixations[word_pos]
+            if has_no_fixations(word_fixations) or has_weird_chars(word) or \
+                    is_first_word(word_pos) or is_last_word(word_pos, line_words):
+                continue
+            word = word.lower().translate(chars_mapping)
+            fixations_on_word = count_fixations_on_word(word_fixations)
+            if word not in metrics_by_word:
+                metrics_by_word[word] = fixations_on_word
+            else:
+                metrics_by_word[word] += fixations_on_word
+
+
+def count_fixations_on_word(word_fixations):
+    fixation_counter = 0
+    for fixation in word_fixations['index']:
+        # Count consecutive fixations on the word
+        # This discards inter-word regressions, but counts intra-word regressions
+        if fixation_counter == 0:
+            prev_fix = fixation
+        elif fixation != prev_fix + 1:
+            break
+        fixation_counter += 1
+    return fixation_counter
 
 
 def is_first_word(word_pos):
