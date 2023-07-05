@@ -34,12 +34,12 @@ CHARS_MAP = {'—': '', '«': '', '»': '', '“': '', '”': '', '\'': '', '\"'
 """
 
 
-def extract_measures(items, chars_mapping, save_file):
+def extract_measures(items, chars_mapping, save_path):
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
         item_measures = process_item_screens(screens_text, item, chars_mapping)
 
-        utils.save_measures_by_subj(item_measures, save_file)
+        utils.save_measures_by_subj(item_measures, save_path)
 
 
 def process_item_screens(screens_text, item, chars_mapping):
@@ -124,11 +124,11 @@ if __name__ == '__main__':
                         help='Stimuli path. Used only for assigning fixations to words')
     parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
                         help='Path to trials data. Used only for assigning fixations to words')
-    parser.add_argument('--save_file', type=str, default='Data/processed/metrics.json')
+    parser.add_argument('--save_path', type=str, default='Data/processed/measures')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
-    data_path, save_file = Path(args.data_path), Path(args.save_file)
+    data_path, save_path = Path(args.data_path), Path(args.save_path)
     if not data_path.exists():
         subj_paths = utils.get_dirs(Path(args.trials_path))
         assign_fixations_to_words(Path(args.stimuli), subj_paths, data_path)
@@ -139,4 +139,4 @@ if __name__ == '__main__':
         item_paths = utils.get_dirs(data_path)
 
     chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(item_paths, chars_mapping, save_file)
+    extract_measures(item_paths, chars_mapping, save_path)

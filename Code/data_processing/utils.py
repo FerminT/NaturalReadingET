@@ -222,3 +222,10 @@ def add_offsets(cal_points, val_points, val_offsets, screen_size):
     val_fixs['duration'] = 1
 
     return cal_fixs, val_fixs
+
+
+def save_measures_by_subj(item_measures, save_path):
+    for subj in item_measures['subj'].unique():
+        subj_measures = item_measures[item_measures['subj'] == subj]
+        subj_measures.reset_index(drop=True, inplace=True)
+        subj_measures.to_pickle(save_path / f'{subj}.pkl')
