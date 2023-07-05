@@ -122,14 +122,33 @@ def save_trial_word_fixations(trial_fixations_by_word, item_savepath, subj_name)
 
 def load_screen_data(trial_path, screen_id, screen_counter):
     screen_dir = trial_path / f'screen_{screen_id}'
-    fix_filename, lines_filename = 'fixations.pkl', 'lines.pkl'
-    if screen_counter[screen_id] > 0:
-        fix_filename = f'fixations_{screen_counter[screen_id]}.pkl'
-        lines_filename = f'lines_{screen_counter[screen_id]}.pkl'
+    fix_filename, lines_filename = get_screen_filenames(screen_counter[screen_id])
     fixations = pd.read_pickle(screen_dir / fix_filename)
     lines_pos = pd.read_pickle(screen_dir / lines_filename).sort_values('y')['y'].to_numpy()
 
+    if screen_counter[screen_id] > 0:
+        last_fixation_index = get_last_fixation_index(screen_dir, screen_counter[screen_id] - 1)
+        fixations.index += last_fixation_index + 1
+
     return fixations, lines_pos
+
+
+def get_screen_filenames(screen_times_read):
+    fix_filename = f'fixations.pkl'
+    lines_filename = f'lines.pkl'
+    if screen_times_read > 0:
+        fix_filename = f'fixations_{screen_times_read}.pkl'
+        lines_filename = f'lines_{screen_times_read}.pkl'
+
+    return fix_filename, lines_filename
+
+
+def get_last_fixation_index(screen_dir, prev_screen_times_read):
+    fix_filename, _ = get_screen_filenames(prev_screen_times_read)
+    fixations = pd.read_pickle(screen_dir / fix_filename)
+    last_fixation_index = fixations.iloc[-1].name
+
+    return last_fixation_index
 
 
 def load_lines_by_screen(item):
