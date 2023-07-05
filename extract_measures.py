@@ -6,7 +6,7 @@ import pandas as pd
 
 WEIRD_CHARS = ['¿', '?', '¡', '!', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
 CHARS_MAP = {'—': '', '«': '', '»': '', '“': '', '”': '', '\'': '', '\"': '',
-             '(': '', ')': '', ';': '', ',': '', ':': '',  '‘': '', '’': ''}
+             '(': '', ')': '', ';': '', ',': '', ':': '', '‘': '', '’': ''}
 
 """ Script to compute eye-tracking measures for each item based on words fixations.
     Measures extracted on a single trial basis:
@@ -25,7 +25,6 @@ CHARS_MAP = {'—': '', '«': '', '»': '', '“': '', '”': '', '\'': '', '\"'
             - RRT (Re-Reading Time): regression path duration minus first pass reading time
             - SPRT (Second Pass Reading Time): sum of fixations after a word has been exited for the first time
             - FC (Fixation Count): number of fixations on a word
-            - RC (Regression Count): number of regressions from a word
     
     Measures extracted across trials:
         Early:
@@ -45,8 +44,7 @@ def extract_measures(items, chars_mapping, save_file):
 
 def process_item_screens(screens_text, item, chars_mapping):
     measures = pd.DataFrame(columns=['subj', 'screen_idx', 'word_idx', 'word', 'excluded',
-                                     'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
-    word_index = 0
+                                     'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC'])
     for screenid in screens_text:
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
@@ -65,18 +63,33 @@ def extract_trial_screen_measures(trial, screen_text, chars_mapping, measures):
         line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
-            measures.loc[len(measures)] = [subj_name, screen_id, word_index, word, False, 0, 0, 0, 0, 0, 0, 0, 0]
+            measures.loc[len(measures)] = [subj_name, screen_id, word_index, word, False, 0, 0, 0, 0, 0, 0, 0]
 
             word_fixations = line_fixations[word_pos]
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words)
             if has_no_fixations(word_fixations) or is_left_out:
-                measures.loc[word_index, 'excluded'] = is_left_out
+                measures.loc[len(measures), 'excluded'] = is_left_out
                 continue
 
             word = word.lower().translate(chars_mapping)
-            fixation_count = count_fixations_on_word(word_fixations)
+            ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc = word_measures(word_fixations)
+            measures.loc[len(measures)] = [subj_name, screen_id, word_index, word, False,
+                                           ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc]
 
             word_index += 1
+
+
+def word_measures(word_fixations):
+    ffd = word_fixations['duration'][0]
+    sfd = ffd if len(word_fixations['fixid']) == 1 else 0
+    fprt = sum(word_fixations['duration'][:first_pass_n_fix(word_fixations['index'])])
+    rpd = sum(word_fixations['duration'][first_pass_n_fix(word_fixations['index']):])
+    tfd = sum(word_fixations['duration'])
+    rrt = rpd - fprt
+    sprt = tfd - fprt
+    fc = len(word_fixations['fixid'])
+
+    return ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc
 
 
 def get_word_pos_in_item(screen_id, measures, subj_name):
@@ -84,16 +97,14 @@ def get_word_pos_in_item(screen_id, measures, subj_name):
     return word_index
 
 
-def count_fixations_on_word(word_fixations):
+def first_pass_n_fix(fixations_indices):
+    # Count number of first pass reading fixations on word
     fixation_counter = 0
-    for fixation in word_fixations['index']:
-        # Count consecutive fixations on the word
-        # This discards inter-word regressions, but counts intra-word regressions
-        if fixation_counter == 0:
-            prev_fix = fixation
-        elif fixation != prev_fix + 1:
+    for i, fix_idx in enumerate(fixations_indices):
+        if i > 0 and fix_idx != fixations_indices[i - 1] + 1:
             break
         fixation_counter += 1
+
     return fixation_counter
 
 
