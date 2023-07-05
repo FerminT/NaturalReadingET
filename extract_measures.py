@@ -5,10 +5,8 @@ import argparse
 import pandas as pd
 
 WEIRD_CHARS = ['¿', '?', '¡', '!', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
-CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
-             'Á': 'A', 'É': 'E', 'I': 'I', 'Ó': 'O', 'Ú': 'U',
-             '—': '', '«': '', '»': '', '“': '', '”': '', '‘': '', '’': '', '\'': '', '\"': '',
-             '(': '', ')': '', ';': '', ',': '', ':': ''}
+CHARS_MAP = {'—': '', '«': '', '»': '', '“': '', '”': '', '\'': '', '\"': '',
+             '(': '', ')': '', ';': '', ',': '', ':': '',  '‘': '', '’': ''}
 
 """ Script to compute eye-tracking measures for each item based on words fixations.
     Measures extracted on a single trial basis:
