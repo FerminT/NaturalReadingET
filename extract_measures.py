@@ -11,7 +11,7 @@ CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
              '(': '', ')': '', ';': '', ',': '', ':': ''}
 
 """ Script to compute eye-tracking measures for each item based on words fixations.
-    Measures computed on a single trial basis:
+    Measures extracted on a single trial basis:
         Early:
             - FFD (First Fixation Duration): duration of the first, and only the first, fixation on a word
             - SFD (Single Fixation Duration): duration of the first and only fixation on a word 
@@ -29,48 +29,61 @@ CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
             - FC (Fixation Count): number of fixations on a word
             - RC (Regression Count): number of regressions from a word
     
-    Measures computed across trials:
+    Measures extracted across trials:
         Early:
-            - LS (Likelihood of Skipping): number of first pass fixations divided by the number of trials
+            - LS (Likelihood of Skipping): number of first pass fixation durations of 0 divided by the number of trials
         Intermediate:
             - RR (Regression Rate): number of trials with a regression divided by the number of trials
 """
 
 
-def compute_metrics(items, save_file, chars_mapping):
-    metrics_by_word = {}
+def extract_measures(items, chars_mapping, save_file):
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
-        process_item_screens(screens_text, item, metrics_by_word, chars_mapping)
+        item_measures = process_item_screens(screens_text, item, chars_mapping)
 
-    utils.save_json(metrics_by_word, save_file.parent, save_file.name)
+        utils.save_measures_by_subj(item_measures, save_file)
 
 
-def process_item_screens(screens_text, item, metrics_by_word, chars_mapping):
-    measurements = pd.DataFrame(columns=['subj', 'word', 'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
+def process_item_screens(screens_text, item, chars_mapping):
+    measures = pd.DataFrame(columns=['subj', 'screen_idx', 'word_idx', 'word', 'excluded',
+                                     'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
+    word_index = 0
     for screenid in screens_text:
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
         for trial in trials:
-            compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping)
+            extract_trial_screen_measures(trial, screen_text, chars_mapping, measures)
+
+    return measures
 
 
-def compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping):
+def extract_trial_screen_measures(trial, screen_text, chars_mapping, measures):
+    subj_name = trial.name
+    screen_id = int(trial.parent.name.split('_')[1])
+    word_index = get_word_pos_in_item(screen_id, measures, subj_name)
     for num_line, line in enumerate(screen_text):
         line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
+            measures.loc[len(measures)] = [subj_name, screen_id, word_index, word, False, 0, 0, 0, 0, 0, 0, 0, 0]
+
             word_fixations = line_fixations[word_pos]
-            if has_no_fixations(word_fixations) or has_weird_chars(word) or \
-                    is_first_word(word_pos) or is_last_word(word_pos, line_words):
+            is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words)
+            if has_no_fixations(word_fixations) or is_left_out:
+                measures.loc[word_index, 'excluded'] = is_left_out
                 continue
+
             word = word.lower().translate(chars_mapping)
-            fixations_on_word = count_fixations_on_word(word_fixations)
-            if word not in metrics_by_word:
-                metrics_by_word[word] = fixations_on_word
-            else:
-                metrics_by_word[word] += fixations_on_word
+            fixation_count = count_fixations_on_word(word_fixations)
+
+            word_index += 1
+
+
+def get_word_pos_in_item(screen_id, measures, subj_name):
+    word_index = 0 if screen_id == 1 else measures[measures['subj'] == subj_name]['word_idx'].max() + 1
+    return word_index
 
 
 def count_fixations_on_word(word_fixations):
@@ -125,4 +138,4 @@ if __name__ == '__main__':
         item_paths = utils.get_dirs(data_path)
 
     chars_mapping = str.maketrans(CHARS_MAP)
-    compute_metrics(item_paths, save_file, chars_mapping)
+    extract_measures(item_paths, chars_mapping, save_file)
