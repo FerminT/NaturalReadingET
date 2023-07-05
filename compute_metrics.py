@@ -2,12 +2,39 @@ from Code.data_processing import utils
 from pathlib import Path
 from assign_fix_to_words import assign_fixations_to_words
 import argparse
+import pandas as pd
 
 WEIRD_CHARS = ['¿', '?', '¡', '!', '.']  # Excluded '(', ')' and ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
 CHARS_MAP = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
              'Á': 'A', 'É': 'E', 'I': 'I', 'Ó': 'O', 'Ú': 'U',
              '—': '', '«': '', '»': '', '“': '', '”': '', '‘': '', '’': '', '\'': '', '\"': '',
              '(': '', ')': '', ';': '', ',': '', ':': ''}
+
+""" Script to compute eye-tracking measures for each item based on words fixations.
+    Measures computed on a single trial basis:
+        Early:
+            - FFD (First Fixation Duration): duration of the first, and only the first, fixation on a word
+            - SFD (Single Fixation Duration): duration of the first and only fixation on a word 
+                (equal to FFD for single fixations). Zero if the word has more than one fixation.
+            - FPRT (First Pass Reading Time/Gaze Duration): sum of all fixations on a word before exiting
+                (either to the right or to the left)
+    
+        Intermediate:
+            - RPD (Regression Path Duration): sum of all fixations on a word after exiting it
+    
+        Late:
+            - TFD (Total Fixation Duration): sum of all fixations on a word, including regressions
+            - RRT (Re-Reading Time): regression path duration minus first pass reading time
+            - SPRT (Second Pass Reading Time): sum of fixations after a word has been exited for the first time
+            - FC (Fixation Count): number of fixations on a word
+            - RC (Regression Count): number of regressions from a word
+    
+    Measures computed across trials:
+        Early:
+            - LS (Likelihood of Skipping): number of first pass fixations divided by the number of trials
+        Intermediate:
+            - RR (Regression Rate): number of trials with a regression divided by the number of trials
+"""
 
 
 def compute_metrics(items, save_file, chars_mapping):
@@ -20,11 +47,11 @@ def compute_metrics(items, save_file, chars_mapping):
 
 
 def process_item_screens(screens_text, item, metrics_by_word, chars_mapping):
+    measurements = pd.DataFrame(columns=['subj', 'word', 'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
     for screenid in screens_text:
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
-        # TODO: Save word metrics by screen, respecting the order of the words (as in assign_fix_to_words.py)
         for trial in trials:
             compute_trial_metrics(trial, screen_text, metrics_by_word, chars_mapping)
 
