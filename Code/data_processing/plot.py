@@ -62,7 +62,7 @@ def build_sequence_states(screens_fixations, screens_lines, trial_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stimuli_path', type=str, default='Stimuli')
-    parser.add_argument('--trial_path', type=str, default='Data/processed/by_participant')
+    parser.add_argument('--trial_path', type=str, default='Data/processed/trials')
     parser.add_argument('--subj', type=str, required=True)
     parser.add_argument('--item', type=str, required=True)
     args = parser.parse_args()

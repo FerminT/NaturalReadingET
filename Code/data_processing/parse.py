@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat',
                         help='Config file with the stimuli information')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
-    parser.add_argument('--save_path', type=str, default='Data/processed/by_participant',
+    parser.add_argument('--save_path', type=str, default='Data/processed/trials',
                         help='Path where to save the processed data')
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()

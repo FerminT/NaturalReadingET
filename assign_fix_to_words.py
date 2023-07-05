@@ -146,8 +146,8 @@ def load_lines_by_screen(item):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Assign fixations to words')
     parser.add_argument('--stimuli', type=str, default='Stimuli')
-    parser.add_argument('--data_path', type=str, default='Data/processed/by_participant')
-    parser.add_argument('--save_path', type=str, default='Data/processed/by_item')
+    parser.add_argument('--data_path', type=str, default='Data/processed/trials')
+    parser.add_argument('--save_path', type=str, default='Data/processed/words_fixations')
     parser.add_argument('--subj', type=str, default='all')
     args = parser.parse_args()
 

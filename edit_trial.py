@@ -161,7 +161,7 @@ if __name__ == '__main__':
     parser.add_argument('--questions', type=str, default='Metadata/stimuli_questions.mat',
                         help='Questions and possible answers file for each stimuli')
     parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
-    parser.add_argument('--data', type=str, default='Data/processed/by_participant',
+    parser.add_argument('--data', type=str, default='Data/processed/trials',
                         help='Path where the processed data is stored in pkl format')
     parser.add_argument('--subj', type=str, help='Participant\'s name')
     args = parser.parse_args()

@@ -77,11 +77,11 @@ def has_no_fixations(word_fixations):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute metrics based on words fixations')
-    parser.add_argument('--data_path', type=str, default='Data/processed/by_item',
+    parser.add_argument('--data_path', type=str, default='Data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
     parser.add_argument('--stimuli', type=str, default='Stimuli',
                         help='Stimuli path. Used only for assigning fixations to words')
-    parser.add_argument('--trials_path', type=str, default='Data/processed/by_participant',
+    parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
                         help='Path to trials data. Used only for assigning fixations to words')
     parser.add_argument('--save_file', type=str, default='Data/processed/metrics.json')
     parser.add_argument('--item', type=str, default='all')
