@@ -226,7 +226,7 @@ def add_offsets(cal_points, val_points, val_offsets, screen_size):
 
 def save_measures_by_subj(item_measures, save_path):
     if not save_path.exists():
-        save_path.mkdirs(parents=True)
+        save_path.mkdir(parents=True)
     for subj in item_measures['subj'].unique():
         subj_measures = item_measures[item_measures['subj'] == subj]
         subj_measures.reset_index(drop=True, inplace=True)

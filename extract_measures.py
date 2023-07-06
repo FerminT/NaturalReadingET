@@ -35,6 +35,7 @@ CHARS_MAP = {'—': '', '«': '', '»': '', '“': '', '”': '', '\'': '', '\"'
 
 
 def extract_measures(items, chars_mapping, save_path):
+    print(f'Extracting eye-tracking measures from trials...')
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
         item_measures = process_item_screens(screens_text, item, chars_mapping)
@@ -43,15 +44,15 @@ def extract_measures(items, chars_mapping, save_path):
 
 
 def process_item_screens(screens_text, item, chars_mapping):
-    measures = pd.DataFrame(columns=['subj', 'screen_idx', 'word', 'excluded',
-                                     'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC'])
+    measures = []
     for screenid in screens_text:
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
         for trial in trials:
             extract_trial_screen_measures(trial, screen_text, chars_mapping, measures)
-
+    measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word', 'excluded',
+                                               'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC'])
     return measures
 
 
@@ -62,18 +63,15 @@ def extract_trial_screen_measures(trial, screen_text, chars_mapping, measures):
         line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
-            measures.loc[len(measures)] = [subj_name, screen_id, word, False, 0, 0, 0, 0, 0, 0, 0]
-
+            word = word.lower().translate(chars_mapping)
             word_fixations = line_fixations[word_pos]
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words)
             if has_no_fixations(word_fixations) or is_left_out:
-                measures.loc[len(measures), 'excluded'] = is_left_out
+                measures.append([subj_name, screen_id, word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0])
                 continue
 
-            word = word.lower().translate(chars_mapping)
             ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc = word_measures(word_fixations)
-            measures.loc[len(measures)] = [subj_name, screen_id, word, False,
-                                           ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc]
+            measures.append([subj_name, screen_id, word, False, ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc])
 
 
 def word_measures(word_fixations):
