@@ -39,7 +39,7 @@ def extract_measures(items, chars_mapping, save_path):
         screens_text = utils.load_json(item, 'screens_text.json')
         item_measures = process_item_screens(screens_text, item, chars_mapping)
 
-        utils.save_measures_by_subj(item_measures, save_path)
+        utils.save_measures_by_subj(item_measures, save_path / item.name)
 
 
 def process_item_screens(screens_text, item, chars_mapping):
