@@ -40,6 +40,7 @@ def extract_measures(items, chars_mapping, save_path):
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
         item_measures = process_item_screens(screens_text, item, chars_mapping)
+        item_measures = add_across_trials_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, save_path / item.name)
 
@@ -51,13 +52,22 @@ def process_item_screens(screens_text, item, chars_mapping):
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
         for trial in trials:
-            extract_trial_screen_measures(trial, screen_text, chars_mapping, measures)
-    measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word', 'excluded',
+            fst_word_index = word_pos_in_item(screenid, screens_text) - 1
+            extract_trial_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures)
+    measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC'])
+
     return measures
 
 
-def extract_trial_screen_measures(trial, screen_text, chars_mapping, measures):
+def add_across_trials_measures(item_measures):
+    item_measures['LS'] = item_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
+    item_measures['RR'] = item_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
+
+    return item_measures
+
+
+def extract_trial_screen_measures(trial, screen_text, word_index, chars_mapping, measures):
     subj_name = trial.name
     screen_id = int(trial.parent.name.split('_')[1])
     for num_line, line in enumerate(screen_text):
@@ -65,14 +75,15 @@ def extract_trial_screen_measures(trial, screen_text, chars_mapping, measures):
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
             word = word.lower().translate(chars_mapping)
+            word_index += 1
             word_fixations = line_fixations[word_pos]
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words)
             if has_no_fixations(word_fixations) or is_left_out:
-                measures.append([subj_name, screen_id, word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0])
+                measures.append([subj_name, screen_id, word_index, word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0])
                 continue
 
             ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc = word_measures(word_fixations)
-            measures.append([subj_name, screen_id, word, False, ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc])
+            measures.append([subj_name, screen_id, word_index, word, False, ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc])
 
 
 def word_measures(word_fixations):
@@ -97,6 +108,15 @@ def first_pass_n_fix(fixations_indices):
         fixation_counter += 1
 
     return fixation_counter
+
+
+def word_pos_in_item(screen_id, screens_text):
+    word_index = sum([num_words(screens_text[str(screen)]) for screen in range(1, int(screen_id))])
+    return word_index
+
+
+def num_words(text):
+    return sum([len(line.split()) for line in text])
 
 
 def is_first_word(word_pos):
