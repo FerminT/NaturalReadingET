@@ -17,25 +17,31 @@ def do_analysis(items_paths, subjs_paths, words_freq_path, save_path):
 
     save_path.mkdir(parents=True, exist_ok=True)
     plot_early_effects(et_measures, save_path)
+    mlm_analysis(et_measures)
+
+
+def mlm_analysis(et_measures):
+    # This is a crossed random intercept (NOT slope) model with no independent groups
     et_measures['group'] = 1
-    vcf = {'subj': '0 + C(subj)', 'item': '0 + C(item)'}
-    ffd_model = sm.MixedLM.from_formula('FFD ~ word_len', groups='group',
-                                        vc_formula=vcf, re_formula='0', data=et_measures)
-    ffd_results = ffd_model.fit()
-    print(ffd_results.summary())
+    variance_components = {'subj': '0 + C(subj)', 'item': '0 + C(item)'}
+    ffd_formula = 'FFD ~ word_len + word_freq'
+    fprt_formula = 'FPRT ~ word_len + word_freq'
+    mixedlm_fit_and_save(ffd_formula, variance_components, '0', 'group', et_measures, 'ffd_mlm', save_path)
+    mixedlm_fit_and_save(fprt_formula, variance_components, '0', 'group', et_measures, 'fprt_mlm', save_path)
+
+
+def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_name, save_path):
+    mixedlm_model = sm.MixedLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
+                                            data=data)
+    mixedlm_results = mixedlm_model.fit()
+    print(mixedlm_results.summary())
+    with open(save_path / model_name, 'w') as f:
+        f.write(mixedlm_results.summary().as_text())
 
 
 def remove_skipped_words(et_measures):
     et_measures = et_measures[et_measures['FFD'] > 0]
     return et_measures
-
-
-def preprocess_data(trial_measures, words_freq):
-    trial_measures = remove_excluded_words(trial_measures)
-    trial_measures = add_length_and_freq(trial_measures, words_freq)
-    trial_measures = log_normalize_durations(trial_measures)
-
-    return trial_measures
 
 
 def remove_excluded_words(et_measures):
@@ -74,6 +80,14 @@ def plot_early_effects(et_measures, save_path):
     wordfreq_fig = plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures)
     wordlen_fig.savefig(save_path / 'wordlen_effects.png')
     wordfreq_fig.savefig(save_path / 'wordfreq_effects.png')
+
+
+def preprocess_data(trial_measures, words_freq):
+    trial_measures = remove_excluded_words(trial_measures)
+    trial_measures = add_length_and_freq(trial_measures, words_freq)
+    trial_measures = log_normalize_durations(trial_measures)
+
+    return trial_measures
 
 
 def load_trial(trial, item_name, words_freq):
