@@ -22,6 +22,11 @@ def get_dirs(datapath):
     return dirs
 
 
+def get_files(datapath):
+    files = [file for file in datapath.iterdir() if file.is_file()]
+    return files
+
+
 def save_screensequence(screens_sequence, item_path, filename='screen_sequence.pkl'):
     screens_sequence.to_pickle(item_path / filename)
 
