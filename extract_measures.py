@@ -76,10 +76,10 @@ def extract_trial_screen_measures(trial, screen_text, word_index, chars_mapping,
         line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
-            word = word.lower().translate(chars_mapping)
             word_index += 1
             word_fixations = line_fixations[word_pos]
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words)
+            word = word.lower().translate(chars_mapping)
             if has_no_fixations(word_fixations) or is_left_out:
                 measures.append([subj_name, screen_id, word_index, word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                 continue
