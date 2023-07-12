@@ -13,10 +13,10 @@ from Code.data_processing import utils
 def do_analysis(items_paths, subjs_paths, words_freq_path, save_path):
     words_freq = pd.read_csv(words_freq_path)
     et_measures = load_et_measures(items_paths, words_freq)
+    save_path.mkdir(parents=True, exist_ok=True)
+
     mlm_analysis(et_measures)
     et_measures = remove_skipped_words(et_measures)
-
-    save_path.mkdir(parents=True, exist_ok=True)
     plot_early_effects(et_measures, save_path)
 
 
