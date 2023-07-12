@@ -13,11 +13,11 @@ from Code.data_processing import utils
 def do_analysis(items_paths, subjs_paths, words_freq_path, save_path):
     words_freq = pd.read_csv(words_freq_path)
     et_measures = load_et_measures(items_paths, words_freq)
+    mlm_analysis(et_measures)
     et_measures = remove_skipped_words(et_measures)
 
     save_path.mkdir(parents=True, exist_ok=True)
     plot_early_effects(et_measures, save_path)
-    mlm_analysis(et_measures)
 
 
 def mlm_analysis(et_measures):
@@ -40,7 +40,8 @@ def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_nam
 
 
 def remove_skipped_words(et_measures):
-    et_measures = et_measures[et_measures['FFD'] > 0]
+    et_measures = et_measures[~et_measures['skipped']]
+    et_measures = et_measures.drop(columns=['skipped'])
     return et_measures
 
 
@@ -50,7 +51,8 @@ def remove_excluded_words(et_measures):
     return et_measures
 
 
-def add_length_and_freq(et_measures, words_freq):
+def add_len_freq_skipped(et_measures, words_freq):
+    et_measures['skipped'] = et_measures['FFD'].apply(lambda x: x == 0)
     et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
     # Categorize frequency of words by deciles
     words_freq['cnt'] = pd.qcut(words_freq['cnt'], 10, labels=[i for i in range(1, 11)])
@@ -84,7 +86,7 @@ def plot_early_effects(et_measures, save_path):
 
 def preprocess_data(trial_measures, words_freq):
     trial_measures = remove_excluded_words(trial_measures)
-    trial_measures = add_length_and_freq(trial_measures, words_freq)
+    trial_measures = add_len_freq_skipped(trial_measures, words_freq)
     trial_measures = log_normalize_durations(trial_measures)
 
     return trial_measures
