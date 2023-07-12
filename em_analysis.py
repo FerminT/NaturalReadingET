@@ -24,15 +24,25 @@ def mlm_analysis(et_measures):
     # This is a crossed random intercept (NOT slope) model with no independent groups
     et_measures['group'] = 1
     variance_components = {'subj': '0 + C(subj)', 'item': '0 + C(item)'}
+    skipped_formula = 'skipped ~ word_len'
+    mixedlm_fit_and_save(skipped_formula, vc_formula=variance_components, re_formula='0', group='group',
+                         data=et_measures, model_name='skipped_mlm', model_type='binomial', save_path=save_path)
+    et_measures = remove_skipped_words(et_measures)
     ffd_formula = 'FFD ~ word_len + word_freq'
     fprt_formula = 'FPRT ~ word_len + word_freq'
-    mixedlm_fit_and_save(ffd_formula, variance_components, '0', 'group', et_measures, 'ffd_mlm', save_path)
-    mixedlm_fit_and_save(fprt_formula, variance_components, '0', 'group', et_measures, 'fprt_mlm', save_path)
+    mixedlm_fit_and_save(ffd_formula, vc_formula=variance_components, re_formula='0', group='group',
+                         data=et_measures, model_name='ffd_mlm', model_type='mlm', save_path=save_path)
+    mixedlm_fit_and_save(fprt_formula, vc_formula=variance_components, re_formula='0', group='group',
+                         data=et_measures, model_name='fprt_mlm', model_type='mlm', save_path=save_path)
 
 
-def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_name, save_path):
-    mixedlm_model = sm.MixedLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
-                                            data=data)
+def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_name, model_type, save_path):
+    if model_type == 'binomial':
+        mixedlm_model = sm.GLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
+                                            data=data, family=sm.families.Binomial())
+    else:
+        mixedlm_model = sm.MixedLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
+                                                data=data)
     mixedlm_results = mixedlm_model.fit()
     print(mixedlm_results.summary())
     with open(save_path / model_name, 'w') as f:
