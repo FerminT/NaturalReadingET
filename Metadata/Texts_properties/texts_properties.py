@@ -14,7 +14,7 @@ min_sentence_length = 5
 max_sentence_length = 30
 uncommon_characters = ['¿', '?', '¡', '!', '\"', '”', '“', '«', '»', '(', ')', '—']
 
-words_freq_stats = 'Words_freq.csv'
+words_freq_stats = 'words_freq.csv'
 words_freq = pd.read_csv(words_freq_stats)
 
 texts_properties = {}
