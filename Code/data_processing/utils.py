@@ -1,8 +1,13 @@
 from scipy.io import loadmat
 from tkinter import messagebox
 import pandas as pd
+import numpy as np
 import json
 import shutil
+
+
+def log(x):
+    return np.log(x) if x > 0 else 0
 
 
 def reorder(trials, stimuli_order):

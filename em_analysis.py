@@ -1,11 +1,10 @@
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import argparse
 from pathlib import Path
-from Code.data_processing import utils
+from Code.data_processing.utils import get_dirs, get_files, log
 
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
@@ -64,16 +63,14 @@ def remove_excluded_words(et_measures):
 def add_len_freq_skipped(et_measures, words_freq):
     et_measures['skipped'] = et_measures['FFD'].apply(lambda x: x == 0)
     et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x))
-    # Categorize frequency of words by deciles
-    words_freq['cnt'] = pd.qcut(words_freq['cnt'], 10, labels=[i for i in range(1, 11)])
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
-                                                         words_freq.loc[words_freq['word'] == x, 'cnt'].values[0])
+                                                         log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0]))
     return et_measures
 
 
 def log_normalize_durations(trial_measures):
     for duration_measure in ['FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'SPRT']:
-        trial_measures[duration_measure] = trial_measures[duration_measure].apply(lambda x: np.log(x) if x > 0 else 0)
+        trial_measures[duration_measure] = trial_measures[duration_measure].apply(lambda x: log(x))
 
     return trial_measures
 
@@ -109,7 +106,7 @@ def load_trial(trial, item_name, words_freq):
 
 
 def load_trials_measures(item, words_freq):
-    trials_measures = [load_trial(trial, item.name, words_freq) for trial in utils.get_files(item)]
+    trials_measures = [load_trial(trial, item.name, words_freq) for trial in get_files(item)]
     return pd.concat(trials_measures, ignore_index=True)
 
 
@@ -138,6 +135,6 @@ if __name__ == '__main__':
     if args.item != 'all':
         items_paths = [data_path / args.item]
     else:
-        items_paths = utils.get_dirs(data_path)
+        items_paths = get_dirs(data_path)
 
     do_analysis(items_paths, subjs_path, words_freq_path, save_path)
