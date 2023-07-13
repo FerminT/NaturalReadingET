@@ -25,18 +25,21 @@ def mlm_analysis(et_measures):
     variance_components = {'subj': '0 + C(subj)', 'item': '0 + C(item)'}
     skipped_formula = 'skipped ~ word_len'
     mixedlm_fit_and_save(skipped_formula, vc_formula=variance_components, re_formula='0', group='group',
-                         data=et_measures, model_name='skipped_mlm', model_type='binomial', save_path=save_path)
+                         data=et_measures, centre=False, name='skipped_mlm', family='binomial', save_path=save_path)
     et_measures = remove_skipped_words(et_measures)
     ffd_formula = 'FFD ~ word_len + word_freq'
     fprt_formula = 'FPRT ~ word_len + word_freq'
     mixedlm_fit_and_save(ffd_formula, vc_formula=variance_components, re_formula='0', group='group',
-                         data=et_measures, model_name='ffd_mlm', model_type='mlm', save_path=save_path)
+                         data=et_measures, centre=True, name='ffd_mlm', family='mlm', save_path=save_path)
     mixedlm_fit_and_save(fprt_formula, vc_formula=variance_components, re_formula='0', group='group',
-                         data=et_measures, model_name='fprt_mlm', model_type='mlm', save_path=save_path)
+                         data=et_measures, centre=True, name='fprt_mlm', family='mlm', save_path=save_path)
 
 
-def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_name, model_type, save_path):
-    if model_type == 'binomial':
+def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, centre, name, family, save_path):
+    if centre:
+        fixed_effects = get_continuous_fixed_effects(formula)
+        data = centre_attributes(data, fixed_effects)
+    if family == 'binomial':
         mixedlm_model = sm.GLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
                                             data=data, family=sm.families.Binomial())
     else:
@@ -44,8 +47,20 @@ def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, model_nam
                                                 data=data)
     mixedlm_results = mixedlm_model.fit()
     print(mixedlm_results.summary())
-    with open(save_path / model_name, 'w') as f:
+    with open(save_path / name, 'w') as f:
         f.write(mixedlm_results.summary().as_text())
+
+
+def get_continuous_fixed_effects(formula):
+    fixed_effects = formula.split('~')[1].split('+')
+    fixed_effects = [effect.strip() for effect in fixed_effects if 'C' not in effect]
+    return fixed_effects
+
+
+def centre_attributes(data, attributes):
+    for attribute in attributes:
+        data[attribute] = data[attribute] - data[attribute].mean()
+    return data
 
 
 def remove_skipped_words(et_measures):
