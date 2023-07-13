@@ -63,7 +63,7 @@ def remove_excluded_words(et_measures):
 
 def add_len_freq_skipped(et_measures, words_freq):
     et_measures['skipped'] = et_measures['FFD'].apply(lambda x: x == 0)
-    et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
+    et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x))
     # Categorize frequency of words by deciles
     words_freq['cnt'] = pd.qcut(words_freq['cnt'], 10, labels=[i for i in range(1, 11)])
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
