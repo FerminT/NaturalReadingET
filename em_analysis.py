@@ -90,17 +90,25 @@ def log_normalize_durations(trial_measures):
     return trial_measures
 
 
-def plot_boxplots(fixed_effect, measures, data):
-    fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(10, 5))
+def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
+    fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
+    if x_order == 'descending':
+        plot_order = sorted(data[fixed_effect].unique(), reverse=True)
+    else:
+        plot_order = sorted(data[fixed_effect].unique())
     for i, measure in enumerate(measures):
-        sns.boxplot(x=fixed_effect, y=measure, data=data, ax=axes[i])
+        sns.boxplot(x=fixed_effect, y=measure, data=data, ax=axes[i], order=plot_order)
+        axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=15)
+        axes[i].set_title(f'{measure} effects')
     plt.show()
 
     return fig
 
 
 def plot_early_effects(et_measures, save_path):
-    wordlen_fig = plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures)
+    et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
+    et_measures['word_freq'] = pd.qcut(et_measures['word_freq'], 15, labels=[i for i in range(1, 16)])
+    wordlen_fig = plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures, x_order='descending')
     wordfreq_fig = plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures)
     wordlen_fig.savefig(save_path / 'wordlen_effects.png')
     wordfreq_fig.savefig(save_path / 'wordfreq_effects.png')
