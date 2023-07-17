@@ -42,13 +42,13 @@ def extract_measures(items, chars_mapping, save_path):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
-        item_measures = process_item_screens(screens_text, item, chars_mapping)
-        item_measures = add_across_trials_measures(item_measures)
+        item_measures = extract_item_measures(screens_text, item, chars_mapping)
+        item_measures = add_aggregated_measures(item_measures)
 
-        utils.save_measures_by_subj(item_measures, save_path / item.name)
+        utils.save_measures_by_subj(item_measures, save_path / 'measures' / item.name)
 
 
-def process_item_screens(screens_text, item, chars_mapping):
+def extract_item_measures(screens_text, item, chars_mapping):
     measures = []
     for screenid in screens_text:
         screen_text = screens_text[screenid]
@@ -56,21 +56,21 @@ def process_item_screens(screens_text, item, chars_mapping):
         trials = utils.get_dirs(screen_path)
         for trial in trials:
             fst_word_index = word_pos_in_item(screenid, screens_text) - 1
-            extract_trial_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures)
+            add_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures)
     measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
 
     return measures
 
 
-def add_across_trials_measures(item_measures):
+def add_aggregated_measures(item_measures):
     item_measures['LS'] = item_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
     item_measures['RR'] = item_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
 
     return item_measures
 
 
-def extract_trial_screen_measures(trial, screen_text, word_index, chars_mapping, measures):
+def add_screen_measures(trial, screen_text, word_index, chars_mapping, measures):
     subj_name = trial.name
     screen_id = int(trial.parent.name.split('_')[1])
     for num_line, line in enumerate(screen_text):
@@ -153,7 +153,7 @@ if __name__ == '__main__':
                         help='Stimuli path. Used only for assigning fixations to words')
     parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
                         help='Path to trials data. Used only for assigning fixations to words')
-    parser.add_argument('--save_path', type=str, default='Data/processed/measures')
+    parser.add_argument('--save_path', type=str, default='Data/processed')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
