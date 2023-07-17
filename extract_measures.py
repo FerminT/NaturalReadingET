@@ -77,21 +77,6 @@ def add_aggregated_measures(item_measures):
     return item_measures
 
 
-def add_word_fixations(subj_name, word_fixations, word_idx, words_fix):
-    if not has_no_fixations(word_fixations):
-        words_fix.extend([subj_name, fix_idx, fix_duration, word_idx]
-                         for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
-
-
-def add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures):
-    if has_no_fixations(word_fixations) or exclude:
-        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
-                         0, 0, 0, 0, 0, 0, 0, 0, 0])
-    else:
-        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
-                         *word_measures(word_fixations)])
-
-
 def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, words_fix):
     subj_name, screen_id = trial.name, int(trial.parent.name.split('_')[1])
 
@@ -106,6 +91,21 @@ def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, w
             add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures)
 
             word_idx += 1
+
+
+def add_word_fixations(subj_name, word_fixations, word_idx, words_fix):
+    if not has_no_fixations(word_fixations):
+        words_fix.extend([subj_name, fix_idx, fix_duration, word_idx]
+                         for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
+
+
+def add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures):
+    if has_no_fixations(word_fixations) or exclude:
+        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0])
+    else:
+        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
+                         *word_measures(word_fixations)])
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
