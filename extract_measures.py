@@ -49,24 +49,6 @@ def extract_measures(items, chars_mapping, save_path):
         utils.save_subjects_scanpaths(item_scanpaths, save_path / 'scanpaths' / item.name)
 
 
-def divide_into_words(screens_text):
-    item_text = []
-    for screenid in screens_text:
-        screen_text = screens_text[screenid]
-        for num_line, line in enumerate(screen_text):
-            line_words = line.split()
-            item_text.extend(line_words)
-    return item_text
-
-
-def build_scanpaths(words_fix, screens_text):
-    item_text = pd.DataFrame(divide_into_words(screens_text))
-    scanpaths = {subj: item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
-                 for subj in words_fix['subj'].unique()}
-
-    return scanpaths
-
-
 def extract_item_measures(screens_text, item, chars_mapping):
     measures, words_fix = [], []
     for screenid in screens_text:
@@ -80,7 +62,7 @@ def extract_item_measures(screens_text, item, chars_mapping):
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
     words_fix.sort_values(['subj', 'fix_idx'], inplace=True)
-    scanpaths = build_scanpaths(words_fix, screens_text)
+    scanpaths = build_scanpaths(words_fix, screens_text, chars_mapping)
 
     return measures, scanpaths
 
@@ -117,6 +99,17 @@ def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, w
                                  ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
 
 
+def build_scanpaths(words_fix, screens_text, chars_mapping):
+    item_text = pd.DataFrame(divide_into_words(screens_text))
+    scanpaths = {}
+    for subj in words_fix['subj'].unique():
+        subj_scanpath = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
+        subj_scanpath = remove_consecutive_punctuations(subj_scanpath, chars_mapping)
+        scanpaths[subj] = subj_scanpath
+
+    return scanpaths
+
+
 def word_measures(word_fixations):
     ffd = word_fixations['duration'][0]
     sfd = ffd if len(word_fixations['fixid']) == 1 else 0
@@ -140,6 +133,24 @@ def first_pass_n_fix(fixations_indices):
         fixation_counter += 1
 
     return fixation_counter
+
+
+def remove_consecutive_punctuations(subj_scanpath, chars_mapping):
+    for i, word in enumerate(subj_scanpath[:-1]):
+        next_word = subj_scanpath[i + 1]
+        subj_scanpath[i] = word if word != next_word else word.translate(chars_mapping)
+
+    return subj_scanpath
+
+
+def divide_into_words(screens_text):
+    item_text = []
+    for screenid in screens_text:
+        screen_text = screens_text[screenid]
+        for num_line, line in enumerate(screen_text):
+            line_words = line.split()
+            item_text.extend(line_words)
+    return item_text
 
 
 def word_pos_in_item(screen_id, screens_text):
