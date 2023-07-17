@@ -56,10 +56,12 @@ def extract_item_measures(screens_text, item, chars_mapping):
         screen_path = item / f'screen_{screenid}'
         trials = utils.get_dirs(screen_path)
         for trial in trials:
-            fst_word_index = word_pos_in_item(screenid, screens_text) - 1
+            fst_word_index = word_pos_in_item(screenid, screens_text)
             add_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures, words_fix)
+
     measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
+
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
     words_fix.sort_values(['subj', 'fix_idx'], inplace=True)
     scanpaths = build_scanpaths(words_fix, screens_text, chars_mapping)
@@ -75,28 +77,35 @@ def add_aggregated_measures(item_measures):
     return item_measures
 
 
+def add_word_fixations(subj_name, word_fixations, word_idx, words_fix):
+    if not has_no_fixations(word_fixations):
+        words_fix.extend([subj_name, fix_idx, fix_duration, word_idx]
+                         for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
+
+
+def add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures):
+    if has_no_fixations(word_fixations) or exclude:
+        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0])
+    else:
+        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
+                         *word_measures(word_fixations)])
+
+
 def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, words_fix):
-    subj_name = trial.name
-    screen_id = int(trial.parent.name.split('_')[1])
+    subj_name, screen_id = trial.name, int(trial.parent.name.split('_')[1])
+
     for num_line, line in enumerate(screen_text):
-        line_fixations = utils.load_json(trial, f'line_{num_line + 1}.json')
-        line_words = line.split()
+        line_words, line_fixations = line.split(), utils.load_json(trial, f'line_{num_line + 1}.json')
         for word_pos, word in enumerate(line_words):
             clean_word = word.lower().translate(chars_mapping)
-            word_idx += 1
+            exclude = should_exclude_word(word, clean_word, word_pos, line_words)
+
             word_fixations = line_fixations[word_pos]
-            if has_no_fixations(word_fixations):
-                continue
-            words_fix.extend([subj_name, fix_idx, fix_duration, word_idx]
-                             for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
-            is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words) \
-                          or has_no_chars(clean_word)
-            if is_left_out:
-                measures.append([subj_name, screen_id, word_idx, clean_word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            else:
-                ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc = word_measures(word_fixations)
-                measures.append([subj_name, screen_id, word_idx, clean_word, False,
-                                 ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
+            add_word_fixations(subj_name, word_fixations, word_idx, words_fix)
+            add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures)
+
+            word_idx += 1
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
@@ -160,6 +169,11 @@ def word_pos_in_item(screen_id, screens_text):
 
 def num_words(text):
     return sum([len(line.split()) for line in text])
+
+
+def should_exclude_word(word, clean_word, word_pos, line_words):
+    return has_weird_chars(word) or has_no_chars(clean_word) \
+            or is_first_word(word_pos) or is_last_word(word_pos, line_words)
 
 
 def is_first_word(word_pos):
