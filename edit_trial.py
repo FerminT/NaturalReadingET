@@ -15,7 +15,7 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
 
 
 def list_participants(raw_path):
-    participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
+    participants = [dir_.name for dir_ in utils.get_dirs(raw_path, by_date=True)]
     chosen_participant = list_options(participants, prompt='Choose a participant: ')
 
     return participants[chosen_participant]

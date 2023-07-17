@@ -22,8 +22,10 @@ def get_screenpath(screenid, item_path):
     return screen_path
 
 
-def get_dirs(datapath):
+def get_dirs(datapath, by_date=False):
     dirs = [dir_ for dir_ in datapath.iterdir() if dir_.is_dir()]
+    if by_date:
+        dirs.sort(key=lambda d: d.stat().st_mtime)
     return dirs
 
 
