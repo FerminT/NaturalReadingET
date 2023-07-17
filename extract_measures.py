@@ -49,7 +49,7 @@ def extract_measures(items, chars_mapping, save_path):
 
 
 def extract_item_measures(screens_text, item, chars_mapping):
-    measures = []
+    measures, words_fix = [], []
     for screenid in screens_text:
         screen_text = screens_text[screenid]
         screen_path = item / f'screen_{screenid}'
@@ -64,13 +64,14 @@ def extract_item_measures(screens_text, item, chars_mapping):
 
 
 def add_aggregated_measures(item_measures):
-    item_measures['LS'] = item_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
-    item_measures['RR'] = item_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
+    valid_measures = item_measures[~item_measures['excluded']]
+    item_measures['LS'] = valid_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
+    item_measures['RR'] = valid_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
 
     return item_measures
 
 
-def add_screen_measures(trial, screen_text, word_index, chars_mapping, measures):
+def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures):
     subj_name = trial.name
     screen_id = int(trial.parent.name.split('_')[1])
     for num_line, line in enumerate(screen_text):
@@ -78,16 +79,16 @@ def add_screen_measures(trial, screen_text, word_index, chars_mapping, measures)
         line_words = line.split()
         for word_pos, word in enumerate(line_words):
             clean_word = word.lower().translate(chars_mapping)
-            word_index += 1
+            word_idx += 1
             word_fixations = line_fixations[word_pos]
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words) \
                           or has_no_chars(clean_word)
             if has_no_fixations(word_fixations) or is_left_out:
-                measures.append([subj_name, screen_id, word_index, clean_word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                measures.append([subj_name, screen_id, word_idx, clean_word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                 continue
 
             ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc = word_measures(word_fixations)
-            measures.append([subj_name, screen_id, word_index, clean_word, False,
+            measures.append([subj_name, screen_id, word_idx, clean_word, False,
                              ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
 
 
