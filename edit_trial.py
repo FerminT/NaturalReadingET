@@ -1,5 +1,6 @@
 from pathlib import Path
 from Code.data_processing import parse, plot, utils
+import numpy as np
 import argparse
 
 
@@ -14,11 +15,25 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
     main_menu(subj_items, trials_flags, subj_profile, subj_datapath, stimuli_path, questions)
 
 
-def list_participants(raw_path):
+def list_participants(raw_path, processed_path):
     participants = [dir_.name for dir_ in utils.get_dirs(raw_path, by_date=True)]
+    add_fully_processed_icon(raw_path, processed_path, participants)
     chosen_participant = list_options(participants, prompt='Choose a participant: ')
 
     return participants[chosen_participant]
+
+
+def add_fully_processed_icon(raw_path, processed_path, participants):
+    for i, participant in enumerate(participants):
+        processed_trials_path = processed_path / participant
+        raw_trials_path = raw_path / participant
+        if processed_trials_path.exists():
+            processed_trials = [dir_.name for dir_ in utils.get_dirs(processed_trials_path)]
+            trials_flags = utils.load_flags(processed_trials, processed_trials_path)
+            edited_trials = [trials_flags[trial]['edited'] for trial in trials_flags]
+            all_edited = np.all(edited_trials) and len(edited_trials) == len(utils.get_files(raw_trials_path)) - 2
+            if all_edited:
+                participants[i] += ' \u2705'
 
 
 def show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_option):
@@ -170,5 +185,5 @@ if __name__ == '__main__':
     if args.subj:
         select_trial(raw_path, args.ascii_path, args.config, args.questions, stimuli_path, data_path, args.subj)
     else:
-        subj = list_participants(raw_path)
+        subj = list_participants(raw_path, data_path).split()[0]
         select_trial(raw_path, args.ascii_path, args.config, args.questions, stimuli_path, data_path, subj)
