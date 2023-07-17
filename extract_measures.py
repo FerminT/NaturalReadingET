@@ -42,10 +42,29 @@ def extract_measures(items, chars_mapping, save_path):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items:
         screens_text = utils.load_json(item, 'screens_text.json')
-        item_measures = extract_item_measures(screens_text, item, chars_mapping)
+        item_measures, item_scanpaths = extract_item_measures(screens_text, item, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, save_path / 'measures' / item.name)
+        utils.save_subjects_scanpaths(item_scanpaths, save_path / 'scanpaths' / item.name)
+
+
+def divide_into_words(screens_text):
+    item_text = []
+    for screenid in screens_text:
+        screen_text = screens_text[screenid]
+        for num_line, line in enumerate(screen_text):
+            line_words = line.split()
+            item_text.extend(line_words)
+    return item_text
+
+
+def build_scanpaths(words_fix, screens_text):
+    item_text = pd.DataFrame(divide_into_words(screens_text))
+    scanpaths = {subj: item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
+                 for subj in words_fix['subj'].unique()}
+
+    return scanpaths
 
 
 def extract_item_measures(screens_text, item, chars_mapping):
@@ -56,11 +75,14 @@ def extract_item_measures(screens_text, item, chars_mapping):
         trials = utils.get_dirs(screen_path)
         for trial in trials:
             fst_word_index = word_pos_in_item(screenid, screens_text) - 1
-            add_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures)
+            add_screen_measures(trial, screen_text, fst_word_index, chars_mapping, measures, words_fix)
     measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
+    words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
+    words_fix.sort_values(['subj', 'fix_idx'], inplace=True)
+    scanpaths = build_scanpaths(words_fix, screens_text)
 
-    return measures
+    return measures, scanpaths
 
 
 def add_aggregated_measures(item_measures):
@@ -71,7 +93,7 @@ def add_aggregated_measures(item_measures):
     return item_measures
 
 
-def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures):
+def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, words_fix):
     subj_name = trial.name
     screen_id = int(trial.parent.name.split('_')[1])
     for num_line, line in enumerate(screen_text):
@@ -81,15 +103,18 @@ def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures):
             clean_word = word.lower().translate(chars_mapping)
             word_idx += 1
             word_fixations = line_fixations[word_pos]
+            if has_no_fixations(word_fixations):
+                continue
+            words_fix.extend([subj_name, fix_idx, fix_duration, word_idx]
+                             for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
             is_left_out = has_weird_chars(word) or is_first_word(word_pos) or is_last_word(word_pos, line_words) \
                           or has_no_chars(clean_word)
-            if has_no_fixations(word_fixations) or is_left_out:
+            if is_left_out:
                 measures.append([subj_name, screen_id, word_idx, clean_word, is_left_out, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-                continue
-
-            ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc = word_measures(word_fixations)
-            measures.append([subj_name, screen_id, word_idx, clean_word, False,
-                             ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
+            else:
+                ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc = word_measures(word_fixations)
+                measures.append([subj_name, screen_id, word_idx, clean_word, False,
+                                 ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
 
 
 def word_measures(word_fixations):

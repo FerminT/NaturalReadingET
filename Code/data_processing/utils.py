@@ -242,3 +242,12 @@ def save_measures_by_subj(item_measures, save_path):
         subj_measures = item_measures[item_measures['subj'] == subj]
         subj_measures.reset_index(drop=True, inplace=True)
         subj_measures.to_pickle(save_path / f'{subj}.pkl')
+
+
+def save_subjects_scanpaths(item_scanpaths, save_path):
+    if not save_path.exists():
+        save_path.mkdir(parents=True)
+    for subj in item_scanpaths:
+        subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
+        with open(save_path / f'{subj}.txt', 'w') as f:
+            f.write(subj_scanpath)
