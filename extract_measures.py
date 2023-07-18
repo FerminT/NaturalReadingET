@@ -63,7 +63,6 @@ def extract_item_measures(screens_text, item, chars_mapping):
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
 
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
-    words_fix.sort_values(['subj', 'fix_idx'], inplace=True)
     scanpaths = build_scanpaths(words_fix, screens_text, chars_mapping)
 
     return measures, scanpaths
@@ -78,17 +77,18 @@ def add_aggregated_measures(item_measures):
 
 
 def add_screen_measures(trial, screen_text, word_idx, chars_mapping, measures, words_fix):
-    subj_name, screen_id = trial.name, int(trial.parent.name.split('_')[1])
-
+    subj_name, screen_id, screen_fix = trial.name, int(trial.parent.name.split('_')[1]), []
     for num_line, line in enumerate(screen_text):
-        line_words, line_fixations = line.split(), utils.load_json(trial, f'line_{num_line + 1}.json')
+        line_words, line_fix = line.split(), utils.load_json(trial, f'line_{num_line + 1}.json')
+        screen_fix.append(line_fix)
         for word_pos, word in enumerate(line_words):
             clean_word = word.lower().translate(chars_mapping)
             exclude = should_exclude_word(word, clean_word, word_pos, line_words)
 
-            word_fixations = line_fixations[word_pos]
-            add_word_fixations(subj_name, word_fixations, word_idx, words_fix)
-            add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures)
+            word_fix = line_fix[word_pos]
+            add_word_fixations(subj_name, word_fix, word_idx, words_fix)
+            add_word_measures(subj_name, screen_id, word_idx, word_pos, clean_word, exclude,
+                              word_fix, screen_fix, measures)
 
             word_idx += 1
 
@@ -99,16 +99,16 @@ def add_word_fixations(subj_name, word_fixations, word_idx, words_fix):
                          for fix_idx, fix_duration in zip(word_fixations['fixid'], word_fixations['duration']))
 
 
-def add_word_measures(subj_name, screen_id, word_idx, clean_word, exclude, word_fixations, measures):
+def add_word_measures(subj_name, screen_id, word_idx, word_pos, clean_word, exclude, word_fixations, screen_fix, measures):
+    metadata = [subj_name, screen_id, word_idx, clean_word, exclude]
     if has_no_fixations(word_fixations) or exclude:
-        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
-                         0, 0, 0, 0, 0, 0, 0, 0, 0])
+        measures.append(metadata.extend([0, 0, 0, 0, 0, 0, 0, 0, 0]))
     else:
-        measures.append([subj_name, screen_id, word_idx, clean_word, exclude,
-                         *word_measures(word_fixations)])
+        measures.append(metadata.extend([*word_measures(word_fixations, word_pos, screen_fix)]))
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
+    words_fix = words_fix.sort_values(['subj', 'fix_idx'])
     item_text = pd.DataFrame(divide_into_words(screens_text))
     scanpaths = {}
     for subj in words_fix['subj'].unique():
@@ -119,29 +119,47 @@ def build_scanpaths(words_fix, screens_text, chars_mapping):
     return scanpaths
 
 
-def word_measures(word_fixations):
-    ffd = word_fixations['duration'][0]
+def word_measures(word_fixations, word_pos, screen_fix):
+    n_first_pass_fix = first_pass_n_fix(word_fixations['index'], word_pos, screen_fix)
+    ffd = word_fixations['duration'][0] if n_first_pass_fix > 0 else 0
     sfd = ffd if len(word_fixations['fixid']) == 1 else 0
-    fprt = sum(word_fixations['duration'][:first_pass_n_fix(word_fixations['index'])])
-    rpd = sum(word_fixations['duration'][first_pass_n_fix(word_fixations['index']):])
+    fprt = sum(word_fixations['duration'][:n_first_pass_fix])
+    rpd = sum(word_fixations['duration'][n_first_pass_fix:])
     tfd = sum(word_fixations['duration'])
     rrt = rpd - fprt
     sprt = tfd - fprt
     fc = len(word_fixations['fixid'])
-    rc = fc - first_pass_n_fix(word_fixations['index'])
+    rc = fc - n_first_pass_fix
 
     return ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc
 
 
-def first_pass_n_fix(fixations_indices):
+def first_pass_n_fix(fix_indices, word_pos, screen_fix):
     # Count number of first pass reading fixations on word
-    fixation_counter = 0
-    for i, fix_idx in enumerate(fixations_indices):
-        if i > 0 and fix_idx != fixations_indices[i - 1] + 1:
-            break
-        fixation_counter += 1
+    prev_consecutive_fix = find_last_consecutive_fix(word_pos, screen_fix)
+    if fix_indices[0] != prev_consecutive_fix + 1:
+        # Regressive (i.e., right-to-left) saccade
+        return 0
+    else:
+        return fix_indices.index(last_consecutive_fix(fix_indices)) + 1
 
-    return fixation_counter
+
+def find_last_consecutive_fix(word_pos, screen_fix):
+    screen_fix[-1] = screen_fix[-1][:word_pos]
+    prev_words_fix = [fix['index'] for line_fix in screen_fix for fix in line_fix]
+    prev_words_fix = sorted([fix for word_fixs in prev_words_fix for fix in word_fixs])
+
+    return last_consecutive_fix(prev_words_fix)
+
+
+def last_consecutive_fix(fix_indices):
+    cons_fix_index = fix_indices[0]
+    for i, fix_idx in enumerate(fix_indices[1:]):
+        if cons_fix_index != fix_indices[i - 1] - 1:
+            break
+        cons_fix_index = fix_idx
+
+    return cons_fix_index
 
 
 def remove_consecutive_punctuations(subj_scanpath, chars_mapping):
