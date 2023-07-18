@@ -26,28 +26,27 @@ def process_item(item, subjects, screens_lines, item_savepath):
         if not (trial_path.exists() and trial_is_correct(subject, item)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
-        trial_fixations_by_word = process_subj_trial(trial_path, screen_sequence, screens_lines)
-        save_trial_word_fixations(trial_fixations_by_word, item_savepath, subject.name)
+        trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines)
+        save_trial_word_fixations(trial_fix_by_word, item_savepath, subject.name)
 
 
-def process_subj_trial(trial_path, screen_sequence, screens_lines):
+def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
     # Keep track of returning screens
     screen_counter = {screen_id: 0 for screen_id in np.unique(screen_sequence)}
-    # Each screen has a list of lines, each line has a dictionary of fixations for each word
-    trial_fixations_by_word = {screen_id: [] for screen_id in np.unique(screen_sequence)}
+    # Each screen has a list of lines, each line is a list of dictionaries with the fixations of the corresponding word
+    trial_fix_by_word = []
     for screen_id in screen_sequence:
         fixations, lines_pos = load_screen_data(trial_path, screen_id, screen_counter)
-        for line_number, line in enumerate(screens_lines[screen_id]):
+        for line_num, line in enumerate(screens_lines[screen_id]):
             words, spaces_pos = line['text'].split(), line['spaces_pos']
-            line_fixations = get_line_fixations(fixations, line_number, lines_pos)
-            words_fixations = assign_line_fixations_to_words(words, line_fixations, spaces_pos)
-
-            screen_fixations, counter = trial_fixations_by_word[screen_id], screen_counter[screen_id]
-            update_screen_fixations(line_number, words_fixations, counter, screen_fixations)
+            line_fix = get_line_fixations(fixations, line_num, lines_pos)
+            assign_line_fixations_to_words(line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word)
 
         screen_counter[screen_id] += 1
+    trial_fix_by_word = pd.DataFrame(trial_fix_by_word, columns=['subj', 'screen', 'line', 'word_pos', 'trial_fix',
+                                                                 'screen_fix', 'duration', 'x'])
 
-    return trial_fixations_by_word
+    return trial_fix_by_word
 
 
 def get_line_fixations(fixations, line_number, lines_pos):
@@ -65,42 +64,24 @@ def get_line_fixations(fixations, line_number, lines_pos):
     return line_fixations
 
 
-def assign_line_fixations_to_words(words, line_fixations, spaces_pos):
-    words_fixations = [{} for word in words]
+def assign_line_fixations_to_words(line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word):
+    line_num += 1
     for i in range(len(spaces_pos) - 1):
-        word_fixations = line_fixations[line_fixations['xAvg'].between(spaces_pos[i],
-                                                                       spaces_pos[i + 1],
-                                                                       inclusive='left')]
-        if word_fixations.empty:
+        word_fix = line_fix[line_fix['xAvg'].between(spaces_pos[i],
+                                                           spaces_pos[i + 1],
+                                                           inclusive='left')]
+        if word_fix.empty:
+            trial_fix_by_word.append([subj_name, screen_id, line_num, i, None, None, None, None])
             continue
-        word_fixations = word_fixations[['index', 'duration', 'xAvg']]
-        word_fixations = word_fixations.rename(columns={'index': 'fixid', 'xAvg': 'x'})
-        word_fixations.reset_index(inplace=True)
+        word_fix = word_fix[['index', 'duration', 'xAvg']]
+        word_fix = word_fix.rename(columns={'index': 'trial_fix', 'xAvg': 'x'})
+        word_fix.reset_index(inplace=True)
         # Shift x to start at 0
-        word_fixations['x'] -= spaces_pos[i]
+        word_fix['x'] -= spaces_pos[i]
+        word_fix['subj'], word_fix['screen'], word_fix['line'], word_fix['word_pos'] = subj_name, screen_id, line_num, i
 
-        words_fixations[i] = word_fixations.to_dict(orient='list')
-
-    return words_fixations
-
-
-def update_screen_fixations(line_number, words_fixations, counter, screen_fixations):
-    if counter == 0:
-        screen_fixations.append(words_fixations)
-    else:
-        # Returning screen, append values
-        update_line_fixations(line_number, words_fixations, screen_fixations)
-
-
-def update_line_fixations(line_number, words_fixations, screen_fixations):
-    for idx, word_fixations in enumerate(words_fixations):
-        if len(word_fixations) > 0:
-            word_prev_fix = screen_fixations[line_number][idx]
-            if len(word_prev_fix) > 0:
-                for key in word_prev_fix:
-                    word_prev_fix[key].extend(words_fixations[idx][key])
-            else:
-                screen_fixations[line_number][idx] = words_fixations[idx]
+        word_fix = word_fix[['subj', 'screen', 'line', 'word_pos', 'trial_fix', 'index', 'duration', 'x']]
+        trial_fix_by_word.extend(word_fix.values.tolist())
 
 
 def trial_is_correct(subject, item):
@@ -110,14 +91,8 @@ def trial_is_correct(subject, item):
     return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
 
 
-def save_trial_word_fixations(trial_fixations_by_word, item_savepath, subj_name):
-    for screen_id in trial_fixations_by_word:
-        screen_savepath = item_savepath / f'screen_{screen_id}' / subj_name
-        screen_savepath.mkdir(exist_ok=True, parents=True)
-        for line_number, line in enumerate(trial_fixations_by_word[screen_id]):
-            line_filename = f'line_{line_number + 1}.json'
-            line_fixations = trial_fixations_by_word[screen_id][line_number]
-            utils.save_json(line_fixations, screen_savepath, line_filename)
+def save_trial_word_fixations(trial_fix_by_word, item_savepath, subj_name):
+    trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
 
 
 def load_screen_data(trial_path, screen_id, screen_counter):
