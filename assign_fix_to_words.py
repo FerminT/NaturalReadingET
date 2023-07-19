@@ -115,7 +115,7 @@ def make_screen_fix_consecutive(trial_fix_by_word):
 
 def cast_to_int(trial_fix_by_word):
     for col in ['screen', 'line', 'word_pos', 'trial_fix', 'screen_fix', 'duration']:
-        trial_fix_by_word[col] = trial_fix_by_word[col].astype(pd.UInt64Dtype())
+        trial_fix_by_word[col] = trial_fix_by_word[col].astype(pd.Int64Dtype())
 
     return trial_fix_by_word
 
