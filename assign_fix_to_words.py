@@ -97,10 +97,8 @@ def trial_is_correct(subject, item):
 
 def save_trial_word_fixations(trial_fix_by_word, item_savepath):
     trial_fix_by_word = make_screen_fix_consecutive(trial_fix_by_word)
-
+    trial_fix_by_word = cast_to_int(trial_fix_by_word)
     trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'line', 'word_pos', 'screen_fix'])
-    trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']] = \
-        trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']].astype(pd.UInt64Dtype())
 
     subj_name = trial_fix_by_word['subj'].iloc[0]
     trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
@@ -111,6 +109,13 @@ def make_screen_fix_consecutive(trial_fix_by_word):
     consecutive_screen_fix = trial_fix_by_word[~trial_fix_by_word['screen_fix'].isna()].copy()
     consecutive_screen_fix['screen_fix'] = consecutive_screen_fix.groupby('screen').cumcount()
     trial_fix_by_word.update(consecutive_screen_fix)
+
+    return trial_fix_by_word
+
+
+def cast_to_int(trial_fix_by_word):
+    for col in ['screen', 'line', 'word_pos', 'trial_fix', 'screen_fix', 'duration']:
+        trial_fix_by_word[col] = trial_fix_by_word[col].astype(pd.UInt64Dtype())
 
     return trial_fix_by_word
 
