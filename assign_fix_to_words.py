@@ -27,7 +27,7 @@ def process_item(item, subjects, screens_lines, item_savepath):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines)
-        save_trial_word_fixations(trial_fix_by_word, item_savepath, subject.name)
+        save_trial_word_fixations(trial_fix_by_word, item_savepath)
 
 
 def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
@@ -77,13 +77,13 @@ def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, scr
         else:
             word_fix = word_fix[['index', 'duration', 'xAvg']]
             word_fix = word_fix.rename(columns={'index': 'trial_fix', 'xAvg': 'x'})
-            word_fix.reset_index(inplace=True)
+            word_fix.reset_index(names='screen_fix', inplace=True)
             # Shift x to start at 0
             word_fix['x'] -= spaces_pos[i]
             word_fix['subj'], word_fix['screen'], word_fix['line'], word_fix['word_pos'] = \
                 subj_name, screen_id, line_num, word_pos
 
-            word_fix = word_fix[['subj', 'screen', 'line', 'word_pos', 'trial_fix', 'index', 'duration', 'x']]
+            word_fix = word_fix[['subj', 'screen', 'line', 'word_pos', 'trial_fix', 'screen_fix', 'duration', 'x']]
             trial_fix_by_word.extend(word_fix.values.tolist())
         word_pos += 1
 
@@ -95,24 +95,45 @@ def trial_is_correct(subject, item):
     return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
 
 
-def save_trial_word_fixations(trial_fix_by_word, item_savepath, subj_name):
+def save_trial_word_fixations(trial_fix_by_word, item_savepath):
+    trial_fix_by_word = make_screen_fix_consecutive(trial_fix_by_word)
+
     trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'line', 'word_pos', 'screen_fix'])
     trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']] = \
-        trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']].astype(pd.UInt64Dtype(), copy=False)
+        trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']].astype(pd.UInt64Dtype())
+
+    subj_name = trial_fix_by_word['subj'].iloc[0]
     trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
+
+
+def make_screen_fix_consecutive(trial_fix_by_word):
+    trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'screen_fix'])
+    consecutive_screen_fix = trial_fix_by_word[~trial_fix_by_word['screen_fix'].isna()].copy()
+    consecutive_screen_fix['screen_fix'] = consecutive_screen_fix.groupby('screen').cumcount()
+    trial_fix_by_word.update(consecutive_screen_fix)
+
+    return trial_fix_by_word
 
 
 def load_screen_data(trial_path, screen_id, screen_counter):
     screen_dir = trial_path / f'screen_{screen_id}'
     fix_filename, lines_filename = get_screen_filenames(screen_counter[screen_id])
-    fixations = pd.read_pickle(screen_dir / fix_filename)
-    lines_pos = pd.read_pickle(screen_dir / lines_filename).sort_values('y')['y'].to_numpy()
+    fixations = load_fixations(screen_dir / fix_filename)
+    lines_pos = load_lines_pos(screen_dir / lines_filename)
 
     if screen_counter[screen_id] > 0:
         last_fixation_index = get_last_fixation_index(screen_dir, screen_counter[screen_id] - 1)
         fixations.index += last_fixation_index + 1
 
     return fixations, lines_pos
+
+
+def load_fixations(fix_file):
+    return pd.read_pickle(fix_file)
+
+
+def load_lines_pos(lines_pos_file):
+    return pd.read_pickle(lines_pos_file).sort_values('y')['y'].to_numpy()
 
 
 def get_screen_filenames(screen_times_read):
@@ -127,7 +148,7 @@ def get_screen_filenames(screen_times_read):
 
 def get_last_fixation_index(screen_dir, prev_screen_times_read):
     fix_filename, _ = get_screen_filenames(prev_screen_times_read)
-    fixations = pd.read_pickle(screen_dir / fix_filename)
+    fixations = load_fixations(screen_dir / fix_filename)
     last_fixation_index = fixations.iloc[-1].name
 
     return last_fixation_index
