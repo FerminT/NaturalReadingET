@@ -127,7 +127,7 @@ def load_screen_data(trial_path, screen_id, screen_counter):
     lines_pos = load_lines_pos(screen_dir / lines_filename)
 
     if screen_counter[screen_id] > 0:
-        last_fixation_index = get_last_fixation_index(screen_dir, screen_counter[screen_id] - 1)
+        last_fixation_index = get_last_fixation_index(screen_dir, screen_counter[screen_id])
         fixations.index += last_fixation_index + 1
 
     return fixations, lines_pos
@@ -152,9 +152,11 @@ def get_screen_filenames(screen_times_read):
 
 
 def get_last_fixation_index(screen_dir, prev_screen_times_read):
-    fix_filename, _ = get_screen_filenames(prev_screen_times_read)
-    fixations = load_fixations(screen_dir / fix_filename)
-    last_fixation_index = fixations.iloc[-1].name
+    last_fixation_index = 0
+    for it in range(prev_screen_times_read):
+        fix_filename, _ = get_screen_filenames(it)
+        fixations = load_fixations(screen_dir / fix_filename)
+        last_fixation_index += fixations.iloc[-1].name
 
     return last_fixation_index
 
