@@ -37,10 +37,13 @@ def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
     trial_fix_by_word = []
     for screen_id in screen_sequence:
         fixations, lines_pos = load_screen_data(trial_path, screen_id, screen_counter)
+        word_pos = 0
         for line_num, line in enumerate(screens_lines[screen_id]):
             words, spaces_pos = line['text'].split(), line['spaces_pos']
             line_fix = get_line_fixations(fixations, line_num, lines_pos)
-            assign_line_fixations_to_words(line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word)
+            assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos,
+                                           screen_id, subj_name, trial_fix_by_word)
+            word_pos += len(words)
 
         screen_counter[screen_id] += 1
     trial_fix_by_word = pd.DataFrame(trial_fix_by_word, columns=['subj', 'screen', 'line', 'word_pos', 'trial_fix',
@@ -64,23 +67,25 @@ def get_line_fixations(fixations, line_number, lines_pos):
     return line_fixations
 
 
-def assign_line_fixations_to_words(line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word):
+def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word):
     for i in range(len(spaces_pos) - 1):
         word_fix = line_fix[line_fix['xAvg'].between(spaces_pos[i],
-                                                           spaces_pos[i + 1],
-                                                           inclusive='left')]
+                                                     spaces_pos[i + 1],
+                                                     inclusive='left')]
         if word_fix.empty:
-            trial_fix_by_word.append([subj_name, screen_id, line_num, i, None, None, None, None])
-            continue
-        word_fix = word_fix[['index', 'duration', 'xAvg']]
-        word_fix = word_fix.rename(columns={'index': 'trial_fix', 'xAvg': 'x'})
-        word_fix.reset_index(inplace=True)
-        # Shift x to start at 0
-        word_fix['x'] -= spaces_pos[i]
-        word_fix['subj'], word_fix['screen'], word_fix['line'], word_fix['word_pos'] = subj_name, screen_id, line_num, i
+            trial_fix_by_word.append([subj_name, screen_id, line_num, word_pos, None, None, None, None])
+        else:
+            word_fix = word_fix[['index', 'duration', 'xAvg']]
+            word_fix = word_fix.rename(columns={'index': 'trial_fix', 'xAvg': 'x'})
+            word_fix.reset_index(inplace=True)
+            # Shift x to start at 0
+            word_fix['x'] -= spaces_pos[i]
+            word_fix['subj'], word_fix['screen'], word_fix['line'], word_fix['word_pos'] = \
+                subj_name, screen_id, line_num, word_pos
 
-        word_fix = word_fix[['subj', 'screen', 'line', 'word_pos', 'trial_fix', 'index', 'duration', 'x']]
-        trial_fix_by_word.extend(word_fix.values.tolist())
+            word_fix = word_fix[['subj', 'screen', 'line', 'word_pos', 'trial_fix', 'index', 'duration', 'x']]
+            trial_fix_by_word.extend(word_fix.values.tolist())
+        word_pos += 1
 
 
 def trial_is_correct(subject, item):
