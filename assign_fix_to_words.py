@@ -65,7 +65,6 @@ def get_line_fixations(fixations, line_number, lines_pos):
 
 
 def assign_line_fixations_to_words(line_fix, line_num, spaces_pos, screen_id, subj_name, trial_fix_by_word):
-    line_num += 1
     for i in range(len(spaces_pos) - 1):
         word_fix = line_fix[line_fix['xAvg'].between(spaces_pos[i],
                                                            spaces_pos[i + 1],
