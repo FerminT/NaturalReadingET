@@ -29,8 +29,8 @@ def get_dirs(datapath, by_date=False):
     return dirs
 
 
-def get_files(datapath):
-    files = [file for file in datapath.iterdir() if file.is_file()]
+def get_files(datapath, extension='*'):
+    files = [file for file in datapath.glob(f'*.{extension}') if file.is_file()]
     return files
 
 
