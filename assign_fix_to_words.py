@@ -92,6 +92,8 @@ def trial_is_correct(subject, item):
 
 
 def save_trial_word_fixations(trial_fix_by_word, item_savepath, subj_name):
+    trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'line', 'word_pos', 'screen_fix'])
+    trial_fix_by_word[['screen_fix', 'trial_fix', 'duration']].astype(pd.UInt64Dtype())
     trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
 
 
