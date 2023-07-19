@@ -8,7 +8,7 @@ import argparse
 
 def assign_fixations_to_words(items_path, subjects, save_path):
     print('Assigning fixations to words...')
-    items = [item for item in items_path.glob('*.mat') if item.name != 'Test.mat']
+    items = [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
     for item in items:
         print(f'Processing "{item.stem}" trials')
         screens_lines = load_lines_by_screen(item)
