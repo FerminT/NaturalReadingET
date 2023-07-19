@@ -73,6 +73,7 @@ def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, scr
                                                      spaces_pos[i + 1],
                                                      inclusive='left')]
         if word_fix.empty:
+            # First time in this screen, add word to dataframe
             trial_fix_by_word.append([subj_name, screen_id, line_num, word_pos, None, None, None, None])
         else:
             word_fix = word_fix[['index', 'duration', 'xAvg']]
@@ -96,12 +97,22 @@ def trial_is_correct(subject, item):
 
 
 def save_trial_word_fixations(trial_fix_by_word, item_savepath):
+    trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'word_pos'], group_keys=False)\
+        .apply(remove_na_from_fixated_words)
     trial_fix_by_word = make_screen_fix_consecutive(trial_fix_by_word)
     trial_fix_by_word = cast_to_int(trial_fix_by_word)
     trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'line', 'word_pos', 'screen_fix'])
 
     subj_name = trial_fix_by_word['subj'].iloc[0]
     trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
+
+
+def remove_na_from_fixated_words(df):
+    # Due to returning screens, there may be words that have fixations but were also added as empty rows
+    if len(df[~df['screen_fix'].isna()]) > 0:
+        return df.dropna()
+    else:
+        return df.head(1)
 
 
 def make_screen_fix_consecutive(trial_fix_by_word):
