@@ -40,12 +40,12 @@ def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, centre, n
         fixed_effects = get_continuous_fixed_effects(formula)
         data = centre_attributes(data, fixed_effects)
     if family == 'binomial':
-        mixedlm_model = sm.GLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
-                                            data=data, family=sm.families.Binomial())
+        mixedlm_model = sm.BinomialBayesMixedGLM.from_formula(formula, vc_formulas=vc_formula, data=data)
+        mixedlm_results = mixedlm_model.fit_vb()
     else:
         mixedlm_model = sm.MixedLM.from_formula(formula, groups=group, vc_formula=vc_formula, re_formula=re_formula,
                                                 data=data)
-    mixedlm_results = mixedlm_model.fit()
+        mixedlm_results = mixedlm_model.fit()
     print(mixedlm_results.summary())
     with open(save_path / name, 'w') as f:
         f.write(mixedlm_results.summary().as_text())
@@ -64,7 +64,7 @@ def centre_attributes(data, attributes):
 
 
 def remove_skipped_words(et_measures):
-    et_measures = et_measures[~et_measures['skipped']]
+    et_measures = et_measures[et_measures['skipped'] == 0]
     et_measures = et_measures.drop(columns=['skipped'])
     return et_measures
 
@@ -76,7 +76,7 @@ def remove_excluded_words(et_measures):
 
 
 def add_len_freq_skipped(et_measures, words_freq):
-    et_measures['skipped'] = et_measures['FFD'].apply(lambda x: x == 0)
+    et_measures['skipped'] = et_measures['FFD'].apply(lambda x: int(x == 0))
     et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x))
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
                                                          log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0]))
