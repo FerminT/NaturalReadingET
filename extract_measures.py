@@ -39,10 +39,10 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
-def extract_measures(items, chars_mapping, save_path):
+def extract_measures(items, chars_mapping, stimuli_path, save_path):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items:
-        screens_text = utils.load_json(item, 'screens_text.json')
+        screens_text = utils.load_lines_text_by_screen(item.stem, stimuli_path)
         item_measures, item_scanpaths = extract_item_measures(screens_text, item, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
 
@@ -223,17 +223,18 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='Data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
     parser.add_argument('--stimuli', type=str, default='Stimuli',
-                        help='Stimuli path. Used only for assigning fixations to words')
+                        help='Stimuli path, from which the items\' text is extracted')
     parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
                         help='Path to trials data. Used only for assigning fixations to words')
     parser.add_argument('--save_path', type=str, default='Data/processed')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
-    data_path, save_path = Path(args.data_path), Path(args.save_path)
+    data_path, trials_path, stimuli_path, save_path = Path(args.data_path), Path(args.trials_path), \
+        Path(args.stimuli), Path(args.save_path)
     if not data_path.exists():
-        subj_paths = utils.get_dirs(Path(args.trials_path))
-        assign_fixations_to_words(Path(args.stimuli), subj_paths, data_path)
+        subj_paths = utils.get_dirs(trials_path)
+        assign_fixations_to_words(stimuli_path, subj_paths, data_path)
 
     if args.item != 'all':
         item_paths = [data_path / args.item]
@@ -241,4 +242,4 @@ if __name__ == '__main__':
         item_paths = utils.get_dirs(data_path)
 
     chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(item_paths, chars_mapping, save_path)
+    extract_measures(item_paths, chars_mapping, stimuli_path, save_path)

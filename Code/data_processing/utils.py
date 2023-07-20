@@ -155,6 +155,23 @@ def save_structs(et_messages, screen_sequence, answers, words, flags, trial_path
     flags.to_pickle(trial_path / 'flags.pkl')
 
 
+def load_lines_text_by_screen(item_name, stimuli_path):
+    screens_lines = load_lines_by_screen(stimuli_path / f'{item_name}.mat')
+    screens_text = {int(screenid): [line['text'] for line in screens_lines[screenid]] for screenid in screens_lines}
+    return screens_text
+
+
+def load_lines_by_screen(item):
+    item_cfg = loadmat(str(item), simplify_cells=True)
+    lines, num_screens = item_cfg['lines'], len(item_cfg['screens'])
+    screens_lines = {screen_id: [] for screen_id in range(1, num_screens + 1)}
+    for line in lines:
+        screens_lines[line['screen']].append({'text': line['text'],
+                                              'spaces_pos': line['spaces_pos']})
+
+    return screens_lines
+
+
 def load_calibrationdata(calibration_path):
     cal_points = load_pickle(calibration_path, 'cal_points.pkl')
     val_points = load_pickle(calibration_path, 'val_points.pkl')
