@@ -42,6 +42,7 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 def extract_measures(items, chars_mapping, stimuli_path, save_path):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items:
+        print(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, stimuli_path)
         item_measures, item_scanpaths = extract_item_measures(screens_text, item, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
