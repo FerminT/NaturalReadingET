@@ -1,5 +1,4 @@
 from pathlib import Path
-from scipy.io import loadmat
 from Code.data_processing import utils
 import pandas as pd
 import numpy as np
@@ -11,7 +10,7 @@ def assign_fixations_to_words(items_path, subjects, save_path):
     items = [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
     for item in items:
         print(f'Processing "{item.stem}" trials')
-        screens_lines = load_lines_by_screen(item)
+        screens_lines = utils.load_lines_by_screen(item)
         item_savepath = save_path / item.name[:-4]
         item_savepath.mkdir(exist_ok=True, parents=True)
 
@@ -19,21 +18,21 @@ def assign_fixations_to_words(items_path, subjects, save_path):
 
 
 def process_item(item, subjects, screens_lines, item_savepath):
-    screens_text = {int(screenid): [line['text'] for line in screens_lines[screenid]] for screenid in screens_lines}
-    utils.save_json(screens_text, item_savepath, 'screens_text.json')
     for subject in subjects:
         trial_path = subject / item.name[:-4]
         if not (trial_path.exists() and trial_is_correct(subject, item)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines)
+        trial_fix_by_word = postprocess_word_fixations(trial_fix_by_word)
         save_trial_word_fixations(trial_fix_by_word, item_savepath)
 
 
 def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
     # Keep track of returning screens
     screen_counter = {screen_id: 0 for screen_id in np.unique(screen_sequence)}
-    # Each screen has a list of lines, each line is a list of dictionaries with the fixations of the corresponding word
+    # Each record corresponds to a word; words with multiple fixations have multiple records.
+    # Words with no fixations have NA values
     trial_fix_by_word = []
     for screen_id in screen_sequence:
         fixations, lines_pos = load_screen_data(trial_path, screen_id, screen_counter)
@@ -97,22 +96,43 @@ def trial_is_correct(subject, item):
 
 
 def save_trial_word_fixations(trial_fix_by_word, item_savepath):
-    trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'word_pos'], group_keys=False)\
+    subj_name = trial_fix_by_word['subj'].iloc[0]
+    trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
+
+
+def postprocess_word_fixations(trial_fix_by_word):
+    trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'line'], group_keys=False) \
+        .apply(remove_return_sweeps_from_line)
+    trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'word_pos'], group_keys=False) \
         .apply(remove_na_from_fixated_words)
     trial_fix_by_word = make_screen_fix_consecutive(trial_fix_by_word)
     trial_fix_by_word = cast_to_int(trial_fix_by_word)
     trial_fix_by_word = trial_fix_by_word.sort_values(['screen', 'line', 'word_pos', 'screen_fix'])
 
-    subj_name = trial_fix_by_word['subj'].iloc[0]
-    trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
+    return trial_fix_by_word
 
 
-def remove_na_from_fixated_words(df):
+def remove_na_from_fixated_words(words_fix):
     # Due to returning screens, there may be words that have fixations but were also added as empty rows
-    if len(df[~df['screen_fix'].isna()]) > 0:
-        return df.dropna()
+    if len(words_fix[~words_fix['screen_fix'].isna()]) > 0:
+        return words_fix.dropna()
     else:
-        return df.head(1)
+        return words_fix.head(1)
+
+
+def remove_return_sweeps_from_line(line_fix):
+    # Remove fixations resulting from oculomotor errors when jumping lines
+    first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
+    if not np.isnan(first_word_with_fix):
+        first_word_fix = line_fix[line_fix['word_pos'] == first_word_with_fix]
+        left_most_fix = first_word_fix[first_word_fix['x'] == first_word_fix['x'].min()]
+        first_line_fix = line_fix['screen_fix'].min()
+        line_fix.loc[line_fix['screen_fix'].between(first_line_fix,
+                                                    left_most_fix['screen_fix'].iloc[0],
+                                                    inclusive='left'),
+                                                    ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
+
+    return line_fix
 
 
 def make_screen_fix_consecutive(trial_fix_by_word):
@@ -170,17 +190,6 @@ def get_last_fixation_index(screen_dir, prev_screen_times_read):
         last_fixation_index += fixations.iloc[-1].name
 
     return last_fixation_index
-
-
-def load_lines_by_screen(item):
-    item_cfg = loadmat(str(item), simplify_cells=True)
-    lines, num_screens = item_cfg['lines'], len(item_cfg['screens'])
-    screens_lines = {screen_id: [] for screen_id in range(1, num_screens + 1)}
-    for line in lines:
-        screens_lines[line['screen']].append({'text': line['text'],
-                                              'spaces_pos': line['spaces_pos']})
-
-    return screens_lines
 
 
 if __name__ == '__main__':
