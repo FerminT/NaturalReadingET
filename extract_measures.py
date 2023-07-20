@@ -4,6 +4,7 @@ from assign_fix_to_words import assign_fixations_to_words
 import argparse
 import pandas as pd
 
+PUNCTUATION_MARKS = ['?', '!', '.']
 WEIRD_CHARS = ['¿', '?', '¡', '!', '.', '−', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 # Not excluded: '(', ')', ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
 CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
@@ -89,8 +90,9 @@ def add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix):
     for screen in screens_text:
         screen_words, screen_fix = split_text_into_words(screens_text[screen]), trial[trial['screen'] == int(screen)]
         for word_pos, word in enumerate(screen_words):
+            prev_word = screen_words[word_pos - 1] if word_pos > 0 else ''
             clean_word = word.lower().translate(chars_mapping)
-            exclude = should_exclude_word(word, clean_word, word_pos, screen_fix)
+            exclude = should_exclude_word(prev_word, word, clean_word, word_pos, line_num_words(word_pos, screen_fix))
 
             word_fix = screen_fix[screen_fix['word_pos'] == word_pos]
             add_word_fixations(word_fix, word_idx, words_fix)
@@ -134,7 +136,7 @@ def first_pass_n_fix(word_fix, screen_fix):
     following_words_fix = screen_fix[screen_fix['word_pos'] > word_pos].dropna()
     regressive_saccade = (following_words_fix['screen_fix'] < fst_fix).any()
     if regressive_saccade:
-        # Word was first skipped and then fixated (i.e, right-to-left saccade)
+        # Word was first skipped and then fixated (i.e., right-to-left saccade)
         return 0
     else:
         # This disregards intra-word regressions; inter-word regressions (rightward or leftward) are considered
@@ -180,11 +182,20 @@ def num_words(text):
     return sum([len(line.split()) for line in text])
 
 
-def should_exclude_word(word, clean_word, word_pos, screen_fix):
+def line_num_words(word_pos, screen_fix):
     line_num = screen_fix[screen_fix['word_pos'] == word_pos]['line'].iloc[0]
-    line_max_wordpos = screen_fix[screen_fix['line'] == line_num]['word_pos'].max()
-    return has_weird_chars(word) or has_no_chars(clean_word) \
-            or is_first_word_in_line(word_pos) or is_last_word_in_line(word_pos, line_max_wordpos)
+    line_nwords = screen_fix[screen_fix['line'] == line_num]['word_pos'].max()
+
+    return line_nwords
+
+
+def is_end_of_sentence(prev_word):
+    return bool([char for char in PUNCTUATION_MARKS if char in prev_word])
+
+
+def should_exclude_word(prev_word, word, clean_word, word_pos, line_nwords):
+    return has_weird_chars(word) or has_no_chars(clean_word) or is_end_of_sentence(prev_word) \
+            or is_first_word_in_line(word_pos) or is_last_word_in_line(word_pos, line_nwords)
 
 
 def is_first_word_in_line(word_pos):
