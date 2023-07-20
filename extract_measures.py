@@ -134,7 +134,7 @@ def first_pass_n_fix(word_fix, screen_fix):
     # Count number of first pass reading fixations on word
     word_pos, fst_fix = word_fix['word_pos'].iloc[0], word_fix['screen_fix'].iloc[0]
     following_words_fix = screen_fix[screen_fix['word_pos'] > word_pos].dropna()
-    regressive_saccade = (following_words_fix['screen_fix'] < fst_fix).any()
+    regressive_saccade = (following_words_fix['screen_fix'] < fst_fix).values.any()
     if regressive_saccade:
         # Word was first skipped and then fixated (i.e., right-to-left saccade)
         return 0
