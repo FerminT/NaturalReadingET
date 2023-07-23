@@ -166,7 +166,7 @@ def make_screen_fix_consecutive(trial_fix_by_word):
 def update_stats(item_stats, trial_fix_by_word, total_trial_fix):
     item_stats['n_subj'] += 1
     item_stats['n_fix'] += n_fix(trial_fix_by_word)
-    item_stats['n_words'] = len(trial_fix_by_word['word_pos'].unique())
+    item_stats['n_words'] = len(trial_fix_by_word.groupby(['screen', 'word_pos']))
     item_stats['out_of_bounds'] += total_trial_fix - n_fix(trial_fix_by_word)
 
 
