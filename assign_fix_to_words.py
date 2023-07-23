@@ -8,6 +8,8 @@ import argparse
 def assign_fixations_to_words(items_path, subjects, save_path):
     print('Assigning fixations to words...')
     items = [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
+    items_stats = {item.stem: {'n_subj': 0, 'n_fix': 0, 'n_words': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
+                   for item in items}
     for item in items:
         item_name = item.stem
         print(f'Processing "{item_name}" trials')
@@ -15,26 +17,27 @@ def assign_fixations_to_words(items_path, subjects, save_path):
         item_savepath = save_path / item_name
         item_savepath.mkdir(exist_ok=True, parents=True)
 
-        process_item(item_name, subjects, screens_lines, item_savepath)
+        process_item(item_name, subjects, screens_lines, items_stats[item_name], item_savepath)
+    save_stats(items_stats, save_path)
 
 
-def process_item(item_name, subjects, screens_lines, item_savepath):
+def process_item(item_name, subjects, screens_lines, item_stats, item_savepath):
     for subject in subjects:
         trial_path = subject / item_name
         if not (trial_path.exists() and trial_is_correct(subject, item_name)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
-        trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines)
-        trial_fix_by_word = postprocess_word_fixations(trial_fix_by_word)
+        trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines, item_stats)
+        trial_fix_by_word = postprocess_word_fixations(trial_fix_by_word, item_stats)
         save_trial_word_fixations(trial_fix_by_word, item_savepath)
 
 
-def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
+def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines, item_stats):
     # Keep track of returning screens
     screen_counter = {screen_id: 0 for screen_id in np.unique(screen_sequence)}
     # Each record corresponds to a word; words with multiple fixations have multiple records.
     # Words with no fixations have NA values
-    trial_fix_by_word = []
+    trial_fix_by_word, total_trial_fix = [], 0
     for screen_id in screen_sequence:
         fixations, lines_pos = load_screen_data(trial_path, screen_id, screen_counter)
         word_pos = 0
@@ -44,10 +47,13 @@ def process_subj_trial(subj_name, trial_path, screen_sequence, screens_lines):
             assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos,
                                            screen_id, subj_name, trial_fix_by_word)
             word_pos += len(words)
+            total_trial_fix += len(line_fix)
 
         screen_counter[screen_id] += 1
-    trial_fix_by_word = pd.DataFrame(trial_fix_by_word, columns=['subj', 'screen', 'line', 'word_pos', 'trial_fix',
-                                                                 'screen_fix', 'duration', 'x'])
+    trial_fix_by_word = pd.DataFrame(trial_fix_by_word,
+                                     columns=['subj', 'screen', 'line', 'word_pos', 'trial_fix',
+                                              'screen_fix', 'duration', 'x'])
+    update_stats(item_stats, trial_fix_by_word, total_trial_fix)
 
     return trial_fix_by_word
 
@@ -99,9 +105,19 @@ def save_trial_word_fixations(trial_fix_by_word, item_savepath):
     trial_fix_by_word.to_pickle(item_savepath / f'{subj_name}.pkl')
 
 
-def postprocess_word_fixations(trial_fix_by_word):
+def save_stats(items_stats, save_path):
+    items_stats = pd.DataFrame.from_dict(items_stats, orient='index')
+    items_stats.loc['Total'] = items_stats.sum()
+    print(items_stats.to_string())
+    items_stats.to_csv(save_path / 'stats.csv')
+
+
+def postprocess_word_fixations(trial_fix_by_word, item_stats):
+    prev_nfix = n_fix(trial_fix_by_word)
     trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'line'], group_keys=False) \
         .apply(remove_return_sweeps_from_line)
+    item_stats['return_sweeps'] += prev_nfix - n_fix(trial_fix_by_word)
+
     trial_fix_by_word = trial_fix_by_word.groupby(['screen', 'word_pos'], group_keys=False) \
         .apply(remove_na_from_fixated_words)
     trial_fix_by_word = make_screen_fix_consecutive(trial_fix_by_word)
@@ -119,6 +135,10 @@ def remove_na_from_fixated_words(words_fix):
         return words_fix.head(1)
 
 
+def n_fix(trial_fix):
+    return len(trial_fix[~trial_fix['screen_fix'].isna()])
+
+
 def remove_return_sweeps_from_line(line_fix):
     # Remove fixations resulting from oculomotor errors when jumping lines
     first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
@@ -129,7 +149,7 @@ def remove_return_sweeps_from_line(line_fix):
         line_fix.loc[line_fix['screen_fix'].between(first_line_fix,
                                                     left_most_fix['screen_fix'].iloc[0],
                                                     inclusive='left'),
-        ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
+                                                    ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
 
     return line_fix
 
@@ -141,6 +161,13 @@ def make_screen_fix_consecutive(trial_fix_by_word):
     trial_fix_by_word.update(consecutive_screen_fix)
 
     return trial_fix_by_word
+
+
+def update_stats(item_stats, trial_fix_by_word, total_trial_fix):
+    item_stats['n_subj'] += 1
+    item_stats['n_fix'] += n_fix(trial_fix_by_word)
+    item_stats['n_words'] = len(trial_fix_by_word['word_pos'].unique())
+    item_stats['out_of_bounds'] += total_trial_fix - n_fix(trial_fix_by_word)
 
 
 def cast_to_int(trial_fix_by_word):
