@@ -9,14 +9,41 @@ from Code.data_processing.utils import get_dirs, get_files, log
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
-def do_analysis(items_paths, subjs_paths, words_freq_path, save_path):
-    words_freq = pd.read_csv(words_freq_path)
+def do_analysis(items_paths, subjs_paths, words_freq_path, stats_file, save_path):
+    words_freq, items_stats = pd.read_csv(words_freq_path), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq)
     save_path.mkdir(parents=True, exist_ok=True)
 
+    print_stats(et_measures, items_stats, save_path)
+    et_measures = remove_excluded_words(et_measures)
     mlm_analysis(et_measures)
     et_measures = remove_skipped_words(et_measures)
     plot_early_effects(et_measures, save_path)
+
+
+def print_stats(et_measures, items_stats, save_path):
+    items = items_stats.index.to_list()[:-1]
+    processed_stats = {item: {'subjs': 0, 'words': 0, 'words_excluded': 0, 'fix': 0, 'fix_excluded': 0,
+                              'regressions': 0, 'skipped': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
+                       for item in items}
+    for item in items:
+        item_measures = et_measures[et_measures['item'] == item]
+        n_subjs = len(item_measures['subj'].unique())
+        processed_stats[item]['subjs'] = n_subjs
+        processed_stats[item]['words'] = len(item_measures['word']) / n_subjs
+        processed_stats[item]['words_excluded'] = item_measures['excluded'].sum() / n_subjs
+        processed_stats[item]['fix'] = item_measures['FC'].sum()
+        processed_stats[item]['fix_excluded'] = items_stats.loc[item, 'n_fix'] - processed_stats[item]['fix']
+        processed_stats[item]['regressions'] = item_measures['RC'].sum()
+        processed_stats[item]['skipped'] = item_measures['skipped'].sum()
+        processed_stats[item]['out_of_bounds'] = items_stats.loc[item, 'out_of_bounds']
+        processed_stats[item]['return_sweeps'] = items_stats.loc[item, 'return_sweeps']
+
+    processed_stats = pd.DataFrame.from_dict(processed_stats, orient='index', dtype='Int64')
+    processed_stats.loc['Total'] = processed_stats.sum()
+    print(processed_stats.to_string())
+
+    processed_stats.to_csv(save_path / 'trials_stats.csv')
 
 
 def mlm_analysis(et_measures):
@@ -76,10 +103,11 @@ def remove_excluded_words(et_measures):
 
 
 def add_len_freq_skipped(et_measures, words_freq):
-    et_measures['skipped'] = et_measures['FFD'].apply(lambda x: int(x == 0))
-    et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x))
+    et_measures['skipped'] = et_measures[~et_measures['excluded']]['FFD'].apply(lambda x: int(x == 0))
+    et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x) if x else 0)
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
-                                                         log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0]))
+                                                         log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0])
+                                                         if x in words_freq['word'].values else 0)
     return et_measures
 
 
@@ -115,7 +143,6 @@ def plot_early_effects(et_measures, save_path):
 
 
 def preprocess_data(trial_measures, words_freq):
-    trial_measures = remove_excluded_words(trial_measures)
     trial_measures = add_len_freq_skipped(trial_measures, words_freq)
     trial_measures = log_normalize_durations(trial_measures)
 
@@ -148,16 +175,17 @@ if __name__ == '__main__':
                         help='Path to participants\' trials, where their metadata is stored')
     parser.add_argument('--words_freq', type=str, default='Metadata/Texts_properties/words_freq.csv',
                         help='Path to file with words frequencies')
+    parser.add_argument('--stats_file', type=str, default='Data/processed/words_fixations/stats.csv')
     parser.add_argument('--save_path', type=str, default='Results')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
-    data_path, subjs_path, words_freq_path, save_path = \
-        Path(args.data_path), Path(args.subjs_path), Path(args.words_freq), Path(args.save_path)
+    data_path, subjs_path, words_freq_path, stats_file, save_path = \
+        Path(args.data_path), Path(args.subjs_path), Path(args.words_freq), Path(args.stats_file), Path(args.save_path)
 
     if args.item != 'all':
         items_paths = [data_path / args.item]
     else:
         items_paths = get_dirs(data_path)
 
-    do_analysis(items_paths, subjs_path, words_freq_path, save_path)
+    do_analysis(items_paths, subjs_path, words_freq_path, stats_file, save_path)
