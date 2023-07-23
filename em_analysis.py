@@ -24,13 +24,13 @@ def do_analysis(items_paths, subjs_paths, words_freq_path, stats_file, save_path
 def print_stats(et_measures, items_stats, save_path):
     items = items_stats.index.to_list()[:-1]
     processed_stats = {item: {'subjs': 0, 'words': 0, 'words_excluded': 0, 'fix': 0, 'fix_excluded': 0,
-                              'regressions': 0, 'skipped': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
+                              'regressions': 0, 'skips': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
                        for item in items}
     for item in items:
         item_measures = et_measures[et_measures['item'] == item]
         n_subjs = len(item_measures['subj'].unique())
         processed_stats[item]['subjs'] = n_subjs
-        processed_stats[item]['words'] = len(item_measures['word']) // n_subjs
+        processed_stats[item]['words'] = len(item_measures[~item_measures['excluded']]['word']) // n_subjs
         processed_stats[item]['words_excluded'] = item_measures['excluded'].sum() // n_subjs
         processed_stats[item]['fix'] = item_measures['FC'].sum()
         processed_stats[item]['fix_excluded'] = items_stats.loc[item, 'n_fix'] - processed_stats[item]['fix']
