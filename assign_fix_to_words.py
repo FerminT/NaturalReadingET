@@ -5,9 +5,8 @@ import numpy as np
 import argparse
 
 
-def assign_fixations_to_words(items_path, subjects, save_path):
+def assign_fixations_to_words(items, subjects, save_path):
     print('Assigning fixations to words...')
-    items = [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
     items_stats = {item.stem: {'n_subj': 0, 'n_fix': 0, 'n_words': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
                    for item in items}
     for item in items:
@@ -220,16 +219,16 @@ def get_last_fixation_index(screen_dir, prev_screen_times_read):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Assign fixations to words')
-    parser.add_argument('--stimuli', type=str, default='Stimuli')
+    parser.add_argument('--items_path', type=str, default='Stimuli')
     parser.add_argument('--data_path', type=str, default='Data/processed/trials')
     parser.add_argument('--save_path', type=str, default='Data/processed/words_fixations')
     parser.add_argument('--subj', type=str, default='all')
+    parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
-    stimuli_path, data_path, save_path = Path(args.stimuli), Path(args.data_path), Path(args.save_path)
-    if args.subj != 'all':
-        subj_paths = [data_path / args.subj]
-    else:
-        subj_paths = utils.get_dirs(data_path)
+    items_path, data_path, save_path = Path(args.items_path), Path(args.data_path), Path(args.save_path)
+    subj_paths = [data_path / args.subj] if args.subj != 'all' else utils.get_dirs(data_path)
+    items_path = [items_path / f'{args.item}.mat'] if args.item != 'all' else\
+        [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
 
-    assign_fixations_to_words(stimuli_path, subj_paths, save_path)
+    assign_fixations_to_words(items_path, subj_paths, save_path)
