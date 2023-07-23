@@ -9,18 +9,19 @@ def assign_fixations_to_words(items_path, subjects, save_path):
     print('Assigning fixations to words...')
     items = [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
     for item in items:
-        print(f'Processing "{item.stem}" trials')
+        item_name = item.stem
+        print(f'Processing "{item_name}" trials')
         screens_lines = utils.load_lines_by_screen(item)
-        item_savepath = save_path / item.name[:-4]
+        item_savepath = save_path / item_name
         item_savepath.mkdir(exist_ok=True, parents=True)
 
-        process_item(item, subjects, screens_lines, item_savepath)
+        process_item(item_name, subjects, screens_lines, item_savepath)
 
 
-def process_item(item, subjects, screens_lines, item_savepath):
+def process_item(item_name, subjects, screens_lines, item_savepath):
     for subject in subjects:
-        trial_path = subject / item.name[:-4]
-        if not (trial_path.exists() and trial_is_correct(subject, item)):
+        trial_path = subject / item_name
+        if not (trial_path.exists() and trial_is_correct(subject, item_name)):
             continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines)
@@ -72,7 +73,6 @@ def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, scr
                                                      spaces_pos[i + 1],
                                                      inclusive='left')]
         if word_fix.empty:
-            # First time in this screen, add word to dataframe
             trial_fix_by_word.append([subj_name, screen_id, line_num, word_pos, None, None, None, None])
         else:
             word_fix = word_fix[['index', 'duration', 'xAvg']]
@@ -88,8 +88,7 @@ def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, scr
         word_pos += 1
 
 
-def trial_is_correct(subject, item):
-    item_name = item.name[:-4]
+def trial_is_correct(subject, item_name):
     trial_flags = utils.load_flags([item_name], subject)
 
     return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
@@ -130,7 +129,7 @@ def remove_return_sweeps_from_line(line_fix):
         line_fix.loc[line_fix['screen_fix'].between(first_line_fix,
                                                     left_most_fix['screen_fix'].iloc[0],
                                                     inclusive='left'),
-                                                    ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
+        ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
 
     return line_fix
 
