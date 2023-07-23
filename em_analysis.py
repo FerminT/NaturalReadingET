@@ -30,8 +30,8 @@ def print_stats(et_measures, items_stats, save_path):
         item_measures = et_measures[et_measures['item'] == item]
         n_subjs = len(item_measures['subj'].unique())
         processed_stats[item]['subjs'] = n_subjs
-        processed_stats[item]['words'] = len(item_measures['word']) / n_subjs
-        processed_stats[item]['words_excluded'] = item_measures['excluded'].sum() / n_subjs
+        processed_stats[item]['words'] = len(item_measures['word']) // n_subjs
+        processed_stats[item]['words_excluded'] = item_measures['excluded'].sum() // n_subjs
         processed_stats[item]['fix'] = item_measures['FC'].sum()
         processed_stats[item]['fix_excluded'] = items_stats.loc[item, 'n_fix'] - processed_stats[item]['fix']
         processed_stats[item]['regressions'] = item_measures['RC'].sum()
