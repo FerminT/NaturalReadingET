@@ -126,38 +126,29 @@ def postprocess_word_fixations(trial_fix_by_word, item_stats):
     return trial_fix_by_word
 
 
+def remove_return_sweeps_from_line(line_fix):
+    # Remove fixations resulting from oculomotor errors when jumping lines
+    fst_fix_num = line_fix['screen_fix'].min()
+    first_saccade_is_regressive = is_regression(line_fix, fst_fix_num, fst_fix_num + 1)
+    if first_saccade_is_regressive:
+        first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
+        if not np.isnan(first_word_with_fix):
+            first_word_fix = line_fix[line_fix['word_pos'] == first_word_with_fix]
+            left_most_fix = first_word_fix[first_word_fix['x'] == first_word_fix['x'].min()]
+            line_fix.loc[line_fix['screen_fix'].between(fst_fix_num,
+                                                        left_most_fix['screen_fix'].iloc[0],
+                                                        inclusive='left'),
+                                                        ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
+
+    return line_fix
+
+
 def remove_na_from_fixated_words(words_fix):
     # Due to returning screens, there may be words that have fixations but were also added as empty rows
     if n_fix(words_fix) > 0:
         return words_fix.dropna()
     else:
         return words_fix.head(1)
-
-
-def n_fix(df_fix):
-    return len(df_fix[~df_fix['screen_fix'].isna()])
-
-
-def remove_return_sweeps_from_line(line_fix):
-    # Remove fixations resulting from oculomotor errors when jumping lines
-    fst_fix_num = line_fix['screen_fix'].min()
-    first_fix = line_fix[line_fix['screen_fix'] == fst_fix_num]
-    second_fix = line_fix[line_fix['screen_fix'] == fst_fix_num + 1]
-    if not first_fix.empty and not second_fix.empty:
-        is_regression = first_fix['word_pos'].iloc[0] > second_fix['word_pos'].iloc[0] or \
-                        (first_fix['word_pos'].iloc[0] == second_fix['word_pos'].iloc[0] and
-                         first_fix['x'].iloc[0] > second_fix['x'].iloc[0])
-        if is_regression:
-            first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
-            if not np.isnan(first_word_with_fix):
-                first_word_fix = line_fix[line_fix['word_pos'] == first_word_with_fix]
-                left_most_fix = first_word_fix[first_word_fix['x'] == first_word_fix['x'].min()]
-                line_fix.loc[line_fix['screen_fix'].between(fst_fix_num,
-                                                            left_most_fix['screen_fix'].iloc[0],
-                                                            inclusive='left'),
-                                                            ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
-
-    return line_fix
 
 
 def make_screen_fix_consecutive(trial_fix_by_word):
@@ -167,6 +158,22 @@ def make_screen_fix_consecutive(trial_fix_by_word):
     trial_fix_by_word.update(consecutive_screen_fix)
 
     return trial_fix_by_word
+
+
+def n_fix(df_fix):
+    return len(df_fix[~df_fix['screen_fix'].isna()])
+
+
+def is_regression(df_fix, fix_num, following_fix_num):
+    regression = False
+    first_fix = df_fix[df_fix['screen_fix'] == fix_num]
+    second_fix = df_fix[df_fix['screen_fix'] == following_fix_num]
+    if not first_fix.empty and not second_fix.empty:
+        regression = first_fix['word_pos'].iloc[0] > second_fix['word_pos'].iloc[0] or \
+                     (first_fix['word_pos'].iloc[0] == second_fix['word_pos'].iloc[0] and
+                      first_fix['x'].iloc[0] > second_fix['x'].iloc[0])
+
+    return regression
 
 
 def update_stats(item_stats, trial_fix_by_word, total_trial_fix):
