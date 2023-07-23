@@ -129,14 +129,14 @@ def postprocess_word_fixations(trial_fix_by_word, item_stats):
 
 def remove_na_from_fixated_words(words_fix):
     # Due to returning screens, there may be words that have fixations but were also added as empty rows
-    if len(words_fix[~words_fix['screen_fix'].isna()]) > 0:
+    if n_fix(words_fix) > 0:
         return words_fix.dropna()
     else:
         return words_fix.head(1)
 
 
-def n_fix(trial_fix):
-    return len(trial_fix[~trial_fix['screen_fix'].isna()])
+def n_fix(df_fix):
+    return len(df_fix[~df_fix['screen_fix'].isna()])
 
 
 def remove_return_sweeps_from_line(line_fix):
