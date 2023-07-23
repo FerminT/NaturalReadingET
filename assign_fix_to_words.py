@@ -140,15 +140,22 @@ def n_fix(df_fix):
 
 def remove_return_sweeps_from_line(line_fix):
     # Remove fixations resulting from oculomotor errors when jumping lines
-    first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
-    if not np.isnan(first_word_with_fix):
-        first_word_fix = line_fix[line_fix['word_pos'] == first_word_with_fix]
-        left_most_fix = first_word_fix[first_word_fix['x'] == first_word_fix['x'].min()]
-        first_line_fix = line_fix['screen_fix'].min()
-        line_fix.loc[line_fix['screen_fix'].between(first_line_fix,
-                                                    left_most_fix['screen_fix'].iloc[0],
-                                                    inclusive='left'),
-                                                    ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
+    fst_fix_num = line_fix['screen_fix'].min()
+    first_fix = line_fix[line_fix['screen_fix'] == fst_fix_num]
+    second_fix = line_fix[line_fix['screen_fix'] == fst_fix_num + 1]
+    if not first_fix.empty and not second_fix.empty:
+        is_regression = first_fix['word_pos'].iloc[0] > second_fix['word_pos'].iloc[0] or \
+                        (first_fix['word_pos'].iloc[0] == second_fix['word_pos'].iloc[0] and
+                         first_fix['x'].iloc[0] > second_fix['x'].iloc[0])
+        if is_regression:
+            first_word_with_fix = line_fix[~line_fix['screen_fix'].isna()]['word_pos'].min()
+            if not np.isnan(first_word_with_fix):
+                first_word_fix = line_fix[line_fix['word_pos'] == first_word_with_fix]
+                left_most_fix = first_word_fix[first_word_fix['x'] == first_word_fix['x'].min()]
+                line_fix.loc[line_fix['screen_fix'].between(fst_fix_num,
+                                                            left_most_fix['screen_fix'].iloc[0],
+                                                            inclusive='left'),
+                                                            ['trial_fix', 'screen_fix', 'duration', 'x']] = np.nan
 
     return line_fix
 
@@ -228,7 +235,7 @@ if __name__ == '__main__':
 
     items_path, data_path, save_path = Path(args.items_path), Path(args.data_path), Path(args.save_path)
     subj_paths = [data_path / args.subj] if args.subj != 'all' else utils.get_dirs(data_path)
-    items_path = [items_path / f'{args.item}.mat'] if args.item != 'all' else\
+    items_path = [items_path / f'{args.item}.mat'] if args.item != 'all' else \
         [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
 
     assign_fixations_to_words(items_path, subj_paths, save_path)
