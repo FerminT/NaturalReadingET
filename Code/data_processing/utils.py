@@ -34,6 +34,11 @@ def get_files(datapath, extension='*'):
     return files
 
 
+def get_items(items_path, item_name):
+    return [items_path / f'{item_name}.mat'] if item_name != 'all' else \
+            [item for item in get_files(items_path, 'mat') if item.stem != 'Test']
+
+
 def save_screensequence(screens_sequence, item_path, filename='screen_sequence.pkl'):
     screens_sequence.to_pickle(item_path / filename)
 
@@ -94,7 +99,7 @@ def update_and_save_trial(sequence_states, stimuli, trial_path):
     # Screens sequence may change (e.g. if all fixations in a screen were deleted)
     del_seqindeces = [seq_id for seq_id in sequence_states if len(sequence_states[seq_id]['fixations']) == 0]
     screens_lst = list(range(1, len(stimuli['screens']) + 1))
-    screens_fixations, screens_lines = {screenid: [] for screenid in screens_lst},\
+    screens_fixations, screens_lines = {screenid: [] for screenid in screens_lst}, \
         {screenid: [] for screenid in screens_lst}
     for seq_id in sequence_states:
         screenid = sequence_states[seq_id]['screenid']

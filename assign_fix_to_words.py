@@ -242,7 +242,6 @@ if __name__ == '__main__':
 
     items_path, data_path, save_path = Path(args.items_path), Path(args.data_path), Path(args.save_path)
     subj_paths = [data_path / args.subj] if args.subj != 'all' else utils.get_dirs(data_path)
-    items_path = [items_path / f'{args.item}.mat'] if args.item != 'all' else \
-        [item for item in utils.get_files(items_path, 'mat') if item.stem != 'Test']
+    items = utils.get_items(items_path, args.item)
 
-    assign_fixations_to_words(items_path, subj_paths, save_path)
+    assign_fixations_to_words(items, subj_paths, save_path)
