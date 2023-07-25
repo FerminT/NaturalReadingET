@@ -36,9 +36,7 @@ def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path
 
 def print_stats(et_measures, items_stats, save_path):
     items = items_stats.index.to_list()[:-1]
-    processed_stats = {item: {'subjs': 0, 'words': 0, 'words_excluded': 0, 'fix': 0, 'fix_excluded': 0,
-                              'regressions': 0, 'skips': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
-                       for item in items}
+    processed_stats = {item: {} for item in items}
     for item in items:
         item_measures = et_measures[et_measures['item'] == item]
         n_subjs = len(item_measures['subj'].unique())
@@ -48,7 +46,7 @@ def print_stats(et_measures, items_stats, save_path):
         processed_stats[item]['fix'] = item_measures['FC'].sum()
         processed_stats[item]['fix_excluded'] = items_stats.loc[item, 'n_fix'] - processed_stats[item]['fix']
         processed_stats[item]['regressions'] = item_measures['RC'].sum()
-        processed_stats[item]['skipped'] = item_measures['skipped'].sum()
+        processed_stats[item]['skips'] = item_measures['skipped'].sum()
         processed_stats[item]['out_of_bounds'] = items_stats.loc[item, 'out_of_bounds']
         processed_stats[item]['return_sweeps'] = items_stats.loc[item, 'return_sweeps']
 
