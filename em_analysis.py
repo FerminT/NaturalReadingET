@@ -10,22 +10,6 @@ from Code.data_processing.utils import get_dirs, get_files, log
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
-def plot_aggregated_measures(et_measures, save_path):
-    # Plot measures computed across trials (i.e., rates)
-    aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
-    wordlen_fig = plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures, x_order='descending')
-    wordfreq_fig = plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures)
-    wordlen_fig.savefig(save_path / 'wordlen_on_rates.png')
-    wordfreq_fig.savefig(save_path / 'wordfreq_on_rates.png')
-
-
-def plot_ffd_histogram(et_measures_no_skipped):
-    fig, ax = plt.subplots(figsize=(10, 5))
-    sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
-    ax.set_title('First Fixation Duration')
-    plt.show()
-
-
 def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq)
@@ -145,9 +129,37 @@ def log_normalize_durations(trial_measures):
     return trial_measures
 
 
-def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
+def plot_ffd_histogram(et_measures_no_skipped):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
+    ax.set_title('First Fixation Duration')
+    ax.set_ylabel('Number of fixarions')
+    plt.show()
+
+
+def plot_aggregated_measures(et_measures, save_path):
+    # Plot measures computed across trials (i.e., rates)
+    aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
+    plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures,
+                  x_label='Word length', ax_titles=['Likelihood of skipping', 'Regression rate'], x_order='descending',
+                  fig_title='Word length on rates', save_path=save_path / 'wordlen_on_rates.png')
+    plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures,
+                  x_label='Word frequency', ax_titles=['Likelihood of skipping', 'Regression rate'],
+                  fig_title='Word frequency on rates', save_path=save_path / 'wordfreq_on_rates.png')
+
+
+def plot_early_effects(et_measures, save_path):
+    plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures,
+                  x_label='Word length', ax_titles=['First Fixation Duration', 'Gaze Duration'], x_order='descending',
+                  fig_title='Early effects of word length', save_path=save_path / 'wordlen_effects.png')
+    plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures,
+                    x_label='Word frequency', ax_titles=['First Fixation Duration', 'Gaze Duration'],
+                    fig_title='Early effects of word frequency', save_path=save_path / 'wordfreq_effects.png')
+
+
+def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None, save_path=None):
     fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
-    axes = np.array(axes)
+    axes, ax_titles = np.array(axes), np.array(ax_titles)
     if x_order == 'descending':
         plot_order = sorted(data[fixed_effect].unique(), reverse=True)
     else:
@@ -155,26 +167,19 @@ def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
     for i, measure in enumerate(measures):
         sns.boxplot(x=fixed_effect, y=measure, data=data, ax=axes[i], order=plot_order)
         axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=15)
-        axes[i].set_title(f'{measure} effects')
+        axes[i].set_xlabel(x_label)
+        axes[i].set_title(ax_titles[i])
+    if fig_title:
+        fig.suptitle(fig_title)
+    if save_path:
+        fig.savefig(save_path)
     plt.show()
 
     return fig
 
 
-def plot_early_effects(et_measures, save_path):
-    wordlen_fig = plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures, x_order='descending')
-    wordfreq_fig = plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures)
-    wordlen_fig.savefig(save_path / 'wordlen_effects.png')
-    wordfreq_fig.savefig(save_path / 'wordfreq_effects.png')
-
-
-def preprocess_data(trial_measures, words_freq):
-    trial_measures = add_len_freq_skipped(trial_measures, words_freq)
-    return trial_measures
-
-
 def load_trial(trial, item_name, words_freq):
-    trial_measures = preprocess_data(pd.read_pickle(trial), words_freq)
+    trial_measures = add_len_freq_skipped(pd.read_pickle(trial), words_freq)
     trial_measures.insert(1, 'item', item_name)
     return trial_measures
 
