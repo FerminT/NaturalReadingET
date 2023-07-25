@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -12,23 +13,25 @@ from Code.data_processing.utils import get_dirs, get_files, log
 def plot_aggregated_measures(et_measures, save_path):
     # Plot measures computed across trials (i.e., rates)
     aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
-    wordlen_fig = plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures)
+    wordlen_fig = plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures, x_order='descending')
     wordfreq_fig = plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures)
     wordlen_fig.savefig(save_path / 'wordlen_on_rates.png')
     wordfreq_fig.savefig(save_path / 'wordfreq_on_rates.png')
 
 
-def do_analysis(items_paths, subjs_paths, words_freq_path, stats_file, save_path):
-    words_freq, items_stats = pd.read_csv(words_freq_path), pd.read_csv(stats_file, index_col=0)
+def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path):
+    words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq)
     save_path.mkdir(parents=True, exist_ok=True)
 
     print_stats(et_measures, items_stats, save_path)
+
     et_measures = remove_excluded_words(et_measures)
     plot_aggregated_measures(et_measures, save_path)
-    mlm_analysis(et_measures)
-    et_measures = remove_skipped_words(et_measures)
-    plot_early_effects(et_measures, save_path)
+    et_measures_no_skipped = remove_skipped_words(et_measures)
+    plot_early_effects(et_measures_no_skipped, save_path)
+
+    mlm_analysis(et_measures, words_freq)
 
 
 def print_stats(et_measures, items_stats, save_path):
@@ -56,9 +59,14 @@ def print_stats(et_measures, items_stats, save_path):
     processed_stats.to_csv(save_path / 'trials_stats.csv')
 
 
-def mlm_analysis(et_measures):
+def mlm_analysis(et_measures, words_freq):
     # This is a crossed random intercept (NOT slope) model with no independent groups
     et_measures['group'] = 1
+    et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x) if x else 0)
+    et_measures['word_freq'] = et_measures['word'].apply(lambda x:
+                                                         log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0])
+                                                         if x in words_freq['word'].values else 0)
+
     variance_components = {'subj': '0 + C(subj)', 'item': '0 + C(item)'}
     skipped_formula = 'skipped ~ word_len'
     mixedlm_fit_and_save(skipped_formula, vc_formula=variance_components, re_formula='0', group='group',
@@ -114,10 +122,12 @@ def remove_excluded_words(et_measures):
 
 def add_len_freq_skipped(et_measures, words_freq):
     et_measures['skipped'] = et_measures[~et_measures['excluded']]['FFD'].apply(lambda x: int(x == 0))
-    et_measures['word_len'] = et_measures['word'].apply(lambda x: 1 / len(x) if x else 0)
+    et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
+    words_freq['cnt'] = pd.qcut(words_freq['cnt'], 15, labels=[i for i in range(1, 16)])
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
-                                                         log(words_freq.loc[words_freq['word'] == x, 'cnt'].values[0])
+                                                         words_freq.loc[words_freq['word'] == x, 'cnt'].values[0]
                                                          if x in words_freq['word'].values else 0)
+
     return et_measures
 
 
@@ -130,7 +140,7 @@ def log_normalize_durations(trial_measures):
 
 def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
     fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
-    axes = [axes]
+    axes = np.array(axes)
     if x_order == 'descending':
         plot_order = sorted(data[fixed_effect].unique(), reverse=True)
     else:
@@ -145,8 +155,6 @@ def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
 
 
 def plot_early_effects(et_measures, save_path):
-    et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
-    et_measures['word_freq'] = pd.qcut(et_measures['word_freq'], 15, labels=[i for i in range(1, 16)])
     wordlen_fig = plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures, x_order='descending')
     wordfreq_fig = plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures)
     wordlen_fig.savefig(save_path / 'wordlen_effects.png')
