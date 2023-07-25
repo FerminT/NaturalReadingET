@@ -19,6 +19,13 @@ def plot_aggregated_measures(et_measures, save_path):
     wordfreq_fig.savefig(save_path / 'wordfreq_on_rates.png')
 
 
+def plot_ffd_histogram(et_measures_no_skipped):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
+    ax.set_title('First Fixation Duration')
+    plt.show()
+
+
 def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq)
@@ -29,7 +36,9 @@ def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path
     et_measures = remove_excluded_words(et_measures)
     plot_aggregated_measures(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
-    plot_early_effects(et_measures_no_skipped, save_path)
+    plot_ffd_histogram(et_measures_no_skipped)
+    et_measures_log = log_normalize_durations(et_measures_no_skipped)
+    plot_early_effects(et_measures_log, save_path)
 
     mlm_analysis(et_measures, words_freq)
 
@@ -161,8 +170,6 @@ def plot_early_effects(et_measures, save_path):
 
 def preprocess_data(trial_measures, words_freq):
     trial_measures = add_len_freq_skipped(trial_measures, words_freq)
-    trial_measures = log_normalize_durations(trial_measures)
-
     return trial_measures
 
 
