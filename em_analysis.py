@@ -24,7 +24,7 @@ def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path
     et_measures_log = log_normalize_durations(et_measures_no_skipped)
     plot_early_effects(et_measures_log, save_path)
 
-    mlm_analysis(et_measures, words_freq)
+    mlm_analysis(log_normalize_durations(et_measures), words_freq)
 
 
 def print_stats(et_measures, items_stats, save_path):
