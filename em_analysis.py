@@ -9,6 +9,15 @@ from Code.data_processing.utils import get_dirs, get_files, log
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
+def plot_aggregated_measures(et_measures, save_path):
+    # Plot measures computed across trials (i.e., rates)
+    aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
+    wordlen_fig = plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures)
+    wordfreq_fig = plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures)
+    wordlen_fig.savefig(save_path / 'wordlen_on_rates.png')
+    wordfreq_fig.savefig(save_path / 'wordfreq_on_rates.png')
+
+
 def do_analysis(items_paths, subjs_paths, words_freq_path, stats_file, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_path), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq)
@@ -16,6 +25,7 @@ def do_analysis(items_paths, subjs_paths, words_freq_path, stats_file, save_path
 
     print_stats(et_measures, items_stats, save_path)
     et_measures = remove_excluded_words(et_measures)
+    plot_aggregated_measures(et_measures, save_path)
     mlm_analysis(et_measures)
     et_measures = remove_skipped_words(et_measures)
     plot_early_effects(et_measures, save_path)
@@ -120,6 +130,7 @@ def log_normalize_durations(trial_measures):
 
 def plot_boxplots(fixed_effect, measures, data, x_order='ascending'):
     fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
+    axes = [axes]
     if x_order == 'descending':
         plot_order = sorted(data[fixed_effect].unique(), reverse=True)
     else:
