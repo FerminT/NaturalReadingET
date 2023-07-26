@@ -10,6 +10,22 @@ from Code.data_processing.utils import get_dirs, get_files, log, load_profile
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
+def plot_skills_effects(et_measures, save_path):
+    skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
+    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
+                                                                        else 'medium' if x <= skills_threshold['medium']
+                                                                        else 'high')
+    plot_boxplots('reading_skill', measures=['LS', 'RR'], data=et_measures,
+                    x_label='Reading skill', ax_titles=['Likelihood of skipping', 'Regression rate'],
+                    fig_title='Reading skill on rates', save_path=save_path / 'skills_on_rates.png')
+    plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures,
+                    x_label='Reading skill', ax_titles=['First Fixation Duration', 'Gaze Duration'],
+                    fig_title='Reading skill on early effects', save_path=save_path / 'skills_effects.png')
+    plot_boxplots('reading_skill', measures=['FC'], data=et_measures,
+                    x_label='Reading skill', ax_titles=['Fixation count'],
+                    fig_title='Reading skill on fixation count', save_path=save_path / 'skills_fixations.png')
+
+
 def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
@@ -21,6 +37,7 @@ def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, 
     plot_aggregated_measures(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
     plot_ffd_histogram(et_measures_no_skipped)
+    plot_skills_effects(et_measures_no_skipped, save_path)
     et_measures_log = log_normalize_durations(et_measures_no_skipped)
     plot_early_effects(et_measures_log, save_path)
 
@@ -159,7 +176,8 @@ def plot_early_effects(et_measures, save_path):
 
 def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None, save_path=None):
     fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
-    axes, ax_titles = np.array(axes), np.array(ax_titles)
+    ax_titles = np.array(ax_titles)
+    axes = [axes] if len(measures) == 1 else axes
     if x_order == 'descending':
         plot_order = sorted(data[fixed_effect].unique(), reverse=True)
     else:
