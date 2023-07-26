@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import argparse
 from pathlib import Path
-from Code.data_processing.utils import get_dirs, get_files, log
+from Code.data_processing.utils import get_dirs, get_files, log, load_profile
 
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
-def do_analysis(items_paths, subjs_paths, words_freq_file, stats_file, save_path):
+def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
-    et_measures = load_et_measures(items_paths, words_freq)
+    et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
     save_path.mkdir(parents=True, exist_ok=True)
 
     print_stats(et_measures, items_stats, save_path)
@@ -178,19 +178,20 @@ def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='asc
     return fig
 
 
-def load_trial(trial, item_name, words_freq):
+def load_trial(trial, item_name, words_freq, subjs_reading_skills):
     trial_measures = add_len_freq_skipped(pd.read_pickle(trial), words_freq)
-    trial_measures.insert(1, 'item', item_name)
+    trial_measures.insert(1, 'reading_skill', subjs_reading_skills[trial_measures['subj'].iloc[0]])
+    trial_measures.insert(0, 'item', item_name)
     return trial_measures
 
 
-def load_trials_measures(item, words_freq):
-    trials_measures = [load_trial(trial, item.name, words_freq) for trial in get_files(item)]
+def load_trials_measures(item, words_freq, subjs_reading_skills):
+    trials_measures = [load_trial(trial, item.name, words_freq, subjs_reading_skills) for trial in get_files(item)]
     return pd.concat(trials_measures, ignore_index=True)
 
 
-def load_et_measures(items_paths, words_freq):
-    measures = [load_trials_measures(item, words_freq) for item in items_paths]
+def load_et_measures(items_paths, words_freq, subjs_reading_skills):
+    measures = [load_trials_measures(item, words_freq, subjs_reading_skills) for item in items_paths]
     measures = pd.concat(measures, ignore_index=True)
 
     return measures
@@ -209,12 +210,14 @@ if __name__ == '__main__':
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 
-    data_path, subjs_path, words_freq_path, stats_file, save_path = \
+    data_path, subjs_path, words_freq_file, stats_file, save_path = \
         Path(args.data_path), Path(args.subjs_path), Path(args.words_freq), Path(args.stats_file), Path(args.save_path)
+    subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
+                            for subj in get_dirs(subjs_path)}
 
     if args.item != 'all':
         items_paths = [data_path / args.item]
     else:
         items_paths = get_dirs(data_path)
 
-    do_analysis(items_paths, subjs_path, words_freq_path, stats_file, save_path)
+    do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
