@@ -39,9 +39,9 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
-def extract_measures(items, chars_mapping, items_path, save_path):
+def extract_measures(items_wordsfix, chars_mapping, items_path, save_path):
     print(f'Extracting eye-tracking measures from trials...')
-    for item in items:
+    for item in items_wordsfix:
         print(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
         item_measures, item_scanpaths = extract_item_measures(screens_text, item, chars_mapping)
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     parser.add_argument('--items_path', type=str, default='Stimuli',
                         help='Items path, from which the stimuli (items\' text) is extracted')
     parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
-                        help='Path to trials data. Used only for assigning fixations to words')
+                        help='Path to trials data.')
     parser.add_argument('--save_path', type=str, default='Data/processed')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
@@ -239,9 +239,9 @@ if __name__ == '__main__':
         assign_fixations_to_words(items, subjects, data_path)
 
     if args.item != 'all':
-        item_paths = [data_path / args.item]
+        items_wordsfix = [data_path / args.item]
     else:
-        item_paths = utils.get_dirs(data_path)
+        items_wordsfix = utils.get_dirs(data_path)
 
     chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(item_paths, chars_mapping, items_path, save_path)
+    extract_measures(items_wordsfix, chars_mapping, items_path, save_path)
