@@ -150,8 +150,9 @@ def plot_ffd_histogram(et_measures_no_skipped):
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
     ax.set_title('First Fixation Duration')
-    ax.set_ylabel('Number of fixarions')
+    ax.set_ylabel('Number of fixations')
     plt.show()
+    plt.savefig(save_path / 'ffd_histogram.png')
 
 
 def plot_aggregated_measures(et_measures, save_path):
