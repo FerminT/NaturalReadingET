@@ -10,15 +10,16 @@ from Code.data_processing.utils import get_dirs, get_files, log, load_profile
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
-def plot_skills_effects(et_measures, subjs_reading_skills, save_path):
+def plot_skills_effects(et_measures, save_path):
     skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
     et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
                                                                         else 'medium' if x <= skills_threshold['medium']
                                                                         else 'high')
-    # Count number of subjects per group
     skipped_group_measures = et_measures.groupby(['reading_skill', 'item'])['skipped'].sum().reset_index()
+    subjs_per_item = et_measures.groupby(['reading_skill', 'item'])['subj'].nunique().reset_index()
+    skipped_group_measures['skipped'] = skipped_group_measures['skipped'] / subjs_per_item['subj']
     plot_boxplots('reading_skill', measures=['skipped'], data=skipped_group_measures,
-                    x_label='Reading skill', ax_titles=['Number of skips'],
+                    x_label='Reading skill', ax_titles=['Mean number of skips'],
                     fig_title='Reading skill on skipping', save_path=save_path / 'skills_on_rates.png')
     et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
     plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures_no_skipped,
@@ -37,7 +38,7 @@ def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, 
     print_stats(et_measures, items_stats, save_path)
 
     et_measures = remove_excluded_words(et_measures)
-    plot_skills_effects(et_measures, subjs_reading_skills, save_path)
+    plot_skills_effects(et_measures, save_path)
     plot_aggregated_measures(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
     plot_ffd_histogram(et_measures_no_skipped)
