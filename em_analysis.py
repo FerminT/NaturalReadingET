@@ -23,7 +23,10 @@ def plot_skills_effects(et_measures, save_path):
     plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures_no_skipped,
                     x_label='Reading skill', ax_titles=['First Fixation Duration', 'Gaze Duration'],
                     fig_title='Reading skill on early effects', save_path=save_path / 'skills_effects.png')
-    plot_boxplots('reading_skill', measures=['FC', 'RC'], data=et_measures_no_skipped,
+    fix_count = count_by_skill(et_measures_no_skipped, 'FC')
+    regression_count = count_by_skill(et_measures_no_skipped, 'RC')
+    fix_count['RC'] = regression_count['RC']
+    plot_boxplots('reading_skill', measures=['FC', 'RC'], data=fix_count,
                     x_label='Reading skill', ax_titles=['Fixation count', 'Regression count'],
                     fig_title='Reading skill on fix and regression count', save_path=save_path / 'skills_fixations.png')
 
