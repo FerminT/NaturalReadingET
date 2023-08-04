@@ -15,10 +15,8 @@ def plot_skills_effects(et_measures, save_path):
     et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
                                                                         else 'medium' if x <= skills_threshold['medium']
                                                                         else 'high')
-    skipped_group_measures = et_measures.groupby(['reading_skill', 'item'])['skipped'].sum().reset_index()
-    subjs_per_item = et_measures.groupby(['reading_skill', 'item'])['subj'].nunique().reset_index()
-    skipped_group_measures['skipped'] = skipped_group_measures['skipped'] / subjs_per_item['subj']
-    plot_boxplots('reading_skill', measures=['skipped'], data=skipped_group_measures,
+    skip_count = count_by_skill(et_measures, 'skipped')
+    plot_boxplots('reading_skill', measures=['skipped'], data=skip_count,
                     x_label='Reading skill', ax_titles=['Mean number of skips'],
                     fig_title='Reading skill on skipping', save_path=save_path / 'skills_on_rates.png')
     et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
@@ -106,6 +104,14 @@ def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, centre, n
     print(mixedlm_results.summary())
     with open(save_path / name, 'w') as f:
         f.write(mixedlm_results.summary().as_text())
+
+
+def count_by_skill(et_measures, measure):
+    group_measure = et_measures.groupby(['reading_skill', 'item'])[measure].sum().reset_index()
+    subjs_per_item = et_measures.groupby(['reading_skill', 'item'])['subj'].nunique().reset_index()
+    group_measure[measure] = group_measure[measure] / subjs_per_item['subj']
+
+    return group_measure
 
 
 def get_continuous_fixed_effects(formula):
