@@ -167,7 +167,7 @@ def plot_ffd_histogram(et_measures_no_skipped):
     ax.set_title('First Fixation Duration')
     ax.set_ylabel('Number of fixations')
     plt.show()
-    plt.savefig(save_path / 'ffd_histogram.png')
+    fig.savefig(save_path / 'ffd_histogram.png')
 
 
 def plot_aggregated_measures(et_measures, save_path):
