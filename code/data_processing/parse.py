@@ -9,7 +9,7 @@ from . import utils
 """ EyeLink's EDF files are assumed to having been converted to ASCII with edf2asc.exe.
     This script extracts fixations from those files and proceeds to divide them by screen for each trial.
     Only one eye is used for fixation extraction, and the eye is chosen based on the calibration results. 
-    Data structures consist of dataframes in pickle format."""
+    data structures consist of dataframes in pickle format."""
 
 
 def item(item, participant_path, ascii_path, config_file, stimuli_path, save_path):
@@ -146,13 +146,13 @@ def get_eyetracking_data(asc_path, subj_name, stimuli_index):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract data from EyeLink .asc files and save them to .pkl')
-    parser.add_argument('--path', type=str, default='Data/raw', help='Path where participants data is stored')
+    parser.add_argument('--path', type=str, default='data/raw', help='Path where participants data is stored')
     parser.add_argument('--ascii_path', type=str, default='asc',
                         help='Path where .asc files are stored in a participants folder')
-    parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat',
+    parser.add_argument('--config', type=str, default='metadata/stimuli_config.mat',
                         help='Config file with the stimuli information')
-    parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
-    parser.add_argument('--save_path', type=str, default='Data/processed/trials',
+    parser.add_argument('--stimuli_path', type=str, default='stimuli', help='Path where the stimuli are stored')
+    parser.add_argument('--save_path', type=str, default='data/processed/trials',
                         help='Path where to save the processed data')
     parser.add_argument('--subj', type=str, help='Subject name', required=False)
     args = parser.parse_args()

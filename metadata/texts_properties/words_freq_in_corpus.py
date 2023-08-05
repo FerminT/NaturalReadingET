@@ -2,7 +2,7 @@ from collections import Counter
 from os import listdir, path, pardir
 import spacy
 
-texts_dir   = path.join(pardir, pardir, 'Texts')
+texts_dir   = path.join(pardir, pardir, 'texts')
 texts_files = listdir(texts_dir)
 
 full_texts = ""

@@ -1,5 +1,5 @@
 from pathlib import Path
-from Code.data_processing import utils
+from code.data_processing import utils
 import pandas as pd
 import numpy as np
 import argparse
@@ -233,9 +233,9 @@ def get_last_fixation_index(screen_dir, prev_screen_times_read):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Assign fixations to words')
-    parser.add_argument('--items_path', type=str, default='Stimuli')
-    parser.add_argument('--data_path', type=str, default='Data/processed/trials')
-    parser.add_argument('--save_path', type=str, default='Data/processed/words_fixations')
+    parser.add_argument('--items_path', type=str, default='stimuli')
+    parser.add_argument('--data_path', type=str, default='data/processed/trials')
+    parser.add_argument('--save_path', type=str, default='data/processed/words_fixations')
     parser.add_argument('--subj', type=str, default='all')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()

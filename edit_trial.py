@@ -1,5 +1,5 @@
 from pathlib import Path
-from Code.data_processing import parse, plot, utils
+from code.data_processing import parse, plot, utils
 import numpy as np
 import argparse
 
@@ -167,16 +167,16 @@ def parse_flags(flags):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Edit trials from a given participant')
-    parser.add_argument('--raw', type=str, default='Data/raw',
+    parser.add_argument('--raw', type=str, default='data/raw',
                         help='Path where participants raw data is stored in ASCII format')
     parser.add_argument('--ascii_path', type=str, default='asc',
                         help='Path where .asc files are stored in a participants folder')
-    parser.add_argument('--config', type=str, default='Metadata/stimuli_config.mat',
+    parser.add_argument('--config', type=str, default='metadata/stimuli_config.mat',
                         help='Config file with the stimuli information')
-    parser.add_argument('--questions', type=str, default='Metadata/stimuli_questions.mat',
+    parser.add_argument('--questions', type=str, default='metadata/stimuli_questions.mat',
                         help='Questions and possible answers file for each stimuli')
-    parser.add_argument('--stimuli_path', type=str, default='Stimuli', help='Path where the stimuli are stored')
-    parser.add_argument('--data', type=str, default='Data/processed/trials',
+    parser.add_argument('--stimuli_path', type=str, default='stimuli', help='Path where the stimuli are stored')
+    parser.add_argument('--data', type=str, default='data/processed/trials',
                         help='Path where the processed data is stored in pkl format')
     parser.add_argument('--subj', type=str, help='Participant\'s name')
     args = parser.parse_args()

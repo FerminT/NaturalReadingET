@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import argparse
 from pathlib import Path
-from Code.data_processing.utils import get_dirs, get_files, log, load_profile
+from code.data_processing.utils import get_dirs, get_files, log, load_profile
 
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
@@ -233,14 +233,14 @@ def load_et_measures(items_paths, words_freq, subjs_reading_skills):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform data analysis on extracted measures')
-    parser.add_argument('--data_path', type=str, default='Data/processed/measures',
+    parser.add_argument('--data_path', type=str, default='data/processed/measures',
                         help='Path where eye-tracking measures are stored')
-    parser.add_argument('--subjs_path', type=str, default='Data/processed/trials',
+    parser.add_argument('--subjs_path', type=str, default='data/processed/trials',
                         help='Path to participants\' trials, where their metadata is stored')
-    parser.add_argument('--words_freq', type=str, default='Metadata/Texts_properties/words_freq.csv',
+    parser.add_argument('--words_freq', type=str, default='metadata/texts_properties/words_freq.csv',
                         help='Path to file with words frequencies')
-    parser.add_argument('--stats_file', type=str, default='Data/processed/words_fixations/stats.csv')
-    parser.add_argument('--save_path', type=str, default='Results')
+    parser.add_argument('--stats_file', type=str, default='data/processed/words_fixations/stats.csv')
+    parser.add_argument('--save_path', type=str, default='results')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 

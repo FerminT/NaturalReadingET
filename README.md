@@ -66,12 +66,12 @@ Data analysis consists of printing overall stats per trial, plotting several ear
 ## Results
 In this first iteration of the experiment, data from 15 participants were collected, where 7 of them completed the two sessions.
 
-![Reading skills on early effects](Results/skills_effects.png)
+![Reading skills on early effects](results/skills_effects.png)
 
-![Word length on rates](Results/wordlen_on_rates.png)
+![Word length on rates](results/wordlen_on_rates.png)
 
-![Word frequency on early measures](Results/wordfreq_effects.png)
+![Word frequency on early measures](results/wordfreq_effects.png)
 
-![Word length on early measures](Results/wordlen_effects.png)
+![Word length on early measures](results/wordlen_effects.png)
 
-![First fixation duration](Results/ffd_histogram.png)
+![First fixation duration](results/ffd_histogram.png)

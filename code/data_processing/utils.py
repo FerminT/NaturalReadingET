@@ -193,7 +193,7 @@ def load_screensequence(item_path, filename='screen_sequence.pkl'):
 def load_stimuli(item, stimuli_path, config_file=None):
     stimuli_file = stimuli_path / (item + '.mat')
     if not stimuli_file.exists():
-        raise ValueError('Stimuli file does not exist: ' + str(stimuli_file))
+        raise ValueError('stimuli file does not exist: ' + str(stimuli_file))
     stimuli = loadmat(str(stimuli_file), simplify_cells=True)
     if config_file:
         config = loadmat(str(config_file), simplify_cells=True)['config']

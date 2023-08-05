@@ -1,4 +1,4 @@
-from Code.data_processing import utils
+from code.data_processing import utils
 from pathlib import Path
 from assign_fix_to_words import assign_fixations_to_words
 import argparse
@@ -221,13 +221,13 @@ def has_no_fixations(word_fix):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute metrics based on words fixations')
-    parser.add_argument('--data_path', type=str, default='Data/processed/words_fixations',
+    parser.add_argument('--data_path', type=str, default='data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
-    parser.add_argument('--items_path', type=str, default='Stimuli',
+    parser.add_argument('--items_path', type=str, default='stimuli',
                         help='Items path, from which the stimuli (items\' text) is extracted')
-    parser.add_argument('--trials_path', type=str, default='Data/processed/trials',
+    parser.add_argument('--trials_path', type=str, default='data/processed/trials',
                         help='Path to trials data.')
-    parser.add_argument('--save_path', type=str, default='Data/processed')
+    parser.add_argument('--save_path', type=str, default='data/processed')
     parser.add_argument('--item', type=str, default='all')
     args = parser.parse_args()
 

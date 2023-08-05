@@ -3,7 +3,7 @@ import pandas as pd
 import spacy
 import json
 
-texts_dir   = path.join(path.pardir, 'Texts')
+texts_dir   = path.join(path.pardir, 'texts')
 texts_files = listdir(texts_dir)
 
 nlp = spacy.load('es_dep_news_trf')
