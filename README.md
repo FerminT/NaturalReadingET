@@ -6,7 +6,7 @@ The eyes are the only visible part of the brain. As such, they provide an easily
 The aim of this experiment is to obtain data on eye movements during reading in Spanish as spoken in Buenos Aires. Leveraging past findings, the recollected data will then be integrated into computational models of language.
 ## Definitions
 A *word* is defined as a sequence of characters between two blank spaces, with the exception of those characters that correspond to punctuation signs.
- - *Unfrequent word*: its number of appearences in the latinamerican subtitles database from [EsPal](https://www.bcbl.eu/databases/espal/) is less or equal to 100.
+ - *Unfrequent word*: its number of appearances in the latinamerican subtitles database from [EsPal](https://www.bcbl.eu/databases/espal/) is less or equal to 100.
  - *Short sentence*: less or equal to 5 words.
  - *Long sentence*: greater or equal to 30 words.
  - *Long word*: greater or equal to 10 chars.
