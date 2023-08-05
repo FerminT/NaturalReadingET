@@ -62,5 +62,15 @@ Data processing is carried out entirely in Python 3.10. There are four distinct 
     * **Late measures:** Total fixation duration (TFD); re-reading time (RRT); second pass reading time (SPRT); fixation count (FC); regression count (RC).
 ### Data analysis
 Data analysis consists of printing overall stats per trial, plotting several early measures as a function of known effects (i.e., word length and frequency) and performing mixed effects models analysis with such fixed effects (```em_analysis.py```).
-## Participants
+## Results
 In this first iteration of the experiment, data from 15 participants were collected, where 7 of them completed the two sessions.
+
+![Reading skills on early effects](Results/skills_effects.png)
+
+![Word length on rates](Results/wordlen_on_rates.png)
+
+![Word frequency on early measures](Results/wordfreq_effects.png)
+
+![Word length on early measures](Results/wordlen_effects.png)
+
+![First fixation duration](Results/ffd_histogram.png)
