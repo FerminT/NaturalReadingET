@@ -1,0 +1,13 @@
+               Binomial Mixed GLM Results
+========================================================
+          Type Post. Mean Post. SD   SD  SD (LB) SD (UB)
+--------------------------------------------------------
+Intercept    M    -1.9018   0.0068                      
+word_len     M     5.7143   0.0200                      
+subj         V    -1.0626   0.1929 0.346   0.235   0.508
+item         V    -2.6462   0.1673 0.071   0.051   0.099
+========================================================
+Parameter types are mean structure (M) and variance
+structure (V)
+Variance parameters are modeled as log standard
+deviations
