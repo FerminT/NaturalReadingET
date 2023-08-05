@@ -10,42 +10,14 @@ from Code.data_processing.utils import get_dirs, get_files, log, load_profile
 """ Script to perform analysis on the extracted eye-tracking measures. """
 
 
-def plot_skills_effects(et_measures, save_path):
-    skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
-    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
-                                                                        else 'medium' if x <= skills_threshold['medium']
-                                                                        else 'high')
-    skip_count = count_by_skill(et_measures, 'skipped')
-    plot_boxplots('reading_skill', measures=['skipped'], data=skip_count,
-                    x_label='Reading skill', ax_titles=['Mean number of skips'],
-                    fig_title='Reading skill on skipping', save_path=save_path / 'skills_on_rates.png')
-    et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
-    plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures_no_skipped,
-                    x_label='Reading skill', ax_titles=['First Fixation Duration', 'Gaze Duration'],
-                    fig_title='Reading skill on early effects', save_path=save_path / 'skills_effects.png')
-    fix_count = count_by_skill(et_measures_no_skipped, 'FC')
-    regression_count = count_by_skill(et_measures_no_skipped, 'RC')
-    fix_count['RC'] = regression_count['RC']
-    plot_boxplots('reading_skill', measures=['FC', 'RC'], data=fix_count,
-                    x_label='Reading skill', ax_titles=['Fixation count', 'Regression count'],
-                    fig_title='Reading skill on fix and regression count', save_path=save_path / 'skills_fixations.png')
-
-
 def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
     save_path.mkdir(parents=True, exist_ok=True)
-
     print_stats(et_measures, items_stats, save_path)
 
     et_measures = remove_excluded_words(et_measures)
-    plot_skills_effects(et_measures, save_path)
-    plot_aggregated_measures(et_measures, save_path)
-    et_measures_no_skipped = remove_skipped_words(et_measures)
-    plot_ffd_histogram(et_measures_no_skipped)
-    et_measures_log = log_normalize_durations(et_measures_no_skipped)
-    plot_early_effects(et_measures_log, save_path)
-
+    plot_measures(et_measures, save_path)
     mlm_analysis(log_normalize_durations(et_measures), words_freq)
 
 
@@ -70,6 +42,15 @@ def print_stats(et_measures, items_stats, save_path):
     print(processed_stats.to_string())
 
     processed_stats.to_csv(save_path / 'trials_stats.csv')
+
+
+def plot_measures(et_measures, save_path):
+    plot_skills_effects(et_measures, save_path)
+    plot_aggregated_measures(et_measures, save_path)
+    et_measures_no_skipped = remove_skipped_words(et_measures)
+    plot_ffd_histogram(et_measures_no_skipped)
+    et_measures_log = log_normalize_durations(et_measures_no_skipped)
+    plot_early_measures(et_measures_log, save_path)
 
 
 def mlm_analysis(et_measures, words_freq):
@@ -159,6 +140,27 @@ def log_normalize_durations(trial_measures):
     return trial_measures
 
 
+def plot_skills_effects(et_measures, save_path):
+    skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
+    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
+                                                                        else 'medium' if x <= skills_threshold['medium']
+                                                                        else 'high')
+    skip_count = count_by_skill(et_measures, 'skipped')
+    plot_boxplots('reading_skill', measures=['skipped'], data=skip_count,
+                    x_label='Reading skill', ax_titles=['Mean number of skips'],
+                    fig_title='Reading skill on skipping', save_path=save_path / 'skills_on_rates.png')
+    et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
+    plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures_no_skipped,
+                    x_label='Reading skill', ax_titles=['First Fixation Duration', 'Gaze Duration'],
+                    fig_title='Reading skill on early effects', save_path=save_path / 'skills_effects.png')
+    fix_count = count_by_skill(et_measures_no_skipped, 'FC')
+    regression_count = count_by_skill(et_measures_no_skipped, 'RC')
+    fix_count['RC'] = regression_count['RC']
+    plot_boxplots('reading_skill', measures=['FC', 'RC'], data=fix_count,
+                    x_label='Reading skill', ax_titles=['Fixation count', 'Regression count'],
+                    fig_title='Reading skill on fix and regression count', save_path=save_path / 'skills_fixations.png')
+
+
 def plot_ffd_histogram(et_measures_no_skipped):
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
@@ -179,7 +181,7 @@ def plot_aggregated_measures(et_measures, save_path):
                   fig_title='Word frequency on rates', save_path=save_path / 'wordfreq_on_rates.png')
 
 
-def plot_early_effects(et_measures, save_path):
+def plot_early_measures(et_measures, save_path):
     plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures,
                   x_label='Word length', ax_titles=['First Fixation Duration', 'Gaze Duration'], x_order='descending',
                   fig_title='Early effects of word length', save_path=save_path / 'wordlen_effects.png')
