@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import argparse
 from pathlib import Path
-from code.data_processing.utils import get_dirs, get_files, log, load_profile
+from scripts.data_processing.utils import get_dirs, get_files, log, load_profile
 
 """ Script to perform analysis on the extracted eye-tracking measures. """
 

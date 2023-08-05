@@ -1,5 +1,5 @@
 from pathlib import Path
-from code.data_processing import parse, plot, utils
+from scripts.data_processing import parse, plot, utils
 import numpy as np
 import argparse
 

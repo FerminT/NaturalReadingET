@@ -1,5 +1,5 @@
 function run_experiment()
-    addpath(genpath('Code/experiment'))
+    addpath(genpath('scripts/experiment'))
     % Constants
     SAVE_PATH      = fullfile('Data', 'raw');
     METADATA_PATH  = 'Metadata';
