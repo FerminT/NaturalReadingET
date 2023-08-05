@@ -1,4 +1,5 @@
 # Eye-tracking during natural reading
+![Example trial](preview.jpg)
 ## About
 The eyes are the only visible part of the brain. As such, they provide an easily accessible window into the cognitive processes that underpin attention. This has been acknowledged by neurolinguistic researchers for over a century now, with Javal’s initial observations concerning the role of eye movements in reading in 1879 (Huey, 1908). Nowadays, the fundamental assumption of the eyes as a window into the mind (Just & Carpenter, 1980) has long been validated, and the study of eye movements in reading has been established as a central tool for unraveling language processing in the brain (Kliegl et al., 2006).
 
