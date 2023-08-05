@@ -1,6 +1,6 @@
 from code.data_processing import utils
 from pathlib import Path
-from assign_fix_to_words import assign_fixations_to_words
+from code.data_processing.assign_fix_to_words import assign_fixations_to_words
 import argparse
 import pandas as pd
 
