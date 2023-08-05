@@ -1,4 +1,8 @@
-# Eye-tracking during natural reading - Long Texts
+# Eye-tracking during natural reading
+## About
+The eyes are the only visible part of the brain. As such, they provide an easily accessible window into the cognitive processes that underpin attention. This has been acknowledged by neurolinguistic researchers for over a century now, with Javal’s initial observations concerning the role of eye movements in reading in 1879 (Huey, 1908). Nowadays, the fundamental assumption of the eyes as a window into the mind (Just & Carpenter, 1980) has long been validated, and the study of eye movements in reading has been established as a central tool for unraveling language processing in the brain (Kliegl et al., 2006).
+
+The aim of this experiment is to obtain data on eye movements during reading in Spanish as spoken in Buenos Aires. Leveraging past findings, the recollected data will then be integrated into computational models of language.
 ## Definitions
 A *word* is defined as a sequence of characters between two blank spaces, with the exception of those characters that correspond to punctuation signs.
  - *Unfrequent word*: its number of appearences in the latinamerican subtitles database from [EsPal](https://www.bcbl.eu/databases/espal/) is less or equal to 100.
@@ -22,7 +26,7 @@ On average, these are 800 (+/- 135) words long (min: 680; max: 1220) and each on
 
 There is a correlation between *minimizing dialogues* and *minimizing unfrequent characters*, as dialogues are usually characterized by such.
 ## Methodology
-* Stimuli creation (see ```config.mat```):
+* Stimuli creation (see ```Metadata/stimuli_config.mat```):
     * Resolution: 1080x1920.
     * Font: Courier New. Size: 24. Color: black.
     * Background color: grey.
@@ -43,54 +47,20 @@ There is a correlation between *minimizing dialogues* and *minimizing unfrequent
 * The following item is displayed by pressing a button.
 * Each item is a *block*. After each block, a one minute break and eye-tracker calibration follows.
 * Eye-tracker calibration is validated by the presentation of points positioned in the corners of where stimuli is displayed.
+
+## Code
+### Experiment
+The experiment is coded in MATLAB 2015a using the Psychophysics Toolbox (http://psychtoolbox.org/). It is launched by running ```run_experiment.m```.
+### Data processing
+Data processing is carried out entirely in Python 3.10. There are four distinct steps:
+1. **Data extraction:** Raw EDF data are converted to ASC using the *edf2asc* tool from the EyeLink Display Software.
+2. **Data cleaning:** Trials are manually inspected, where horizontal lines are drawn for delimiting text lines and fixations are corrected when needed (```edit_trial.py```). Very short (50ms) and very long (1000ms) fixations are discarded in this step.
+3. **Fixation assignment:** Fixations are assigned to words, using blank spaces as delimiters (```assign_fixations.py```). Return sweeps are discarded in this step.
+4. **Measures extraction:** Eye-tracking measures (early, intermediate and late) are computed for each word, except the first and last words of each line or those following or preceding punctuation marks (```extract_measures.py```). The measures are:
+    * **Early measures:** First fixation duration (FFD); single fixation duration (SFD); first pass reading time/gaze duration (FPRT); likelihood of skipping (LS).
+    * **Intermediate measures:** Regression path duration (RPD); regression rate (RR).
+    * **Late measures:** Total fixation duration (TFD); re-reading time (RRT); second pass reading time (SPRT); fixation count (FC); regression count (RC).
+### Data analysis
+Data analysis consists of printing overall stats per trial, plotting several early measures as a function of known effects (i.e., word length and frequency) and performing mixed effects models analysis with such fixed effects (```em_analysis.py```).
 ## Participants
 In this first iteration of the experiment, data from 15 participants were collected, where 7 of them completed the two sessions.
-### Data structure
-* The *by_participant* directory contains the fixations and (horizontal) lines for each trial done by a given subject, divided by the item's screens.
-* *by_item* contains the fixations assigned to words, organized by lines for each item's screens.
-* The MATLAB files in *raw* contain trial metadata, such as questions answers, stimuli order, and reading skills.
-
-```
-Data/
-├── processed/
-│   ├── by_item/
-│   │   ├── item_1
-│   │   ├── ...
-│   │   └── item_m/
-│   │       ├── screen_1
-│   │       ├── ...
-│   │       └── screen_k/
-│   │           ├── participant_1
-│   │           ├── ...
-│   │           └── participant_n/
-│   │               ├── line_1.json
-│   │               ├── ...
-│   │               └── line_p.json
-│   └── by_participant/
-│       ├── participant_1
-│       ├── ...
-│       └── participant_n/
-│           ├── item_1
-│           ├── ...
-│           └── item_m/
-│               ├── screen_1
-│               ├── ...
-│               └── screen_k/
-│                   ├── fixations.pkl
-│                   └── lines.pkl
-└── raw/
-    ├── participant_1
-    ├── ...
-    └── participant_n/
-        ├── item_1.mat
-        ├── ...
-        ├── item_m.mat
-        ├── asc/
-        │   ├── participant_n_1.asc
-        │   ├── ...
-        │   └── participant_n_m.asc
-        └── edf/
-            ├── participant_n_1.edf
-            ├── ...
-            └── participant_n_m.edf
-```
