@@ -22,6 +22,7 @@ def trial(stimuli, trial_path, editable=False):
     sequence_states, screens_sequence = build_sequence_states(screens_fixations, screens_lines, trial_path)
 
     sequence(screens, screens_sequence, sequence_states, editable)
+    save_files = False
     if editable:
         save_files = messagebox.askyesno(title='Modified trial', message='Do you want to save the trial?')
         if save_files:
