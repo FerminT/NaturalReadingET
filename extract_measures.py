@@ -44,18 +44,19 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path):
     for item in items_wordsfix:
         print(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
-        item_measures, item_scanpaths = extract_item_measures(screens_text, item, chars_mapping)
+        item_trials = utils.get_files(item, 'pkl')
+        item_measures, item_scanpaths = extract_item_measures(screens_text, item_trials, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, save_path / 'measures' / item.name)
         utils.save_subjects_scanpaths(item_scanpaths, save_path / 'scanpaths' / item.name)
 
 
-def extract_item_measures(screens_text, item, chars_mapping):
+def extract_item_measures(screens_text, trials, chars_mapping):
     measures, words_fix = [], []
-    trials = [pd.read_pickle(trial) for trial in utils.get_files(item, 'pkl')]
     for trial in trials:
-        add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix)
+        trial_df = pd.read_pickle(trial)
+        add_trial_measures(trial_df, screens_text, chars_mapping, measures, words_fix)
 
     measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
