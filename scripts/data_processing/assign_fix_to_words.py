@@ -1,5 +1,5 @@
 from pathlib import Path
-import utils
+from scripts.data_processing import utils
 import pandas as pd
 import numpy as np
 import argparse
