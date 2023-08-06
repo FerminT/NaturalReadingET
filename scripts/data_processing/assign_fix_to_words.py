@@ -1,11 +1,11 @@
 from pathlib import Path
-from . import utils
+import utils
 import pandas as pd
 import numpy as np
 import argparse
 
 
-def assign_fixations_to_words(items, subjects, save_path):
+def assign_fixations_to_words(items, subjects, save_path, reprocess=False):
     print('Assigning fixations to words...')
     items_stats = {item.stem: {'n_subj': 0, 'n_fix': 0, 'n_words': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
                    for item in items}
@@ -15,16 +15,15 @@ def assign_fixations_to_words(items, subjects, save_path):
         screens_lines = utils.load_lines_by_screen(item)
         item_savepath = save_path / item_name
         item_savepath.mkdir(exist_ok=True, parents=True)
+        item_subjects = get_subjects_to_process(subjects, item_name, item_savepath, reprocess)
 
-        process_item(item_name, subjects, screens_lines, items_stats[item_name], item_savepath)
+        process_item(item_name, item_subjects, screens_lines, items_stats[item_name], item_savepath)
     save_stats(items_stats, save_path)
 
 
 def process_item(item_name, subjects, screens_lines, item_stats, item_savepath):
     for subject in subjects:
         trial_path = subject / item_name
-        if not (trial_path.exists() and trial_is_correct(subject, item_name)):
-            continue
         screen_sequence = pd.read_pickle(trial_path / 'screen_sequence.pkl')['currentscreenid'].to_numpy()
         trial_fix_by_word = process_subj_trial(subject.name, trial_path, screen_sequence, screens_lines, item_stats)
         trial_fix_by_word = postprocess_word_fixations(trial_fix_by_word, item_stats)
@@ -93,10 +92,13 @@ def assign_line_fixations_to_words(word_pos, line_fix, line_num, spaces_pos, scr
         word_pos += 1
 
 
-def trial_is_correct(subject, item_name):
-    trial_flags = utils.load_flags([item_name], subject)
+def get_subjects_to_process(subjects, item_name, item_savepath, reprocess):
+    subjects_to_process = utils.get_correct_trials(subjects, item_name)
+    if not reprocess:
+        processed_subjects = utils.get_subjects(item_savepath)
+        subjects_to_process = [subj for subj in subjects_to_process if subj.name not in processed_subjects]
 
-    return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
+    return subjects_to_process
 
 
 def save_trial_word_fixations(trial_fix_by_word, item_savepath):
@@ -107,6 +109,10 @@ def save_trial_word_fixations(trial_fix_by_word, item_savepath):
 def save_stats(items_stats, save_path):
     items_stats = pd.DataFrame.from_dict(items_stats, orient='index')
     items_stats.loc['Total'] = items_stats.sum()
+    stats_file = save_path / 'stats.csv'
+    if stats_file.exists():
+        old_stats = pd.read_csv(stats_file, index_col=0)
+        items_stats += old_stats
     print(items_stats.to_string())
     items_stats.to_csv(save_path / 'stats.csv')
 
@@ -233,15 +239,16 @@ def get_last_fixation_index(screen_dir, prev_screen_times_read):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Assign fixations to words')
-    parser.add_argument('--items_path', type=str, default='stimuli')
-    parser.add_argument('--data_path', type=str, default='data/processed/trials')
-    parser.add_argument('--save_path', type=str, default='data/processed/words_fixations')
+    parser.add_argument('--items_path', type=str, default='../../stimuli')
+    parser.add_argument('--data_path', type=str, default='../../data/processed/trials')
+    parser.add_argument('--save_path', type=str, default='../../data/processed/words_fixations')
     parser.add_argument('--subj', type=str, default='all')
     parser.add_argument('--item', type=str, default='all')
+    parser.add_argument('--reprocess', action='store_true')
     args = parser.parse_args()
 
     items_path, data_path, save_path = Path(args.items_path), Path(args.data_path), Path(args.save_path)
     subj_paths = [data_path / args.subj] if args.subj != 'all' else utils.get_dirs(data_path)
     items = utils.get_items(items_path, args.item)
 
-    assign_fixations_to_words(items, subj_paths, save_path)
+    assign_fixations_to_words(items, subj_paths, save_path, args.reprocess)

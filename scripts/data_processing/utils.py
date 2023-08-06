@@ -39,6 +39,17 @@ def get_items(items_path, item_name):
             [item for item in get_files(items_path, 'mat') if item.stem != 'Test']
 
 
+def get_subjects(item_path):
+    subjects = [subj.stem for subj in item_path.iterdir() if subj.is_file()]
+    return subjects
+
+
+def get_correct_trials(subjects, item_name):
+    correct_trials = [subject for subject in subjects
+                      if (subject / item_name).exists() and trial_is_correct(subject, item_name)]
+    return correct_trials
+
+
 def save_screensequence(screens_sequence, item_path, filename='screen_sequence.pkl'):
     screens_sequence.to_pickle(item_path / filename)
 
@@ -63,6 +74,11 @@ def update_flags(trial_flags, trial_path, filename='flags.pkl'):
 def load_flags(trials, datapath, filename='flags.pkl'):
     flags = {trial: pd.read_pickle(datapath / trial / filename) for trial in trials}
     return flags
+
+
+def trial_is_correct(subject, item_name):
+    trial_flags = load_flags([item_name], subject)
+    return trial_flags[item_name]['edited'][0] and not trial_flags[item_name]['iswrong'][0]
 
 
 def load_questions_and_words(questions_file, item):
