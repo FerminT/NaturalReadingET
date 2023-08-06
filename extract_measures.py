@@ -39,16 +39,25 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
-def extract_measures(items_wordsfix, chars_mapping, items_path, save_path):
+def get_trials_to_process(item, item_savepath, reprocess):
+    trials_to_process = utils.get_files(item, 'pkl')
+    if item_savepath.exists() and not reprocess:
+        trials_to_process = [trial for trial in trials_to_process if not (item_savepath / trial.name).exists()]
+
+    return trials_to_process
+
+
+def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items_wordsfix:
         print(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
-        item_trials = utils.get_files(item, 'pkl')
+        item_measures_path = save_path / 'measures' / item.name
+        item_trials = get_trials_to_process(item, item_measures_path, reprocess)
         item_measures, item_scanpaths = extract_item_measures(screens_text, item_trials, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
 
-        utils.save_measures_by_subj(item_measures, save_path / 'measures' / item.name)
+        utils.save_measures_by_subj(item_measures, item_measures_path)
         utils.save_subjects_scanpaths(item_scanpaths, save_path / 'scanpaths' / item.name)
 
 
@@ -80,9 +89,10 @@ def build_scanpaths(words_fix, screens_text, chars_mapping):
 
 
 def add_aggregated_measures(item_measures):
-    valid_measures = item_measures[~item_measures['excluded']]
-    item_measures['LS'] = valid_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
-    item_measures['RR'] = valid_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
+    if not item_measures.empty:
+        valid_measures = item_measures[~item_measures['excluded']]
+        item_measures['LS'] = valid_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
+        item_measures['RR'] = valid_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
 
     return item_measures
 
@@ -230,6 +240,7 @@ if __name__ == '__main__':
                         help='Path to trials data.')
     parser.add_argument('--save_path', type=str, default='data/processed')
     parser.add_argument('--item', type=str, default='all')
+    parser.add_argument('--reprocess', action='store_true')
     args = parser.parse_args()
 
     data_path, trials_path, items_path, save_path = Path(args.data_path), Path(args.trials_path), \
@@ -237,7 +248,7 @@ if __name__ == '__main__':
     if not data_path.exists():
         subjects = utils.get_dirs(trials_path)
         items = utils.get_items(items_path, args.item)
-        assign_fixations_to_words(items, subjects, data_path)
+        assign_fixations_to_words(items, subjects, data_path, args.reprocess)
 
     if args.item != 'all':
         items_wordsfix = [data_path / args.item]
@@ -245,4 +256,4 @@ if __name__ == '__main__':
         items_wordsfix = utils.get_dirs(data_path)
 
     chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(items_wordsfix, chars_mapping, items_path, save_path)
+    extract_measures(items_wordsfix, chars_mapping, items_path, save_path, args.reprocess)

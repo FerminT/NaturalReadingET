@@ -275,12 +275,13 @@ def add_offsets(cal_points, val_points, val_offsets, screen_size):
 
 
 def save_measures_by_subj(item_measures, save_path):
-    if not save_path.exists():
-        save_path.mkdir(parents=True)
-    for subj in item_measures['subj'].unique():
-        subj_measures = item_measures[item_measures['subj'] == subj]
-        subj_measures.reset_index(drop=True, inplace=True)
-        subj_measures.to_pickle(save_path / f'{subj}.pkl')
+    if not item_measures.empty:
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
+        for subj in item_measures['subj'].unique():
+            subj_measures = item_measures[item_measures['subj'] == subj]
+            subj_measures.reset_index(drop=True, inplace=True)
+            subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
 def save_subjects_scanpaths(item_scanpaths, save_path):
