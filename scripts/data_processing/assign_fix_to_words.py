@@ -1,4 +1,5 @@
 from pathlib import Path
+from tqdm import tqdm
 from scripts.data_processing import utils
 import pandas as pd
 import numpy as np
@@ -9,9 +10,9 @@ def assign_fixations_to_words(items, subjects, save_path, reprocess=False):
     print('Assigning fixations to words...')
     items_stats = {item.stem: {'n_subj': 0, 'n_fix': 0, 'n_words': 0, 'out_of_bounds': 0, 'return_sweeps': 0}
                    for item in items}
-    for item in items:
+    for item in (pbar := tqdm(items)):
         item_name = item.stem
-        print(f'Processing "{item_name}" trials')
+        pbar.set_description(f'Processing "{item_name}" trials')
         screens_lines = utils.load_lines_by_screen(item)
         item_savepath = save_path / item_name
         item_savepath.mkdir(exist_ok=True, parents=True)
