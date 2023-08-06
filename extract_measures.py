@@ -39,14 +39,6 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
-def get_trials_to_process(item, item_savepath, reprocess):
-    trials_to_process = utils.get_files(item, 'pkl')
-    if item_savepath.exists() and not reprocess:
-        trials_to_process = [trial for trial in trials_to_process if not (item_savepath / trial.name).exists()]
-
-    return trials_to_process
-
-
 def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):
     print(f'Extracting eye-tracking measures from trials...')
     for item in items_wordsfix:
@@ -163,6 +155,14 @@ def n_consecutive_fix(fix_indices):
         fix_counter += 1
 
     return fix_counter
+
+
+def get_trials_to_process(item, item_savepath, reprocess):
+    trials_to_process = utils.get_files(item, 'pkl')
+    if item_savepath.exists() and not reprocess:
+        trials_to_process = [trial for trial in trials_to_process if not (item_savepath / trial.name).exists()]
+
+    return trials_to_process
 
 
 def remove_consecutive_punctuations(subj_scanpath, chars_mapping):
