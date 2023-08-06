@@ -1,6 +1,7 @@
 from scripts.data_processing import utils
 from pathlib import Path
 from scripts.data_processing.assign_fix_to_words import assign_fixations_to_words
+from tqdm import tqdm
 import argparse
 import pandas as pd
 
@@ -41,8 +42,8 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 
 def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):
     print(f'Extracting eye-tracking measures from trials...')
-    for item in items_wordsfix:
-        print(f'Processing "{item.stem}" trials')
+    for item in (pbar := tqdm(items_wordsfix)):
+        pbar.set_description(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
         item_measures_path = save_path / 'measures' / item.name
         item_trials = get_trials_to_process(item, item_measures_path, reprocess)
