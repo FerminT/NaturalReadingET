@@ -158,10 +158,10 @@ def plot_skills_effects(et_measures, save_path):
     fix_count = count_by_skill(et_measures_no_skipped, 'FC')
     regression_count = count_by_skill(et_measures_no_skipped, 'RC')
 
-    y_labels = ['Mean number of skips', 'log First Fixation Duration', 'log Gaze Duration',
-                'Fixation count', 'Regression count']
-    plot_boxplots(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
-                  data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count],
+    y_labels = ['log First Fixation Duration', 'log Gaze Duration', 'Fixation count', 'Regression count',
+                'Mean number of skips']
+    plot_boxplots(['reading_skill'], measures=['FFD', 'FPRT', 'FC', 'RC', 'skipped'],
+                  data=[et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count, skip_count],
                   x_labels=['Reading skill'] * 5,
                   y_labels=y_labels,
                   ax_titles=y_labels,
