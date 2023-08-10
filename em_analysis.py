@@ -46,12 +46,10 @@ def print_stats(et_measures, items_stats, save_path):
 
 def plot_measures(et_measures, save_path):
     plot_skills_effects(et_measures, save_path)
-    plot_aggregated_measures(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
     plot_histograms(et_measures_no_skipped, ['FFD', 'FC'], ax_titles=['First Fixation Duration', 'Fixation Count'],
                     y_labels=['Number of words', 'Number of words'], save_file=save_path / 'FFD_FC_distributions.png')
-    et_measures_log = log_normalize_durations(et_measures_no_skipped)
-    plot_early_measures(et_measures_log, save_path)
+    plot_words_effects(et_measures, save_path)
 
 
 def mlm_analysis(et_measures, words_freq):
@@ -177,17 +175,7 @@ def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
     fig.savefig(save_file)
 
 
-def plot_aggregated_measures(et_measures, save_path):
-    # Plot measures computed across trials (i.e., rates)
-    aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
-    plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures,
-                  x_label='Word length', ax_titles=['Likelihood of skipping', 'Regression rate'],
-                  fig_title='Word length on rates', save_path=save_path / 'wordlen_on_rates.png')
-    plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures,
-                  x_label='Word frequency', ax_titles=['Likelihood of skipping', 'Regression rate'],
-                  fig_title='Word frequency on rates', save_path=save_path / 'wordfreq_on_rates.png')
-
-def plot_wordlength(et_measures, save_path):
+def plot_words_effects(et_measures, save_path):
     et_measures_log = log_normalize_durations(remove_skipped_words(et_measures))
     aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
     y_labels = ['First Fixation Duration', 'Gaze Duration', 'Likelihood of skipping', 'Regression rate']
@@ -198,13 +186,12 @@ def plot_wordlength(et_measures, save_path):
                        ax_titles=y_labels,
                        fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
 
-def plot_early_measures(et_measures, save_path):
-    plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures,
-                  x_label='Word length', ax_titles=['First Fixation Duration', 'Gaze Duration'],
-                  fig_title='Early effects of word length', save_path=save_path / 'wordlen_effects.png')
-    plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures,
-                    x_label='Word frequency', ax_titles=['First Fixation Duration', 'Gaze Duration'],
-                    fig_title='Early effects of word frequency', save_path=save_path / 'wordfreq_effects.png')
+    plot_boxplots_grid(['word_freq'], measures=['FFD', 'FPRT', 'LS', 'RR'],
+                       data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
+                       x_labels=['Word frequency in percentiles'] * 4,
+                       y_labels=y_labels,
+                       ax_titles=y_labels,
+                       fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
 
 
 def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None, save_path=None):
