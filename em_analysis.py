@@ -187,7 +187,7 @@ def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
 def plot_words_effects(et_measures, save_path):
     et_measures_log = log_normalize_durations(remove_skipped_words(et_measures))
     aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
-    y_labels = ['First Fixation Duration', 'Gaze Duration', 'Likelihood of skipping', 'Regression rate']
+    y_labels = ['First Fixation Duration', 'log Gaze Duration', 'log Likelihood of skipping', 'Regression rate']
     plot_boxplots_grid(['word_len'], measures=['FFD', 'FPRT', 'LS', 'RR'],
                        data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
                        x_labels=['Word length'] * 4,
