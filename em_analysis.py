@@ -203,29 +203,6 @@ def plot_words_effects(et_measures, save_path):
                        fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
 
 
-def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None,
-                  save_path=None):
-    fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
-    ax_titles = np.array(ax_titles)
-    axes = [axes] if len(measures) == 1 else axes
-    if x_order == 'descending':
-        plot_order = sorted(data[fixed_effect].unique(), reverse=True)
-    else:
-        plot_order = sorted(data[fixed_effect].unique())
-    for i, measure in enumerate(measures):
-        sns.boxplot(x=fixed_effect, y=measure, data=data, ax=axes[i], order=plot_order)
-        axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=15)
-        axes[i].set_xlabel(x_label)
-        axes[i].set_title(ax_titles[i])
-    if fig_title:
-        fig.suptitle(fig_title)
-    if save_path:
-        fig.savefig(save_path)
-    plt.show()
-
-    return fig
-
-
 def plot_boxplots_grid(fixed_effects, measures, data, x_labels, y_labels, ax_titles, fig_title, save_file):
     n_plots = len(fixed_effects) * len(measures)
     n_cols = int(np.ceil(np.sqrt(n_plots)))
