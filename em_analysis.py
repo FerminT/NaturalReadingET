@@ -158,17 +158,18 @@ def plot_skills_effects(et_measures, save_path):
     fix_count = count_by_skill(et_measures_no_skipped, 'FC')
     regression_count = count_by_skill(et_measures_no_skipped, 'RC')
 
-    y_labels = ['log First Fixation Duration', 'log Gaze Duration', 'Fixation count', 'Regression count',
+    y_labels = ['log First Fixation Duration', 'log Gaze Duration', 'Mean fixation count', 'Mean regression count',
                 'Mean number of skips']
     plot_boxplots(['reading_skill'], measures=['FFD', 'FPRT', 'FC', 'RC', 'skipped'],
                   data=[et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count, skip_count],
                   x_labels=['Reading skill'] * 5,
                   y_labels=y_labels,
                   ax_titles=y_labels,
+                  fig_title='Reading skill on eye-tracking measures',
+                  save_file=save_path / 'skills_on_measures.png',
                   sharey=False,
                   orientation='vertical',
-                  fig_title='Reading skill on eye-tracking measures',
-                  save_file=save_path / 'skills_on_measures.png')
+                  order=['low', 'medium', 'high'])
 
 
 def plot_words_effects(et_measures, save_path):
@@ -180,22 +181,20 @@ def plot_words_effects(et_measures, save_path):
                   x_labels=['Word length'] * 4,
                   y_labels=y_labels,
                   ax_titles=y_labels,
-                  sharey='row',
-                  orientation='horizontal',
-                  fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
+                  fig_title='Word length effects on measures',
+                  save_file=save_path / 'word_length.png')
 
     plot_boxplots(['word_freq'], measures=['FFD', 'FPRT', 'LS', 'RR'],
                   data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
                   x_labels=['Word frequency in percentiles'] * 4,
                   y_labels=y_labels,
                   ax_titles=y_labels,
-                  sharey='row',
-                  orientation='horizontal',
-                  fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
+                  fig_title='Word frequency effects on measures',
+                  save_file=save_path / 'word_frequency.png')
 
 
 def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
-                  sharey, orientation, fig_title, save_file):
+                  fig_title, save_file, sharey='row', orientation='horizontal', order=None):
     n_plots = len(fixed_effects) * len(measures)
     n_cols = int(np.ceil(np.sqrt(n_plots)))
     n_rows = int(np.ceil(n_plots / n_cols))
@@ -207,7 +206,7 @@ def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
         for j, measure in enumerate(measures):
             ax = axes[(i + j) // n_cols, (i + j) % n_cols]
             plot_data = data[j] if isinstance(data, list) else data
-            sns.boxplot(x=fixed_effect, y=measure, data=plot_data, ax=ax)
+            sns.boxplot(x=fixed_effect, y=measure, data=plot_data, order=order, ax=ax)
             ax.set_xticklabels(ax.get_xticklabels(), rotation=15)
             ax.yaxis.set_tick_params(labelleft=True)
             ax.set_xlabel(x_labels[i])
