@@ -160,50 +160,35 @@ def plot_skills_effects(et_measures, save_path):
 
     y_labels = ['Mean number of skips', 'log First Fixation Duration', 'log Gaze Duration',
                 'Fixation count', 'Regression count']
-    plot_boxplots_grid(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
-                       data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count],
-                       x_labels=['Reading skill'] * 5,
-                       y_labels=y_labels,
-                       ax_titles=y_labels,
-                       fig_title='Reading skill on eye-tracking measures',
-                       save_file=save_path / 'skills_on_measures.png')
-
-
-def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
-    ncols = len(measures) // 2
-    nrows = 2 if len(measures) > 1 else 1
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-    axes = np.array(axes)[:, np.newaxis] if len(measures) <= 2 else axes
-    for i, measure in enumerate(measures):
-        ax = axes[i // ncols, i % ncols]
-        sns.histplot(x=measure, data=et_measures, ax=ax, binwidth=1)
-        ax.set_title(ax_titles[i])
-        ax.set_ylabel(y_labels[i])
-    plt.tight_layout()
-    plt.show()
-    fig.savefig(save_file)
+    plot_boxplots(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
+                  data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count],
+                  x_labels=['Reading skill'] * 5,
+                  y_labels=y_labels,
+                  ax_titles=y_labels,
+                  fig_title='Reading skill on eye-tracking measures',
+                  save_file=save_path / 'skills_on_measures.png')
 
 
 def plot_words_effects(et_measures, save_path):
     et_measures_log = log_normalize_durations(remove_skipped_words(et_measures))
     aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
     y_labels = ['First Fixation Duration', 'log Gaze Duration', 'log Likelihood of skipping', 'Regression rate']
-    plot_boxplots_grid(['word_len'], measures=['FFD', 'FPRT', 'LS', 'RR'],
-                       data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
-                       x_labels=['Word length'] * 4,
-                       y_labels=y_labels,
-                       ax_titles=y_labels,
-                       fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
+    plot_boxplots(['word_len'], measures=['FFD', 'FPRT', 'LS', 'RR'],
+                  data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
+                  x_labels=['Word length'] * 4,
+                  y_labels=y_labels,
+                  ax_titles=y_labels,
+                  fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
 
-    plot_boxplots_grid(['word_freq'], measures=['FFD', 'FPRT', 'LS', 'RR'],
-                       data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
-                       x_labels=['Word frequency in percentiles'] * 4,
-                       y_labels=y_labels,
-                       ax_titles=y_labels,
-                       fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
+    plot_boxplots(['word_freq'], measures=['FFD', 'FPRT', 'LS', 'RR'],
+                  data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
+                  x_labels=['Word frequency in percentiles'] * 4,
+                  y_labels=y_labels,
+                  ax_titles=y_labels,
+                  fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
 
 
-def plot_boxplots_grid(fixed_effects, measures, data, x_labels, y_labels, ax_titles, fig_title, save_file):
+def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles, fig_title, save_file):
     n_plots = len(fixed_effects) * len(measures)
     n_cols = int(np.ceil(np.sqrt(n_plots)))
     n_rows = int(np.ceil(n_plots / n_cols))
@@ -225,6 +210,21 @@ def plot_boxplots_grid(fixed_effects, measures, data, x_labels, y_labels, ax_tit
     plt.show()
 
     return fig
+
+
+def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
+    ncols = len(measures) // 2
+    nrows = 2 if len(measures) > 1 else 1
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+    axes = np.array(axes)[:, np.newaxis] if len(measures) <= 2 else axes
+    for i, measure in enumerate(measures):
+        ax = axes[i // ncols, i % ncols]
+        sns.histplot(x=measure, data=et_measures, ax=ax, binwidth=1)
+        ax.set_title(ax_titles[i])
+        ax.set_ylabel(y_labels[i])
+    plt.tight_layout()
+    plt.show()
+    fig.savefig(save_file)
 
 
 def load_trial(trial, item_name, words_freq, subjs_reading_skills):
