@@ -174,7 +174,7 @@ def plot_aggregated_measures(et_measures, save_path):
     # Plot measures computed across trials (i.e., rates)
     aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
     plot_boxplots('word_len', measures=['LS', 'RR'], data=aggregated_measures,
-                  x_label='Word length', ax_titles=['Likelihood of skipping', 'Regression rate'], x_order='descending',
+                  x_label='Word length', ax_titles=['Likelihood of skipping', 'Regression rate'],
                   fig_title='Word length on rates', save_path=save_path / 'wordlen_on_rates.png')
     plot_boxplots('word_freq', measures=['LS', 'RR'], data=aggregated_measures,
                   x_label='Word frequency', ax_titles=['Likelihood of skipping', 'Regression rate'],
@@ -183,7 +183,7 @@ def plot_aggregated_measures(et_measures, save_path):
 
 def plot_early_measures(et_measures, save_path):
     plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures,
-                  x_label='Word length', ax_titles=['First Fixation Duration', 'Gaze Duration'], x_order='descending',
+                  x_label='Word length', ax_titles=['First Fixation Duration', 'Gaze Duration'],
                   fig_title='Early effects of word length', save_path=save_path / 'wordlen_effects.png')
     plot_boxplots('word_freq', measures=['FFD', 'FPRT'], data=et_measures,
                     x_label='Word frequency', ax_titles=['First Fixation Duration', 'Gaze Duration'],
