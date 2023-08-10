@@ -55,11 +55,11 @@ def parse_asc(filename, verbose=True):
             # ===== PARSE EYELINK FILE ===== #
     i_not_start = np.nonzero(line_type != 'START')[0]
     df_rec_start = pd.read_csv(filename, skiprows=i_not_start, header=None, delim_whitespace=True, usecols=[1],
-                             low_memory=False)
+                               low_memory=False)
     df_rec_start.columns = ['tStart']
     i_not_end = np.nonzero(line_type != 'END')[0]
     df_rec_end = pd.read_csv(filename, skiprows=i_not_end, header=None, delim_whitespace=True, usecols=[1, 5, 6],
-                           low_memory=False)
+                             low_memory=False)
     df_rec_end.columns = ['tEnd', 'xRes', 'yRes']
     # combine trial info
     df_rec = pd.concat([df_rec_start, df_rec_end], axis=1)
@@ -81,13 +81,13 @@ def parse_asc(filename, verbose=True):
     # Import Fixations
     i_not_efix = np.nonzero(line_type != 'EFIX')[0]
     df_fix = pd.read_csv(filename, skiprows=i_not_efix, header=None, delim_whitespace=True, usecols=range(1, 8),
-                        low_memory=False)
+                         low_memory=False)
     df_fix.columns = ['eye', 'tStart', 'tEnd', 'duration', 'xAvg', 'yAvg', 'pupilAvg']
 
     # Saccades
     i_not_esacc = np.nonzero(line_type != 'ESACC')[0]
     df_sacc = pd.read_csv(filename, skiprows=i_not_esacc, header=None, delim_whitespace=True, usecols=range(1, 11),
-                         low_memory=False)
+                          low_memory=False)
     df_sacc.columns = ['eye', 'tStart', 'tEnd', 'duration', 'xStart', 'yStart', 'xEnd', 'yEnd', 'ampDeg', 'vPeak']
 
     # Blinks
@@ -95,7 +95,7 @@ def parse_asc(filename, verbose=True):
     i_not_eblink = np.nonzero(line_type != 'EBLINK')[0]
     if len(i_not_eblink) < n_lines:
         df_blink = pd.read_csv(filename, skiprows=i_not_eblink, header=None, delim_whitespace=True, usecols=range(1, 5),
-                              low_memory=False)
+                               low_memory=False)
         df_blink.columns = ['eye', 'tStart', 'tEnd', 'duration']
 
     # determine sample columns based on eyes recorded in file
@@ -107,21 +107,23 @@ def parse_asc(filename, verbose=True):
         print('monocular data detected (%c eye).' % eye)
         cols = ['tSample', '%cX' % eye, '%cY' % eye, '%cPupil' % eye]
 
-    # Import samples    
-    i_not_sample = np.nonzero(np.logical_or(line_type != 'SAMPLE', np.arange(n_lines) < i_start_rec))[0]
-    df_samples = pd.read_csv(filename, skiprows=i_not_sample, header=None, delim_whitespace=True,
-                            usecols=range(0, len(cols)), low_memory=False)
-    df_samples.columns = cols
-    # Convert values to numbers
-    for eye in ['L', 'R']:
-        if eye in eyes_in_file:
-            df_samples['%cX' % eye] = pd.to_numeric(df_samples['%cX' % eye], errors='coerce')
-            df_samples['%cY' % eye] = pd.to_numeric(df_samples['%cY' % eye], errors='coerce')
-            df_samples['%cPupil' % eye] = pd.to_numeric(df_samples['%cPupil' % eye], errors='coerce')
-        else:
-            df_samples['%cX' % eye] = np.nan
-            df_samples['%cY' % eye] = np.nan
-            df_samples['%cPupil' % eye] = np.nan
+    # Import samples
+    df_samples = pd.DataFrame()
+    if i_start_rec:
+        i_not_sample = np.nonzero(np.logical_or(line_type != 'SAMPLE', np.arange(n_lines) < i_start_rec))[0]
+        df_samples = pd.read_csv(filename, skiprows=i_not_sample, header=None, delim_whitespace=True,
+                                 usecols=range(0, len(cols)), low_memory=False)
+        df_samples.columns = cols
+        # Convert values to numbers
+        for eye in ['L', 'R']:
+            if eye in eyes_in_file:
+                df_samples['%cX' % eye] = pd.to_numeric(df_samples['%cX' % eye], errors='coerce')
+                df_samples['%cY' % eye] = pd.to_numeric(df_samples['%cY' % eye], errors='coerce')
+                df_samples['%cPupil' % eye] = pd.to_numeric(df_samples['%cPupil' % eye], errors='coerce')
+            else:
+                df_samples['%cX' % eye] = np.nan
+                df_samples['%cY' % eye] = np.nan
+                df_samples['%cPupil' % eye] = np.nan
 
     if verbose:
         print('%d recording periods found.' % n_rec)
@@ -141,7 +143,7 @@ def parse_asc(filename, verbose=True):
 
 def find_besteye(df_msg, default='R'):
     val_msgs = (df_msg[df_msg['text'].str.contains('CAL VALIDATION')][-2:]).to_numpy(dtype=str)
-    if 'ABORTED' in val_msgs[0][1]:
+    if not len(val_msgs) or 'ABORTED' in val_msgs[0][1]:
         return default
 
     left_index = int('LEFT' in val_msgs[1][1])
