@@ -48,7 +48,8 @@ def plot_measures(et_measures, save_path):
     plot_skills_effects(et_measures, save_path)
     plot_aggregated_measures(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
-    plot_ffd_histogram(et_measures_no_skipped)
+    plot_histograms(et_measures_no_skipped, ['FFD', 'FC'], ax_titles=['First Fixation Duration', 'Fixation Count'],
+                    y_labels=['Number of words', 'Number of words'], save_file=save_path / 'FFD_FC_distributions.png')
     et_measures_log = log_normalize_durations(et_measures_no_skipped)
     plot_early_measures(et_measures_log, save_path)
 
@@ -161,13 +162,19 @@ def plot_skills_effects(et_measures, save_path):
                     fig_title='Reading skill on fix and regression count', save_path=save_path / 'skills_fixations.png')
 
 
-def plot_ffd_histogram(et_measures_no_skipped):
-    fig, ax = plt.subplots(figsize=(10, 5))
-    sns.histplot(x='FFD', data=et_measures_no_skipped, ax=ax, bins=50)
-    ax.set_title('First Fixation Duration')
-    ax.set_ylabel('Number of fixations')
+def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
+    ncols = len(measures) // 2
+    nrows = 2 if len(measures) > 1 else 1
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+    axes = np.array(axes)[:, np.newaxis] if len(measures) <= 2 else axes
+    for i, measure in enumerate(measures):
+        ax = axes[i // ncols, i % ncols]
+        sns.histplot(x=measure, data=et_measures, ax=ax, binwidth=1)
+        ax.set_title(ax_titles[i])
+        ax.set_ylabel(y_labels[i])
+    plt.tight_layout()
     plt.show()
-    fig.savefig(save_path / 'ffd_histogram.png')
+    fig.savefig(save_file)
 
 
 def plot_aggregated_measures(et_measures, save_path):
