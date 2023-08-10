@@ -139,16 +139,26 @@ def log_normalize_durations(trial_measures):
     return trial_measures
 
 
+def categorize_skill(reading_skill, thresholds):
+    category = 'low'
+    if thresholds['low'] < reading_skill <= thresholds['medium']:
+        category = 'medium'
+    elif reading_skill > thresholds['medium']:
+        category = 'high'
+
+    return category
+
+
 def plot_skills_effects(et_measures, save_path):
     skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
-    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
-                                    else 'medium' if x <= skills_threshold['medium']
-                                    else 'high')
+    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: categorize_skill(x, skills_threshold))
+
     skip_count = count_by_skill(et_measures, 'skipped')
     et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
     fix_count = count_by_skill(et_measures_no_skipped, 'FC')
     regression_count = count_by_skill(et_measures_no_skipped, 'RC')
     fix_count['RC'] = regression_count['RC']
+
     y_labels = ['Mean number of skips', 'First Fixation Duration', 'Gaze Duration',
                 'Fixation count', 'Regression count']
     plot_boxplots_grid(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
