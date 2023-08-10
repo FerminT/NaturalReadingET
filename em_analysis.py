@@ -187,6 +187,16 @@ def plot_aggregated_measures(et_measures, save_path):
                   x_label='Word frequency', ax_titles=['Likelihood of skipping', 'Regression rate'],
                   fig_title='Word frequency on rates', save_path=save_path / 'wordfreq_on_rates.png')
 
+def plot_wordlength(et_measures, save_path):
+    et_measures_log = log_normalize_durations(remove_skipped_words(et_measures))
+    aggregated_measures = et_measures.drop_duplicates(subset=['item', 'word_idx'])
+    y_labels = ['First Fixation Duration', 'Gaze Duration', 'Likelihood of skipping', 'Regression rate']
+    plot_boxplots_grid(['word_len'], measures=['FFD', 'FPRT', 'LS', 'RR'],
+                       data=[et_measures_log, et_measures_log, aggregated_measures, aggregated_measures],
+                       x_labels=['Word length'] * 4,
+                       y_labels=y_labels,
+                       ax_titles=y_labels,
+                       fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
 
 def plot_early_measures(et_measures, save_path):
     plot_boxplots('word_len', measures=['FFD', 'FPRT'], data=et_measures,
@@ -214,6 +224,30 @@ def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='asc
         fig.suptitle(fig_title)
     if save_path:
         fig.savefig(save_path)
+    plt.show()
+
+    return fig
+
+
+def plot_boxplots_grid(fixed_effects, measures, data, x_labels, y_labels, ax_titles, fig_title, save_file):
+    n_plots = len(fixed_effects) * len(measures)
+    n_cols = int(np.ceil(np.sqrt(n_plots)))
+    n_rows = int(np.ceil(n_plots / n_cols))
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, sharey='row', figsize=(n_cols * 7, n_rows * 6))
+    axes = [axes] if n_plots == 1 else axes
+    for i, fixed_effect in enumerate(fixed_effects):
+        for j, measure in enumerate(measures):
+            ax = axes[(i + j) // n_cols, (i + j) % n_cols]
+            plot_data = data[j] if isinstance(data, list) else data
+            sns.boxplot(x=fixed_effect, y=measure, data=plot_data, ax=ax)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=15)
+            ax.yaxis.set_tick_params(labelleft=True)
+            ax.set_xlabel(x_labels[i])
+            ax.set_ylabel(y_labels[j])
+            ax.set_title(ax_titles[j])
+    fig.suptitle(fig_title)
+    fig.savefig(save_file, bbox_inches='tight')
+    plt.tight_layout()
     plt.show()
 
     return fig
