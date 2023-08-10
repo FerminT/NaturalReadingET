@@ -152,17 +152,16 @@ def categorize_skill(reading_skill, thresholds):
 def plot_skills_effects(et_measures, save_path):
     skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
     et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: categorize_skill(x, skills_threshold))
+    et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
 
     skip_count = count_by_skill(et_measures, 'skipped')
-    et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
     fix_count = count_by_skill(et_measures_no_skipped, 'FC')
     regression_count = count_by_skill(et_measures_no_skipped, 'RC')
-    fix_count['RC'] = regression_count['RC']
 
-    y_labels = ['Mean number of skips', 'First Fixation Duration', 'Gaze Duration',
+    y_labels = ['Mean number of skips', 'log First Fixation Duration', 'log Gaze Duration',
                 'Fixation count', 'Regression count']
     plot_boxplots_grid(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
-                       data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, fix_count],
+                       data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count],
                        x_labels=['Reading skill'] * 5,
                        y_labels=y_labels,
                        ax_titles=y_labels,
