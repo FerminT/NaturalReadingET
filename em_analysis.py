@@ -18,7 +18,7 @@ def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, 
 
     et_measures = remove_excluded_words(et_measures)
     plot_measures(et_measures, save_path)
-    mlm_analysis(log_normalize_durations(et_measures), words_freq)
+    # mlm_analysis(log_normalize_durations(et_measures), words_freq)
 
 
 def print_stats(et_measures, items_stats, save_path):
@@ -142,22 +142,22 @@ def log_normalize_durations(trial_measures):
 def plot_skills_effects(et_measures, save_path):
     skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
     et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: 'low' if x <= skills_threshold['low']
-                                                                        else 'medium' if x <= skills_threshold['medium']
-                                                                        else 'high')
+                                    else 'medium' if x <= skills_threshold['medium']
+                                    else 'high')
     skip_count = count_by_skill(et_measures, 'skipped')
-    plot_boxplots('reading_skill', measures=['skipped'], data=skip_count,
-                    x_label='Reading skill', ax_titles=['Mean number of skips'],
-                    fig_title='Reading skill on skipping', save_path=save_path / 'skills_on_rates.png')
     et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
-    plot_boxplots('reading_skill', measures=['FFD', 'FPRT'], data=et_measures_no_skipped,
-                    x_label='Reading skill', ax_titles=['First Fixation Duration', 'Gaze Duration'],
-                    fig_title='Reading skill on early effects', save_path=save_path / 'skills_effects.png')
     fix_count = count_by_skill(et_measures_no_skipped, 'FC')
     regression_count = count_by_skill(et_measures_no_skipped, 'RC')
     fix_count['RC'] = regression_count['RC']
-    plot_boxplots('reading_skill', measures=['FC', 'RC'], data=fix_count,
-                    x_label='Reading skill', ax_titles=['Fixation count', 'Regression count'],
-                    fig_title='Reading skill on fix and regression count', save_path=save_path / 'skills_fixations.png')
+    y_labels = ['Mean number of skips', 'First Fixation Duration', 'Gaze Duration',
+                'Fixation count', 'Regression count']
+    plot_boxplots_grid(['reading_skill'], measures=['skipped', 'FFD', 'FPRT', 'FC', 'RC'],
+                       data=[skip_count, et_measures_no_skipped, et_measures_no_skipped, fix_count, fix_count],
+                       x_labels=['Reading skill'] * 5,
+                       y_labels=y_labels,
+                       ax_titles=y_labels,
+                       fig_title='Reading skill on eye-tracking measures',
+                       save_file=save_path / 'skills_on_measures.png')
 
 
 def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
@@ -194,7 +194,8 @@ def plot_words_effects(et_measures, save_path):
                        fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
 
 
-def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None, save_path=None):
+def plot_boxplots(fixed_effect, measures, data, x_label, ax_titles, x_order='ascending', fig_title=None,
+                  save_path=None):
     fig, axes = plt.subplots(1, len(measures), sharey='all', figsize=(12, 5))
     ax_titles = np.array(ax_titles)
     axes = [axes] if len(measures) == 1 else axes
