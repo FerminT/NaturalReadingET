@@ -165,6 +165,7 @@ def plot_skills_effects(et_measures, save_path):
                   x_labels=['Reading skill'] * 5,
                   y_labels=y_labels,
                   ax_titles=y_labels,
+                  sharey=False,
                   orientation='vertical',
                   fig_title='Reading skill on eye-tracking measures',
                   save_file=save_path / 'skills_on_measures.png')
@@ -179,6 +180,7 @@ def plot_words_effects(et_measures, save_path):
                   x_labels=['Word length'] * 4,
                   y_labels=y_labels,
                   ax_titles=y_labels,
+                  sharey='row',
                   orientation='horizontal',
                   fig_title='Word length effects on measures', save_file=save_path / 'word_length.png')
 
@@ -187,17 +189,19 @@ def plot_words_effects(et_measures, save_path):
                   x_labels=['Word frequency in percentiles'] * 4,
                   y_labels=y_labels,
                   ax_titles=y_labels,
+                  sharey='row',
                   orientation='horizontal',
                   fig_title='Word frequency effects on measures', save_file=save_path / 'word_frequency.png')
 
 
-def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles, orientation, fig_title, save_file):
+def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
+                  sharey, orientation, fig_title, save_file):
     n_plots = len(fixed_effects) * len(measures)
     n_cols = int(np.ceil(np.sqrt(n_plots)))
     n_rows = int(np.ceil(n_plots / n_cols))
     if orientation == 'vertical':
         n_cols, n_rows = n_rows, n_cols
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, sharey='row', figsize=(n_cols * 7, n_rows * 6))
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, sharey=sharey, figsize=(n_cols * 7, n_rows * 6))
     axes = [axes] if n_plots == 1 else axes
     for i, fixed_effect in enumerate(fixed_effects):
         for j, measure in enumerate(measures):
