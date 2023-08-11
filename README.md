@@ -5,7 +5,7 @@ The eyes are the only visible part of the brain. As such, they provide an easily
 
 The aim of this experiment is to obtain data on eye movements during reading in Spanish as spoken in Buenos Aires. Leveraging past findings, the recollected data will then be integrated into computational models of language.
 ## Definitions
-A *word* is defined as a sequence of characters between two blank spaces, with the exception of those characters that correspond to punctuation signs.
+A *word* is defined as a sequence of characters between two blank spaces, except those characters that correspond to punctuation signs.
  - *Unfrequent word*: its number of appearances in the latinamerican subtitles database from [EsPal](https://www.bcbl.eu/databases/espal/) is less or equal to 100.
  - *Short sentence*: less or equal to 5 words.
  - *Long sentence*: greater or equal to 30 words.
@@ -44,9 +44,9 @@ There is a correlation between *minimizing dialogues* and *minimizing unfrequent
     * The stories in the first session have 769 words on average (+/- 37; min: 713; max: 843).
     * The stories in the second session have 822 words on average (+/- 183; min: 680; max: 1221).
 * Once an item has been read, comprehension questions are answered.
-* Additionally, words are displayed (one by one) and the participant is asked to write the first word that comes to mind.
+* Additionally, unique common nouns are displayed (one by one) and the participant is asked to write the first word that comes to mind.
 * The following item is displayed by pressing a button.
-* Each item is a *block*. After each block, a one minute break and eye-tracker calibration follows.
+* Each item is a *block*. After each block, a one-minute break and eye-tracker calibration follows.
 * Eye-tracker calibration is validated by the presentation of points positioned in the corners of where stimuli is displayed.
 
 ## Code
@@ -64,14 +64,9 @@ Data processing is carried out entirely in Python 3.10. There are four distinct 
 ### Data analysis
 Data analysis consists of printing overall stats per trial, plotting several early measures as a function of known effects (i.e., word length and frequency) and performing mixed effects models analysis with such fixed effects (```em_analysis.py```).
 ## Results
-In this first iteration of the experiment, data from 15 participants were collected, where 7 of them completed the two sessions.
+In this first iteration of the experiment, data from 14 participants were collected, where 7 of them completed the two sessions.
 
-![Reading skills on early effects](results/skills_effects.png)
-
-![Word length on rates](results/wordlen_on_rates.png)
-
-![Word frequency on early measures](results/wordfreq_effects.png)
-
-![Word length on early measures](results/wordlen_effects.png)
-
-![First fixation duration](results/ffd_histogram.png)
+* [Reading skills effects](results/skills_on_measures.png)
+* [Word length effects](results/word_length.png)
+* [Word frequency effects](results/word_frequency.png)
+* [First fixation duration and fixation count distributions](results/FFD_FC_distributions.png)
