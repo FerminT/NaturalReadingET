@@ -246,10 +246,9 @@ if __name__ == '__main__':
 
     data_path, trials_path, items_path, save_path = Path(args.data_path), Path(args.trials_path), \
         Path(args.items_path), Path(args.save_path)
-    if not data_path.exists():
-        subjects = utils.get_dirs(trials_path)
-        items = utils.get_items(items_path, args.item)
-        assign_fixations_to_words(items, subjects, data_path, args.reprocess)
+
+    subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, args.item)
+    assign_fixations_to_words(items, subjects, data_path, args.reprocess)
 
     if args.item != 'all':
         items_wordsfix = [data_path / args.item]
