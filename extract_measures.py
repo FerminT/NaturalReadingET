@@ -231,6 +231,19 @@ def has_no_fixations(word_fix):
     return word_fix['trial_fix'].isna().all()
 
 
+def main(item, data_path, items_path, trials_path, save_path, reprocess):
+    subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, item)
+    assign_fixations_to_words(items, subjects, data_path, reprocess)
+
+    if item != 'all':
+        items_wordsfix = [data_path / item]
+    else:
+        items_wordsfix = utils.get_dirs(data_path)
+
+    chars_mapping = str.maketrans(CHARS_MAP)
+    extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Compute metrics based on words fixations')
     parser.add_argument('--data_path', type=str, default='data/processed/words_fixations',
@@ -247,13 +260,4 @@ if __name__ == '__main__':
     data_path, trials_path, items_path, save_path = Path(args.data_path), Path(args.trials_path), \
         Path(args.items_path), Path(args.save_path)
 
-    subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, args.item)
-    assign_fixations_to_words(items, subjects, data_path, args.reprocess)
-
-    if args.item != 'all':
-        items_wordsfix = [data_path / args.item]
-    else:
-        items_wordsfix = utils.get_dirs(data_path)
-
-    chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(items_wordsfix, chars_mapping, items_path, save_path, args.reprocess)
+    main(args.item, data_path, items_path, trials_path, save_path, args.reprocess)
