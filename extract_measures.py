@@ -239,7 +239,7 @@ if __name__ == '__main__':
                         help='Items path, from which the stimuli (items\' text) is extracted')
     parser.add_argument('--trials_path', type=str, default='data/processed/trials',
                         help='Path to trials data.')
-    parser.add_argument('--save_path', type=str, default='data/processed')
+    parser.add_argument('--save_path', type=str, default='data/results')
     parser.add_argument('--item', type=str, default='all')
     parser.add_argument('--reprocess', action='store_true')
     args = parser.parse_args()
