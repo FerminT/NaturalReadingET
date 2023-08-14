@@ -27,7 +27,7 @@ On average, these are 800 (+/- 135) words long (min: 680; max: 1220) and each on
 
 There is a correlation between *minimizing dialogues* and *minimizing unfrequent characters*, as dialogues are usually characterized by such.
 ## Methodology
-* Stimuli creation (see ```Metadata/stimuli_config.mat```):
+* Stimuli creation (see ```metadata/stimuli_config.mat```):
     * Resolution: 1080x1920.
     * Font: Courier New. Size: 24. Color: black.
     * Background color: grey.
@@ -56,13 +56,15 @@ The experiment is coded in MATLAB 2015a using the Psychophysics Toolbox (http://
 Data processing is carried out entirely in Python 3.10. There are four distinct steps:
 1. **Data extraction:** Raw EDF data are converted to ASC using the *edf2asc* tool from the EyeLink Display Software.
 2. **Data cleaning:** Trials are manually inspected, where horizontal lines are drawn for delimiting text lines and fixations are corrected when needed (```edit_trial.py```). Very short (50ms) and very long (1000ms) fixations are discarded in this step.
-3. **Fixation assignment:** Fixations are assigned to words, using blank spaces as delimiters (```assign_fixations.py```). Return sweeps are discarded in this step.
-4. **Measures extraction:** Eye-tracking measures (early, intermediate and late) are computed for each word, except the first and last words of each line or those following or preceding punctuation marks (```extract_measures.py```). The measures are:
+3. **Fixation assignment:** Fixations are assigned to words, using blank spaces as delimiters (```scripts/data_processing/assign_fixations.py```). Return sweeps are discarded in this step.
+4. **Measures extraction:** Eye-tracking measures (early, intermediate and late) are computed for each word, except the first and last words of each line or those following or preceding punctuation marks (```scripts/data_processing/extract_measures.py```). The measures are:
     * **Early measures:** First fixation duration (FFD); single fixation duration (SFD); first pass reading time/gaze duration (FPRT); likelihood of skipping (LS).
     * **Intermediate measures:** Regression path duration (RPD); regression rate (RR).
     * **Late measures:** Total fixation duration (TFD); re-reading time (RRT); second pass reading time (SPRT); fixation count (FC); regression count (RC).
 ### Data analysis
 Data analysis consists of printing overall stats per trial, plotting several early measures as a function of known effects (i.e., word length and frequency) and performing mixed effects models analysis with such fixed effects (```em_analysis.py```).
+
+This script also takes care of steps 3 and 4 of data processing by calling the corresponding functions from the aforementioned files.
 ## Results
 In this first iteration of the experiment, data from 14 participants were collected, where 7 of them completed the two sessions.
 
