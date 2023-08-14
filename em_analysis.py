@@ -9,9 +9,9 @@ from scripts.data_processing.extract_measures import main as extract_measures
 from scripts.data_processing.utils import get_dirs, get_files, log, load_profile
 
 """ Script to perform data analysis on eye-tracking measures. It is composed of three steps:
-    1. Assign each trials' fixations to the corresponding word in the text
-    2. Extract measures from the fixations
-    3. Perform analysis on the extracted measures """
+    1. Assign the fixations from each trial to their corresponding word in the text
+    2. Extract measures from fixations (FFD, FPRT, RPD, TFD, FC, etc.)
+    3. Perform data analysis on the extracted measures """
 
 
 def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
