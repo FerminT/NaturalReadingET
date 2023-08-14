@@ -256,29 +256,29 @@ def load_et_measures(items_paths, words_freq, subjs_reading_skills):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Perform data analysis on extracted measures')
-    parser.add_argument('--wordsfix', type=str, default='data/processed/words_fixations',
+    parser = argparse.ArgumentParser(description='Perform data analysis on extracted eye-tracking measures')
+    parser.add_argument('-w', '--wordsfix', type=str, default='data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
-    parser.add_argument('--measures', type=str, default='data/processed/measures',
+    parser.add_argument('m', '--measures', type=str, default='data/processed/measures',
                         help='Path where eye-tracking measures are stored')
-    parser.add_argument('--items', type=str, default='stimuli',
+    parser.add_argument('-s', '--stimuli', type=str, default='stimuli',
                         help='Items path, from which the stimuli (items\' text) is extracted')
-    parser.add_argument('--subjs', type=str, default='data/processed/trials',
+    parser.add_argument('-p', '--participants', type=str, default='data/processed/trials',
                         help='Path to participants\' trials, where their fixations and metadata are stored.')
-    parser.add_argument('--words_freq', type=str, default='metadata/texts_properties/words_freq.csv',
+    parser.add_argument('-wf', '--words_freq', type=str, default='metadata/texts_properties/words_freq.csv',
                         help='Path to file with words frequencies')
-    parser.add_argument('--stats', type=str, default='data/processed/words_fixations/stats.csv')
-    parser.add_argument('--output', type=str, default='results')
-    parser.add_argument('--item', type=str, default='all')
+    parser.add_argument('-st', '--stats', type=str, default='data/processed/words_fixations/stats.csv')
+    parser.add_argument('-o', '--output', type=str, default='results')
+    parser.add_argument('-i', '--item', type=str, default='all')
     args = parser.parse_args()
 
-    wordsfix_path, measures_path, items_path, subjs_path, save_path = \
-        Path(args.wordsfix), Path(args.measures), Path(args.items), Path(args.subjs), Path(args.output)
+    wordsfix_path, measures_path, stimuli_path, participants_path, save_path = \
+        Path(args.wordsfix), Path(args.measures), Path(args.stimuli), Path(args.participants), Path(args.output)
     words_freq_file, stats_file = Path(args.words_freq), Path(args.stats_file)
     subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
-                            for subj in get_dirs(subjs_path)}
+                            for subj in get_dirs(participants_path)}
 
-    extract_measures(args.item, wordsfix_path, items_path, subjs_path, save_path, reprocess=False)
+    extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
 
     if args.item != 'all':
         items_paths = [wordsfix_path / args.item]
