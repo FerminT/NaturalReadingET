@@ -114,7 +114,6 @@ def save_stats(items_stats, save_path):
     if stats_file.exists():
         old_stats = pd.read_csv(stats_file, index_col=0)
         items_stats += old_stats
-    print(items_stats.to_string())
     items_stats.to_csv(save_path / 'stats.csv')
 
 
