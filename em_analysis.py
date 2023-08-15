@@ -262,7 +262,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform data analysis on extracted eye-tracking measures')
     parser.add_argument('-w', '--wordsfix', type=str, default='data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
-    parser.add_argument('-m', '--measures', type=str, default='data/processed/measures',
+    parser.add_argument('-m', '--measures', type=str, default='results/measures',
                         help='Path where eye-tracking measures are stored')
     parser.add_argument('-s', '--stimuli', type=str, default='stimuli',
                         help='Items path, from which the stimuli (items\' text) is extracted')
@@ -284,8 +284,8 @@ if __name__ == '__main__':
     extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
 
     if args.item != 'all':
-        items_paths = [wordsfix_path / args.item]
+        items_paths = [measures_path / args.item]
     else:
-        items_paths = get_dirs(wordsfix_path)
+        items_paths = get_dirs(measures_path)
 
     do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
