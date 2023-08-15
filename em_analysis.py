@@ -15,6 +15,7 @@ from scripts.data_processing.utils import get_dirs, get_files, log, load_profile
 
 
 def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
+    print('Analysing eye-tracking measures...')
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
     save_path.mkdir(parents=True, exist_ok=True)
