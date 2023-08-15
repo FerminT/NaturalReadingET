@@ -262,7 +262,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform data analysis on extracted eye-tracking measures')
     parser.add_argument('-w', '--wordsfix', type=str, default='data/processed/words_fixations',
                         help='Where items\' fixations by word are stored')
-    parser.add_argument('m', '--measures', type=str, default='data/processed/measures',
+    parser.add_argument('-m', '--measures', type=str, default='data/processed/measures',
                         help='Path where eye-tracking measures are stored')
     parser.add_argument('-s', '--stimuli', type=str, default='stimuli',
                         help='Items path, from which the stimuli (items\' text) is extracted')
@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
     wordsfix_path, measures_path, stimuli_path, participants_path, save_path = \
         Path(args.wordsfix), Path(args.measures), Path(args.stimuli), Path(args.participants), Path(args.output)
-    words_freq_file, stats_file = Path(args.words_freq), Path(args.stats_file)
+    words_freq_file, stats_file = Path(args.words_freq), Path(args.stats)
     subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
                             for subj in get_dirs(participants_path)}
 
