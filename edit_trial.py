@@ -91,6 +91,7 @@ def handle_action(item, action, stimuli, questions_file, trial_flags, trial_path
         trial_flags['edited'] = plot.trial(stimuli, trial_path, editable=True) or trial_flags['edited']
     elif action == 'Flag as wrong':
         trial_flags['iswrong'] = not trial_flags['iswrong'][0]
+        trial_flags['edited'] = True
     elif action == 'Exit':
         exit()
 
