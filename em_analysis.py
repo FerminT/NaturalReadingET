@@ -219,7 +219,6 @@ def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
             ax.set_title(ax_titles[j])
     fig.suptitle(fig_title)
     fig.savefig(save_file, bbox_inches='tight')
-    plt.tight_layout()
     plt.show()
 
     return fig
