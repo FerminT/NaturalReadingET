@@ -1,8 +1,8 @@
 function run_experiment()
     addpath(genpath('scripts/experiment'))
     % Constants
-    SAVE_PATH      = fullfile('Data', 'raw');
-    METADATA_PATH  = 'Metadata';
+    SAVE_PATH      = fullfile('data', 'raw');
+    METADATA_PATH  = 'metadata';
     TEST_FILE      = 'Test';
     stimuli_splits = [5 5 5 5];
     splits_per_session = 2;

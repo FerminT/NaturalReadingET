@@ -1,6 +1,6 @@
 function exit_status = run_trial(subjname, stimuli_index, stimuli_order, stimuli_questions, stimuli_config, save_path, use_eyetracker)
     % Constants
-    STIMULI_PATH = 'Stimuli';
+    STIMULI_PATH = 'stimuli';
     KbName('UnifyKeyNames')
     keys.ESC  = KbName('ESCAPE');
     keys.NEXT = KbName('RightArrow');
