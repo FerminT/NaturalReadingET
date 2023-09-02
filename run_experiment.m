@@ -26,6 +26,10 @@ function run_experiment()
         if strcmp(load_metadata, 'Yes')
             load(subjfile)
             loaded_metadata = true;
+            snd_date = char(datetime('now','TimeZone','local','Format','dd-MM-y HH:mm'));
+            snd_sleeptime = sleep_time;
+            snd_wakeuptime = wakeup_time;
+            save(subjfile, 'snd_sleeptime', 'snd_wakeuptime', 'snd_date', '-append')
         elseif strcmp(load_metadata, 'Cancel')
             return
         end
@@ -44,8 +48,12 @@ function run_experiment()
         shuffled_stimuli = shuffle_in_blocks(stimuli_splits, ordered_stimuli);
         shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
         stimuli_index = 1;
+        fst_date = char(datetime('now','TimeZone','local','Format','dd-MM-y HH:mm'));
+        fst_sleeptime = sleep_time;
+        fst_wakeuptime = wakeup_time;
     
-        save(subjfile, 'subjname', 'reading_level', 'sleep_time', 'wakeup_time', ...
+        save(subjfile, 'subjname', 'reading_level', ...
+            'fst_wakeuptime', 'fst_sleeptime', 'fst_date', ...
             'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
     end
     
@@ -64,7 +72,7 @@ function run_experiment()
         
         if ~aborted
             stimuli_index = stimuli_index + 1;
-            save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
+            save(subjfile, 'stimuli_index', '-append')
         end
         
         if i == first_session_trials + 1 || aborted
