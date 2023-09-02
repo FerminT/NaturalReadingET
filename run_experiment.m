@@ -9,7 +9,7 @@ function run_experiment()
     load(fullfile(METADATA_PATH, 'stimuli_config.mat'));
     load(fullfile(METADATA_PATH, 'stimuli_questions.mat'));
     
-    [subjname, reading_level, use_eyetracker] = initial_questions();
+    [subjname, reading_level, sleep_time, wakeup_time, use_eyetracker] = initial_questions();
     if isempty(subjname); return; end
     
     SAVE_PATH = fullfile(SAVE_PATH, subjname);
@@ -45,7 +45,8 @@ function run_experiment()
         shuffled_stimuli = cat(1, TEST_FILE, shuffled_stimuli);
         stimuli_index = 1;
     
-        save(subjfile, 'subjname', 'reading_level', 'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
+        save(subjfile, 'subjname', 'reading_level', 'sleep_time', 'wakeup_time', ...
+            'shuffled_stimuli', 'stimuli_index', 'use_eyetracker')
     end
     
     laststimuli_index = stimuli_index;
@@ -95,17 +96,21 @@ function shuffled_elems = shuffle_in_blocks(blocks_size, elems)
     end
 end
 
-function [initials, reading_level, use_eyetracker] =  initial_questions()
+function [initials, reading_level, sleep_time, wakeup_time, use_eyetracker] =  initial_questions()
     initials = '';
     reading_level = '';
+    sleep_time = '';
+    wakeup_time = '';
     use_eyetracker = 0;
     
-    prompt = {'\fontsize{13} Ingrese sus iniciales (incluya segundo nombre, si lo tiene):', ...
+    prompt = {'\fontsize{13} Ingrese sus iniciales (incluya segundo nombre):', ...
         '\fontsize{13} Del 1 al 10, que tan frecuentemente lee? (10 = mas de una hora al dia)', ...
+        '\fontsize{13} A que hora te fuiste a dormir ayer?', ...
+        '\fontsize{13} Y a que hora te despertaste hoy?', ...
         '\fontsize{13} Usar el eyetracker? (Y/N)'};
     dlgtitle = 'Metadata';
-    dims     = [1 60];
-    definput = {'', '', 'Y'};
+    dims     = [1 70];
+    definput = {'', '', '', '', 'Y'};
     opts.Interpreter = 'tex';
     answer = inputdlg(prompt, dlgtitle, dims, definput, opts);
     if isempty(answer)
@@ -117,10 +122,22 @@ function [initials, reading_level, use_eyetracker] =  initial_questions()
         else
             reading_level = 'N/C';
         end
-        if isempty(answer{3})
+
+        if ~isempty(answer{3})
+            sleep_time = answer{3};
+        else
+            sleep_time = 'N/C';
+        end
+        if ~isempty(answer{4})
+            wakeup_time = answer{4};
+        else
+            wakeup_time = 'N/C';
+        end
+        
+        if isempty(answer{5})
             use_eyetracker = 0;
         else
-            if strcmp(upper(answer{3}), 'Y')
+            if strcmp(upper(answer{5}), 'Y')
                 use_eyetracker = 1;
             else
                 use_eyetracker = 0;
