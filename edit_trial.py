@@ -114,7 +114,8 @@ def read_words_associations(questions_file, item, trial_path):
     answers = utils.load_answers(trial_path, filename='words.pkl')
     for i in range(len(words)):
         print(f'{i + 1}. {words[i]}')
-        print(f'      {answers[i]}')
+        answer = answers[i] if len(answers) > i else ''
+        print(f'      {answer}')
 
     input('Press enter to continue...')
 
@@ -124,7 +125,8 @@ def read_questions_and_answers(questions_file, item, trial_path):
     answers = utils.load_answers(trial_path, filename='answers.pkl')
     for i in range(len(questions)):
         print(f'{i + 1}. {questions[i]} ({possible_answers[i]})')
-        print(f'      {answers[i]}')
+        answer = answers[i] if len(answers) > i else ''
+        print(f'      {answer}')
 
     wrong_answers = input('Number of wrong answers: ')
     while not wrong_answers.isdigit() or int(wrong_answers) < 0 or int(wrong_answers) > len(questions):
