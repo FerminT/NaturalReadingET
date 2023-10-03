@@ -18,7 +18,6 @@ def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, 
     print('Analysing eye-tracking measures...')
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
     et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
-    save_path.mkdir(parents=True, exist_ok=True)
     print_stats(et_measures, items_stats, save_path)
 
     et_measures = remove_excluded_words(et_measures)
@@ -258,10 +257,10 @@ def load_et_measures(items_paths, words_freq, subjs_reading_skills):
     return measures
 
 
-def load_words_answers(questions_file, participants_path):
+def load_words_associations(questions_file, participants_path):
     questions = load_matfile(str(questions_file))['stimuli_questions']
     items_words = {}
-    words_answers = {}
+    words_associations = {}
     for item_dict in questions:
         item = item_dict['title']
         items_words[item] = list(item_dict['words'])
@@ -278,11 +277,11 @@ def load_words_answers(questions_file, participants_path):
                     else:
                         answer = trial_answers[i].lower()
                         answer = answer.replace(';', 'ñ')
-                    words_answers[word] = words_answers.get(word, []) + [answer]
+                    words_associations[word] = words_associations.get(word, []) + [answer]
 
-    words_answers = pd.DataFrame.from_dict(words_answers, orient='index')
+    words_associations = pd.DataFrame.from_dict(words_associations, orient='index')
 
-    return words_answers
+    return words_associations
 
 
 if __name__ == '__main__':
@@ -309,7 +308,7 @@ if __name__ == '__main__':
     words_freq_file, stats_file, questions_file = Path(args.words_freq), Path(args.stats), Path(args.questions)
     subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
                             for subj in get_dirs(participants_path)}
-    words_answers = load_words_answers(questions_file, participants_path)
+    words_associations = load_words_associations(questions_file, participants_path)
 
     extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
 
@@ -317,5 +316,8 @@ if __name__ == '__main__':
         items_paths = [measures_path / args.item]
     else:
         items_paths = get_dirs(measures_path)
+
+    save_path.mkdir(parents=True, exist_ok=True)
+    words_associations.to_pickle(save_path / 'words_associations.pkl')
 
     do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
