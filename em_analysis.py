@@ -6,7 +6,7 @@ import statsmodels.api as sm
 import argparse
 from pathlib import Path
 from scripts.data_processing.extract_measures import main as extract_measures
-from scripts.data_processing.utils import get_dirs, get_files, log, load_profile
+from scripts.data_processing.utils import get_dirs, get_files, log, load_profile, load_matfile, load_answers
 
 """ Script to perform data analysis on eye-tracking measures. It is composed of three steps:
     1. Assign the fixations from each trial to their corresponding word in the text
@@ -258,6 +258,28 @@ def load_et_measures(items_paths, words_freq, subjs_reading_skills):
     return measures
 
 
+def load_words_answers(questions_file, participants_path):
+    questions = load_matfile(str(questions_file))['stimuli_questions']
+    items_words = {}
+    words_answers = {}
+    for item_dict in questions:
+        item = item_dict['title']
+        items_words[item] = list(item_dict['words'])
+
+    for subj in get_dirs(participants_path):
+        subj_trials = get_dirs(subj)
+        for trial in subj_trials:
+            trial_words = items_words[trial.name]
+            trial_answers = load_answers(trial, filename='words.pkl')
+            for i, word in enumerate(trial_words):
+                if i < len(trial_answers):
+                    words_answers[word] = words_answers.get(word, []) + [trial_answers[i]]
+
+    words_answers = pd.DataFrame.from_dict(words_answers, orient='index')
+
+    return words_answers
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Perform data analysis on extracted eye-tracking measures')
     parser.add_argument('-w', '--wordsfix', type=str, default='data/processed/words_fixations',
@@ -268,6 +290,8 @@ if __name__ == '__main__':
                         help='Items path, from which the stimuli (items\' text) is extracted')
     parser.add_argument('-p', '--participants', type=str, default='data/processed/trials',
                         help='Path to participants\' trials, where their fixations and metadata are stored.')
+    parser.add_argument('-q', '--questions', type=str, default='metadata/stimuli_questions.mat',
+                        help='Path to file with items\' questions')
     parser.add_argument('-wf', '--words_freq', type=str, default='metadata/texts_properties/words_freq.csv',
                         help='Path to file with words frequencies')
     parser.add_argument('-st', '--stats', type=str, default='data/processed/words_fixations/stats.csv')
@@ -277,9 +301,10 @@ if __name__ == '__main__':
 
     wordsfix_path, measures_path, stimuli_path, participants_path, save_path = \
         Path(args.wordsfix), Path(args.measures), Path(args.stimuli), Path(args.participants), Path(args.output)
-    words_freq_file, stats_file = Path(args.words_freq), Path(args.stats)
+    words_freq_file, stats_file, questions_file = Path(args.words_freq), Path(args.stats), Path(args.questions)
     subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
                             for subj in get_dirs(participants_path)}
+    words_answers = load_words_answers(questions_file, participants_path)
 
     extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
 
