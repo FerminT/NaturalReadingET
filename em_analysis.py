@@ -273,7 +273,10 @@ def load_words_answers(questions_file, participants_path):
             trial_answers = load_answers(trial, filename='words.pkl')
             for i, word in enumerate(trial_words):
                 if i < len(trial_answers):
-                    words_answers[word] = words_answers.get(word, []) + [trial_answers[i]]
+                    answer = trial_answers[i].lower()
+                    answer = answer.replace(';', 'ñ')
+                    if answer != '[]':
+                        words_answers[word] = words_answers.get(word, []) + [answer]
 
     words_answers = pd.DataFrame.from_dict(words_answers, orient='index')
 
