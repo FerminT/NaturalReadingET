@@ -82,7 +82,7 @@ def trial_is_correct(subject, item_name):
 
 
 def load_questions_and_words(questions_file, item):
-    all_questionswords = loadmat(questions_file, simplify_cells=True)['stimuli_questions']
+    all_questionswords = load_matfile(questions_file)['stimuli_questions']
     questions, possible_answers, words = [], [], []
     for item_dict in all_questionswords:
         if item_dict['title'] == item:
@@ -93,6 +93,10 @@ def load_questions_and_words(questions_file, item):
         raise ValueError('Questions/words not found for item', item)
 
     return questions, possible_answers, words
+
+
+def load_matfile(matfile):
+    return loadmat(str(matfile), simplify_cells=True)
 
 
 def load_answers(trial_path, filename):
@@ -183,7 +187,7 @@ def load_lines_text_by_screen(item_name, stimuli_path):
 
 
 def load_lines_by_screen(item):
-    item_cfg = loadmat(str(item), simplify_cells=True)
+    item_cfg = load_matfile(str(item))
     lines, num_screens = item_cfg['lines'], len(item_cfg['screens'])
     screens_lines = {screen_id: [] for screen_id in range(1, num_screens + 1)}
     for line in lines:
@@ -210,9 +214,9 @@ def load_stimuli(item, stimuli_path, config_file=None):
     stimuli_file = stimuli_path / (item + '.mat')
     if not stimuli_file.exists():
         raise ValueError('stimuli file does not exist: ' + str(stimuli_file))
-    stimuli = loadmat(str(stimuli_file), simplify_cells=True)
+    stimuli = load_matfile(str(stimuli_file))
     if config_file:
-        config = loadmat(str(config_file), simplify_cells=True)['config']
+        config = load_matfile(str(config_file))['config']
         stimuli['config'] = config
 
     return stimuli
