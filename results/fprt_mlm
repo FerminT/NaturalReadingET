@@ -1,17 +1,17 @@
           Mixed Linear Model Regression Results
 =========================================================
 Model:            MixedLM Dependent Variable: FPRT       
-No. Observations: 72430   Method:             REML       
-No. Groups:       1       Scale:              0.1664     
-Min. group size:  72430   Log-Likelihood:     -37896.5286
-Max. group size:  72430   Converged:          Yes        
-Mean group size:  72430.0                                
+No. Observations: 92070   Method:             REML       
+No. Groups:       1       Scale:              0.1658     
+Min. group size:  92070   Log-Likelihood:     -48016.4963
+Max. group size:  92070   Converged:          Yes        
+Mean group size:  92070.0                                
 ---------------------------------------------------------
               Coef.  Std.Err.    z    P>|z| [0.025 0.975]
 ---------------------------------------------------------
-Intercept      5.464    0.029 186.601 0.000  5.406  5.521
-word_len      -0.293    0.010 -28.168 0.000 -0.314 -0.273
-word_freq     -0.089    0.003 -33.788 0.000 -0.094 -0.084
+Intercept      5.455    0.027 201.213 0.000  5.402  5.508
+word_len      -0.289    0.009 -31.224 0.000 -0.307 -0.271
+word_freq     -0.088    0.002 -37.578 0.000 -0.093 -0.083
 item Var       0.000    0.000                            
-subj Var       0.014    0.012                            
+subj Var       0.016    0.012                            
 =========================================================
