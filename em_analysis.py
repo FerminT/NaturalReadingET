@@ -253,35 +253,41 @@ def load_trials_measures(item, words_freq, subjs_reading_skills):
 def load_et_measures(items_paths, words_freq, subjs_reading_skills):
     measures = [load_trials_measures(item, words_freq, subjs_reading_skills) for item in items_paths]
     measures = pd.concat(measures, ignore_index=True)
-
     return measures
 
 
 def load_words_associations(questions_file, participants_path):
     questions = load_matfile(str(questions_file))['stimuli_questions']
+    subjects = get_dirs(participants_path)
     items_words = {}
     words_associations = {}
     for item_dict in questions:
         item = item_dict['title']
         items_words[item] = list(item_dict['words'])
 
-    for subj in get_dirs(participants_path):
+    for subj in subjects:
         subj_trials = get_dirs(subj)
         for trial in subj_trials:
             trial_words = map(str.lower, items_words[trial.name])
             trial_answers = load_answers(trial, filename='words.pkl')
             for i, word in enumerate(trial_words):
                 if i < len(trial_answers):
-                    if type(trial_answers[i]) != str:
-                        answer = None
-                    else:
-                        answer = trial_answers[i].lower()
-                        answer = answer.replace(';', 'ñ')
+                    answer = parse_answer(trial_answers[i])
                     words_associations[word] = words_associations.get(word, []) + [answer]
 
     words_associations = pd.DataFrame.from_dict(words_associations, orient='index')
+    words_associations.columns = [subj.name for subj in subjects]
 
     return words_associations
+
+
+def parse_answer(answer):
+    if type(answer) != str:
+        answer = None
+    else:
+        answer = answer.lower()
+        answer = answer.replace(';', 'ñ')
+    return answer
 
 
 if __name__ == '__main__':
