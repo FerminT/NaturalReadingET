@@ -268,7 +268,7 @@ def load_words_associations(questions_file, participants_path):
     for subj in get_dirs(participants_path):
         subj_trials = get_dirs(subj)
         for trial in subj_trials:
-            trial_words = items_words[trial.name]
+            trial_words = map(str.lower, items_words[trial.name])
             trial_answers = load_answers(trial, filename='words.pkl')
             for i, word in enumerate(trial_words):
                 if i < len(trial_answers):
