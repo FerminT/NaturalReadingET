@@ -324,6 +324,6 @@ if __name__ == '__main__':
         items_paths = get_dirs(measures_path)
 
     save_path.mkdir(parents=True, exist_ok=True)
-    words_associations.to_pickle(save_path / 'words_associations.pkl')
+    words_associations.to_csv(save_path / 'words_associations.csv')
 
     do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
