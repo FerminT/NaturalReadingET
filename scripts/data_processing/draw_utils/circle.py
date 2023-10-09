@@ -19,7 +19,7 @@ class FixCircle:
     def select(self):
         self.is_selected = True
 
-    def desselect(self, df_fix):
+    def deselect(self, df_fix):
         self.is_selected = False
         df_fix.loc[self.fix_name(), ['xAvg', 'yAvg']] = self.center()
 

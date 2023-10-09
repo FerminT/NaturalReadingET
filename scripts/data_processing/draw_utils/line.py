@@ -15,7 +15,7 @@ class HLine:
         self.is_selected = True
         self.prev_y = self.get_y()
 
-    def desselect(self, lines_coords):
+    def deselect(self, lines_coords):
         lines_coords[self.id] = self.get_y()
         self.is_selected = False
 
