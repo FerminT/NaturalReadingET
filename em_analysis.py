@@ -6,6 +6,7 @@ import statsmodels.api as sm
 import argparse
 from pathlib import Path
 from scripts.data_processing.extract_measures import main as extract_measures
+from scripts.data_processing.parse_answers import parse_answer
 from scripts.data_processing.utils import get_dirs, get_files, log, load_profile, load_matfile, load_answers
 
 """ Script to perform data analysis on eye-tracking measures. It is composed of three steps:
@@ -279,15 +280,6 @@ def load_words_associations(questions_file, participants_path):
     words_associations.columns = [subj.name for subj in subjects]
 
     return words_associations
-
-
-def parse_answer(answer):
-    if type(answer) != str:
-        answer = None
-    else:
-        answer = answer.lower()
-        answer = answer.replace(';', 'ñ')
-    return answer
 
 
 if __name__ == '__main__':
