@@ -1,3 +1,5 @@
+DEACC = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u'}
+
 WORDS_MAPPING = {
     'anio': 'año',
     'anos': 'años',
@@ -10,6 +12,12 @@ WORDS_MAPPING = {
     'maniana': 'mañana',
     'ojo': 'ojos',
 }
+
+
+def parse_cue(cue):
+    cue = cue.lower()
+    cue = ''.join([DEACC[char] if char in DEACC else char for char in cue])
+    return cue
 
 
 def parse_answer(answer):
