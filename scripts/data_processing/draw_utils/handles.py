@@ -37,9 +37,9 @@ def release_object(event, lines_coords, df_fix, last_actions):
         selected_object = last_actions[-1]
         if selected_object.is_selected:
             if isinstance(selected_object, FixCircle):
-                selected_object.desselect(df_fix)
+                selected_object.deselect(df_fix)
             else:
-                selected_object.desselect(lines_coords)
+                selected_object.deselect(lines_coords)
 
 
 def update_arrows(ax, arrows, circles, index, remove_current=True):
