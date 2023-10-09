@@ -267,16 +267,20 @@ def load_words_associations(questions_file, participants_path):
         items_words[item] = list(item_dict['words'])
 
     for subj in subjects:
-        subj_trials = get_dirs(subj)
-        for trial in subj_trials:
-            trial_words = map(parse_cue, items_words[trial.name])
-            trial_answers = load_answers(trial, filename='words.pkl')
-            for i, word in enumerate(trial_words):
+        subj_trials = {trial.name: trial for trial in get_dirs(subj)}
+        for item in items_words:
+            item_words = map(parse_cue, items_words[item])
+            trial_answers = []
+            if item in subj_trials:
+                trial_answers = load_answers(subj_trials[item], filename='words.pkl')
+            for i, word in enumerate(item_words):
+                answer = None
                 if i < len(trial_answers):
                     answer = parse_answer(trial_answers[i])
-                    words_associations[word] = words_associations.get(word, []) + [answer]
+                words_associations[word] = words_associations.get(word, []) + [answer]
 
     words_associations = pd.DataFrame.from_dict(words_associations, orient='index')
+    words_associations = words_associations.loc[:, :len(subjects) - 1]
     words_associations.columns = [subj.name for subj in subjects]
 
     return words_associations
