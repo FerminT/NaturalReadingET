@@ -7,7 +7,8 @@ WORDS_MAPPING = {
     'seniora': 'señora',
     'senior': 'señor',
     'seniorita': 'señorita',
-    'maniana': 'mañana'
+    'maniana': 'mañana',
+    'ojo': 'ojos',
 }
 
 
