@@ -94,6 +94,8 @@ def add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix):
     word_idx = 0
     for screen in screens_text:
         screen_words, screen_fix = split_text_into_words(screens_text[screen]), trial[trial['screen'] == int(screen)]
+        if screen_fix.empty:
+            continue
         for word_pos, word in enumerate(screen_words):
             prev_word = screen_words[word_pos - 1] if word_pos > 0 else ''
             clean_word = word.lower().translate(chars_mapping)
