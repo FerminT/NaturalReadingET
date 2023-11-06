@@ -21,7 +21,7 @@ def parse_cue(cue):
 
 
 def parse_answer(answer):
-    if type(answer) != str:
+    if isinstance(answer, str):
         answer = None
     else:
         answer = answer.lower()
