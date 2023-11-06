@@ -6,7 +6,7 @@ import statsmodels.api as sm
 import argparse
 from pathlib import Path
 from scripts.data_processing.extract_measures import main as extract_measures
-from scripts.data_processing.wa_task import parse_cue, parse_answer
+from scripts.data_processing.wa_task import parse_cue, parse_answer, get_words_associations
 from scripts.data_processing.utils import get_dirs, get_files, log, load_profile, load_matfile, load_answers
 
 """ Script to perform data analysis on eye-tracking measures. It is composed of three steps:
@@ -257,11 +257,11 @@ def load_et_measures(items_paths, words_freq, subjs_reading_skills):
     return measures
 
 
-def load_words_associations(questions_file, participants_path):
+def parse_wa_task(questions_file, participants_path):
     questions = load_matfile(str(questions_file))['stimuli_questions']
     subjects = get_dirs(participants_path)
     items_words = {}
-    words_associations = {}
+    subjects_associations = {}
     for item_dict in questions:
         item = item_dict['title']
         items_words[item] = list(item_dict['words'])
@@ -277,13 +277,14 @@ def load_words_associations(questions_file, participants_path):
                 answer = None
                 if i < len(trial_answers):
                     answer = parse_answer(trial_answers[i])
-                words_associations[word] = words_associations.get(word, []) + [answer]
+                subjects_associations[word] = subjects_associations.get(word, []) + [answer]
 
-    words_associations = pd.DataFrame.from_dict(words_associations, orient='index')
-    words_associations = words_associations.loc[:, :len(subjects) - 1]
-    words_associations.columns = [subj.name for subj in subjects]
+    subjects_associations = pd.DataFrame.from_dict(subjects_associations, orient='index')
+    subjects_associations = subjects_associations.loc[:, :len(subjects) - 1]
+    subjects_associations.columns = [subj.name for subj in subjects]
+    words_associations = get_words_associations(subjects_associations)
 
-    return words_associations
+    return subjects_associations, words_associations
 
 
 if __name__ == '__main__':
@@ -310,7 +311,7 @@ if __name__ == '__main__':
     words_freq_file, stats_file, questions_file = Path(args.words_freq), Path(args.stats), Path(args.questions)
     subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
                             for subj in get_dirs(participants_path)}
-    words_associations = load_words_associations(questions_file, participants_path)
+    subjects_associations, words_associations = parse_wa_task(questions_file, participants_path)
 
     extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
 
@@ -320,6 +321,7 @@ if __name__ == '__main__':
         items_paths = get_dirs(measures_path)
 
     save_path.mkdir(parents=True, exist_ok=True)
+    subjects_associations.to_csv(save_path / 'subjects_associations.csv')
     words_associations.to_csv(save_path / 'words_associations.csv')
 
     do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)

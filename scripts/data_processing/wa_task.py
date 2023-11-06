@@ -1,3 +1,5 @@
+import pandas as pd
+
 DEACC = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u'}
 
 WORDS_MAPPING = {
@@ -31,3 +33,19 @@ def parse_answer(answer):
         if answer in WORDS_MAPPING:
             answer = WORDS_MAPPING[answer]
     return answer
+
+
+def get_words_associations(subjects_associations):
+    freq = answers_frequency(subjects_associations)
+    words_pairs = []
+    for cue in freq:
+        cue_answers = freq[cue]
+        for answer in cue_answers.keys():
+            words_pairs.append((cue, answer, cue_answers[answer]))
+
+    words_pairs = pd.DataFrame(words_pairs, columns=['cue', 'answer', 'freq'])
+    return words_pairs
+
+
+def answers_frequency(words_associations, normalized=True):
+    return {word: words_associations.loc[word].value_counts(normalize=normalized) for word in words_associations.index}
