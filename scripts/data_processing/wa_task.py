@@ -1,4 +1,5 @@
 import pandas as pd
+from scripts.data_processing.utils import load_matfile, get_dirs, load_answers
 
 DEACC = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u'}
 
@@ -14,6 +15,36 @@ WORDS_MAPPING = {
     'maniana': 'mañana',
     'ojo': 'ojos',
 }
+
+
+def parse_wa_task(questions_file, participants_path):
+    questions = load_matfile(str(questions_file))['stimuli_questions']
+    subjects = get_dirs(participants_path)
+    items_words = {}
+    subjects_associations = {}
+    for item_dict in questions:
+        item = item_dict['title']
+        items_words[item] = list(item_dict['words'])
+
+    for subj in subjects:
+        subj_trials = {trial.name: trial for trial in get_dirs(subj)}
+        for item in items_words:
+            item_words = map(parse_cue, items_words[item])
+            trial_answers = []
+            if item in subj_trials:
+                trial_answers = load_answers(subj_trials[item], filename='words.pkl')
+            for i, word in enumerate(item_words):
+                answer = None
+                if i < len(trial_answers):
+                    answer = parse_answer(trial_answers[i])
+                subjects_associations[word] = subjects_associations.get(word, []) + [answer]
+
+    subjects_associations = pd.DataFrame.from_dict(subjects_associations, orient='index')
+    subjects_associations = subjects_associations.loc[:, :len(subjects) - 1]
+    subjects_associations.columns = [subj.name for subj in subjects]
+    words_associations = get_words_associations(subjects_associations)
+
+    return subjects_associations, words_associations
 
 
 def parse_cue(cue):
