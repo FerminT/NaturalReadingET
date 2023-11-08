@@ -293,5 +293,5 @@ def save_subjects_scanpaths(item_scanpaths, save_path):
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
         subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
-        with open(save_path / f'{subj}.txt', 'w') as f:
+        with open(save_path / f'{subj}', 'w') as f:
             f.write(subj_scanpath)
