@@ -212,9 +212,9 @@ def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
             ax = axes[(i + j) // n_cols, (i + j) % n_cols]
             plot_data = data[j] if isinstance(data, list) else data
             sns.boxplot(x=fixed_effect, y=measure, data=plot_data, order=order, ax=ax)
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=15)
+            ax.xaxis.set_ticks(x_labels[i])
+            ax.xaxis.set_ticklabels(ax.get_xticklabels(), rotation=15)
             ax.yaxis.set_tick_params(labelleft=True)
-            ax.set_xlabel(x_labels[i])
             ax.set_ylabel(y_labels[j])
             ax.set_title(ax_titles[j])
     fig.suptitle(fig_title)
