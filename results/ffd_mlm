@@ -1,17 +1,17 @@
           Mixed Linear Model Regression Results
-=========================================================
-Model:            MixedLM Dependent Variable: FFD        
-No. Observations: 92070   Method:             REML       
-No. Groups:       1       Scale:              0.1315     
-Min. group size:  92070   Log-Likelihood:     -37357.5026
-Max. group size:  92070   Converged:          Yes        
-Mean group size:  92070.0                                
----------------------------------------------------------
-              Coef.  Std.Err.    z    P>|z| [0.025 0.975]
----------------------------------------------------------
-Intercept      5.356    0.027 195.028 0.000  5.302  5.409
-word_len      -0.070    0.008  -8.516 0.000 -0.086 -0.054
-word_freq     -0.037    0.002 -17.509 0.000 -0.041 -0.032
-item Var       0.000    0.000                            
-subj Var       0.016    0.014                            
-=========================================================
+==========================================================
+Model:            MixedLM  Dependent Variable: FFD        
+No. Observations: 158633   Method:             REML       
+No. Groups:       1        Scale:              0.1361     
+Min. group size:  158633   Log-Likelihood:     -67077.9843
+Max. group size:  158633   Converged:          Yes        
+Mean group size:  158633.0                                
+-----------------------------------------------------------
+           Coef.   Std.Err.     z     P>|z|  [0.025  0.975]
+-----------------------------------------------------------
+Intercept   5.379     0.042  128.848  0.000   5.297   5.460
+word_len   -0.063     0.006   -9.927  0.000  -0.075  -0.050
+word_freq  -0.030     0.002  -18.690  0.000  -0.033  -0.027
+item Var    0.000     0.000                                
+subj Var    0.066                                          
+==========================================================
