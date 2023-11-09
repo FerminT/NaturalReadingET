@@ -98,7 +98,8 @@ def check_validation_fixations(fixations, points_coords, num_points, points_area
     for (x, y) in fix_coords:
         lower_bound = points_coords.iloc[point_index] - (points_area + error_margin)
         upper_bound = points_coords.iloc[point_index] + (points_area + error_margin)
-        if x in range(lower_bound[0], upper_bound[0]) and y in range(lower_bound[1], upper_bound[1]):
+        if (x in range(lower_bound.iloc[0], upper_bound.iloc[0])
+                and y in range(lower_bound.iloc[1], upper_bound.iloc[1])):
             point_index += 1
             if point_index == num_points - 1:
                 break
