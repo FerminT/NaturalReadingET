@@ -56,7 +56,7 @@ def parse_cue(cue):
 
 
 def parse_answer(answer):
-    if isinstance(answer, str):
+    if not isinstance(answer, str):
         answer = None
     else:
         answer = answer.lower()
@@ -69,14 +69,15 @@ def parse_answer(answer):
 
 
 def get_words_associations(subjects_associations):
-    freq = answers_frequency(subjects_associations)
+    answers_freq = answers_frequency(subjects_associations)
+    n_answers = answers_frequency(subjects_associations, normalized=False)
     words_pairs = []
-    for cue in freq:
-        cue_answers = freq[cue]
+    for cue in answers_freq:
+        cue_answers = answers_freq[cue]
         for answer in cue_answers.keys():
-            words_pairs.append((cue, answer, cue_answers[answer]))
+            words_pairs.append((cue, answer, n_answers[cue][answer], cue_answers[answer]))
 
-    words_pairs = pd.DataFrame(words_pairs, columns=['cue', 'answer', 'freq'])
+    words_pairs = pd.DataFrame(words_pairs, columns=['cue', 'answer', 'n', 'freq'])
     return words_pairs
 
 
