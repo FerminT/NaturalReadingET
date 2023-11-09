@@ -293,6 +293,6 @@ if __name__ == '__main__':
 
     save_path.mkdir(parents=True, exist_ok=True)
     subjects_associations.to_csv(save_path / 'subjects_associations.csv')
-    words_associations.to_csv(save_path / 'words_associations.csv')
+    words_associations.to_csv(save_path / 'words_associations.csv', index=False)
 
     do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
