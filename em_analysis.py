@@ -211,7 +211,8 @@ def plot_boxplots(fixed_effects, measures, data, x_labels, y_labels, ax_titles,
         for j, measure in enumerate(measures):
             ax = axes[(i + j) // n_cols, (i + j) % n_cols]
             plot_data = data[j] if isinstance(data, list) else data
-            sns.boxplot(x=fixed_effect, y=measure, data=plot_data, order=order, ax=ax)
+            sns.boxplot(x=fixed_effect, y=measure, data=plot_data, order=order,
+                        palette=sns.color_palette('Spectral'), ax=ax)
             ax.xaxis.set_ticks(x_labels[i])
             ax.xaxis.set_ticklabels(ax.get_xticklabels(), rotation=15)
             ax.yaxis.set_tick_params(labelleft=True)
