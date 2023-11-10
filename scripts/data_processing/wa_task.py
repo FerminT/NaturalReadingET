@@ -4,6 +4,9 @@ from scripts.data_processing.utils import load_matfile, get_dirs, load_answers
 DEACC = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u'}
 
 WORDS_MAPPING = {
+    'messi': '',
+    'matias': '',
+    'tomas': '',
     'anios': 'años',
     'anio': 'año',
     'anos': 'años',
