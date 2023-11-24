@@ -3,6 +3,10 @@
 *.asc
 *.pkl
 
+# texts
+*.txt
+results/scanpaths
+
 # temp files
 *.pyc
 *.asv
