@@ -65,6 +65,7 @@ def parse_answer(answer):
             answer = answer.split()[-1]
         if answer in WORDS_MAPPING:
             answer = WORDS_MAPPING[answer]
+        answer = ''.join([char for char in answer if char.isalpha()])
     return answer
 
 
