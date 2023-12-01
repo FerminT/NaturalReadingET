@@ -273,6 +273,7 @@ if __name__ == '__main__':
     parser.add_argument('-wf', '--words_freq', type=str, default='metadata/texts_properties/words_freq.csv',
                         help='Path to file with words frequencies')
     parser.add_argument('-st', '--stats', type=str, default='data/processed/words_fixations/stats.csv')
+    parser.add_argument('-r', '--reprocess', action='store_true', help='Compute measures again, even if they exist')
     parser.add_argument('-o', '--output', type=str, default='results')
     parser.add_argument('-i', '--item', type=str, default='all')
     args = parser.parse_args()
@@ -284,7 +285,7 @@ if __name__ == '__main__':
                             for subj in get_dirs(participants_path)}
     subjects_associations, words_associations = parse_wa_task(questions_file, participants_path)
 
-    extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=False)
+    extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=args.reprocess)
 
     if args.item != 'all':
         items_paths = [measures_path / args.item]
