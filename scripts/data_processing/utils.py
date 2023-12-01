@@ -293,6 +293,6 @@ def save_subjects_scanpaths(item_scanpaths, save_path):
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
         subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
-        subj_scanpath = subj_scanpath.replace('.', '.\n')
+        subj_scanpath = subj_scanpath.replace('. ', '.\n')
         with open(save_path / f'{subj}.txt', 'w') as f:
             f.write(subj_scanpath)
