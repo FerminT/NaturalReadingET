@@ -47,11 +47,11 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
         item_measures_path = save_path / 'measures' / item.name
         item_trials = get_trials_to_process(item, item_measures_path, reprocess)
-        item_measures, item_scanpaths = extract_item_measures(screens_text, item_trials, chars_mapping)
+        item_measures, item_scanpaths, item_fixs = extract_item_measures(screens_text, item_trials, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, item_measures_path)
-        utils.save_subjects_scanpaths(item_scanpaths, save_path / 'scanpaths' / item.name)
+        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, save_path / 'scanpaths' / item.name)
 
 
 def extract_item_measures(screens_text, trials, chars_mapping):
@@ -64,21 +64,22 @@ def extract_item_measures(screens_text, trials, chars_mapping):
                                                'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
 
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
-    scanpaths = build_scanpaths(words_fix, screens_text, chars_mapping)
+    words_fix = words_fix.sort_values(['subj', 'fix_idx'])
+    scanpaths_texts, scanpaths_fixs = build_scanpaths(words_fix, screens_text, chars_mapping)
 
-    return measures, scanpaths
+    return measures, scanpaths_texts, scanpaths_fixs
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
-    words_fix = words_fix.sort_values(['subj', 'fix_idx'])
     item_text = pd.DataFrame(divide_into_words(screens_text))
-    scanpaths = {}
+    scanpaths_text, scanpaths_fixs = {}, {}
     for subj in words_fix['subj'].unique():
         subj_scanpath = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
         subj_scanpath = remove_consecutive_punctuations(subj_scanpath, chars_mapping)
-        scanpaths[subj] = subj_scanpath
+        scanpaths_text[subj] = subj_scanpath
+        scanpaths_fixs[subj] = words_fix[words_fix['subj'] == subj][['word_idx', 'fix_idx', 'fix_duration']]
 
-    return scanpaths
+    return scanpaths_text, scanpaths_fixs
 
 
 def add_aggregated_measures(item_measures):

@@ -288,7 +288,7 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, save_path):
+def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
     if not save_path.exists():
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
@@ -296,3 +296,5 @@ def save_subjects_scanpaths(item_scanpaths, save_path):
         subj_scanpath = subj_scanpath.replace('. ', '.\n')
         with open(save_path / f'{subj}.txt', 'w') as f:
             f.write(subj_scanpath)
+        subj_fixs = item_fixs[subj]
+        subj_fixs.to_pickle(save_path / f'{subj}.pkl')
