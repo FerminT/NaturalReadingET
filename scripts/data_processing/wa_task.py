@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from scripts.data_processing.utils import load_matfile, get_dirs, load_answers
 
@@ -85,5 +86,7 @@ def get_words_associations(subjects_associations):
     return words_pairs
 
 
-def answers_frequency(words_associations, normalized=True):
-    return {word: words_associations.loc[word].value_counts(normalize=normalized) for word in words_associations.index}
+def answers_frequency(subjects_associations, normalized=True):
+    subjs_associations = subjects_associations.replace('', None)
+    return {word: subjs_associations.loc[word].value_counts(normalize=normalized)
+            for word in subjs_associations.index}
