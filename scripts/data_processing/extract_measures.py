@@ -76,8 +76,9 @@ def build_scanpaths(words_fix, screens_text, chars_mapping):
     for subj in words_fix['subj'].unique():
         subj_scanpath = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
         subj_scanpath = remove_consecutive_punctuations(subj_scanpath, chars_mapping)
+        subj_fixs = words_fix[words_fix['subj'] == subj][['word_idx', 'fix_idx', 'fix_duration']]
         scanpaths_text[subj] = subj_scanpath
-        scanpaths_fixs[subj] = words_fix[words_fix['subj'] == subj][['word_idx', 'fix_idx', 'fix_duration']]
+        scanpaths_fixs[subj] = subj_fixs.reset_index(drop=True)
 
     return scanpaths_text, scanpaths_fixs
 
