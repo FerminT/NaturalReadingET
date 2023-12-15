@@ -291,12 +291,17 @@ def save_measures_by_subj(item_measures, save_path):
 def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
     if not save_path.exists():
         save_path.mkdir(parents=True)
-    texts_path, fixs_path = save_path / 'texts', save_path / 'fixations'
-    texts_path.mkdir(exist_ok=True), fixs_path.mkdir(exist_ok=True)
     for subj in item_scanpaths:
         subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
         subj_scanpath = subj_scanpath.replace('. ', '.\n')
-        with open(texts_path / f'{subj}.txt', 'w') as f:
-            f.write(subj_scanpath)
+        subj_scanpath = subj_scanpath.split('\n')
         subj_fixs = item_fixs[subj]
-        subj_fixs.to_pickle(fixs_path / f'{subj}.pkl')
+        last_line_pos = 0
+        for line in subj_scanpath:
+            words = line.split()
+            line_fixs = subj_fixs.iloc[last_line_pos:last_line_pos + len(words)]
+            dump = {'text': line, 'fix_dur': line_fixs['fix_duration'].tolist()}
+            with (save_path / f'{subj}.json').open('a') as f:
+                f.write(json.dumps(dump))
+                f.write('\n')
+            last_line_pos += len(words)
