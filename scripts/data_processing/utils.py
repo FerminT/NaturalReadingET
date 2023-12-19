@@ -295,7 +295,7 @@ def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
         subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
         subj_scanpath = subj_scanpath.replace('. ', '.\n')
         subj_scanpath = subj_scanpath.split('\n')
-        subj_fixs = item_fixs[subj]
+        subj_fixs = discretize_fixations(item_fixs[subj])
         last_line_pos = 0
         for line in subj_scanpath:
             words = line.split()
@@ -305,3 +305,15 @@ def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
                 f.write(json.dumps(dump))
                 f.write('\n')
             last_line_pos += len(words)
+
+
+def discretize_fixations(subj_fixs):
+    subj_fixmean = subj_fixs['fix_duration'].mean()
+    subj_fixstd = subj_fixs['fix_duration'].std()
+    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 1 if x < subj_fixmean - subj_fixstd
+                                                                else 2 if x < subj_fixmean - subj_fixstd / 2
+                                                                else 3 if x < subj_fixmean + subj_fixmean / 2
+                                                                else 4 if x > subj_fixmean + subj_fixstd / 2
+                                                                else 5 if x > subj_fixmean + subj_fixstd
+                                                                else 0)
+    return subj_fixs
