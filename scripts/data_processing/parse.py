@@ -59,8 +59,13 @@ def save_profile(participant_rawpath, save_path):
     metafile = loadmat(str(participant_rawpath / 'metadata.mat'), simplify_cells=True)
     stimuli_order = list(metafile['shuffled_stimuli'][1:].astype(str))
     profile = {'name': [metafile['subjname']], 'reading_level': [int(metafile['reading_level'])],
+               'gender': [metafile['gender']], 'n_sessions': [metafile['n_sessions']],
+               'fst_date': [metafile['fst_date']], 'snd_date': [metafile['snd_date']],
+               'fst_sleeptime': [metafile['fst_sleeptime']], 'snd_sleeptime': [metafile['snd_sleeptime']],
+               'fst_wakeuptime': [metafile['fst_wakeuptime']], 'snd_wakeuptime': [metafile['snd_wakeuptime']],
                'stimuli_order': [stimuli_order]}
-    if not save_path.exists(): save_path.mkdir(parents=True)
+    if not save_path.exists():
+        save_path.mkdir(parents=True)
     pd.DataFrame(profile).to_pickle(save_path / 'profile.pkl')
 
 
