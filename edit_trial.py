@@ -1,5 +1,6 @@
 from pathlib import Path
 from scripts.data_processing import parse, plot, utils
+from datetime import datetime
 import numpy as np
 import argparse
 
@@ -17,13 +18,16 @@ def select_trial(raw_path, ascii_path, config, questions, stimuli_path, data_pat
 
 def list_participants(raw_path, processed_path):
     participants = [dir_.name for dir_ in utils.get_dirs(raw_path)]
-    flag_fully_processed(raw_path, processed_path, participants)
+    participants = flag_and_order_participants(raw_path, processed_path, participants)
     chosen_participant = list_options(participants, prompt='Choose a participant: ')
 
     return participants[chosen_participant]
 
 
-def flag_fully_processed(raw_path, processed_path, participants):
+def flag_and_order_participants(raw_path, processed_path, participants):
+    participants_dates = [datetime.strptime(date, '%d-%m-%Y %H:%M') for date in
+                          [utils.load_matfile(raw_path / participant / 'metadata.mat')['fst_date'] for participant in
+                           participants]]
     for i, participant in enumerate(participants):
         processed_trials_path = processed_path / participant
         raw_trials_path = raw_path / participant
@@ -34,7 +38,9 @@ def flag_fully_processed(raw_path, processed_path, participants):
             all_edited = np.all(edited_trials) and len(edited_trials) == len(utils.get_files(raw_trials_path)) - 2
             if all_edited:
                 participants[i] += ' \u2705'
-    participants.sort(key=lambda x: x[-1], reverse=True)
+
+    participants = [participant for _, participant in sorted(zip(participants_dates, participants))]
+    return participants
 
 
 def show_trial_menu(subj_items, trials_flags, subj_datapath, stimuli_path, questions, chosen_option):
