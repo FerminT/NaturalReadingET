@@ -325,6 +325,7 @@ def measure_fixations(subj_fixs, measure):
         fix_duration = 'sum' if measure == 'GD' else 'first'
         subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
             {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
+    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(log)
     subj_fixmean = subj_fixs['fix_duration'].mean()
     subj_fixstd = subj_fixs['fix_duration'].std()
     subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 1 if x < subj_fixmean - subj_fixstd
