@@ -51,7 +51,7 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
         item_measures = add_aggregated_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, item_measures_path)
-        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, save_path / 'scanpaths' / item.name)
+        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, save_path / 'scanpaths' / item.name, measure='FD')
 
 
 def extract_item_measures(screens_text, trials, chars_mapping):
@@ -237,7 +237,7 @@ def has_no_fixations(word_fix):
 
 def main(item, data_path, items_path, trials_path, save_path, reprocess):
     subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, item)
-    assign_fixations_to_words(items, subjects, data_path, reprocess)
+    assign_fixations_to_words(items, subjects, data_path, reprocess=False)
 
     if item != 'all':
         items_wordsfix = [data_path / item]

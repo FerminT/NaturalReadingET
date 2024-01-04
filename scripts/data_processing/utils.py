@@ -288,14 +288,12 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
+def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path, measure='FD'):
     if not save_path.exists():
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
-        subj_scanpath = ' '.join([word for word in item_scanpaths[subj]])
-        subj_scanpath = subj_scanpath.replace('. ', '.\n')
-        subj_scanpath = subj_scanpath.split('\n')
-        subj_fixs = discretize_fixations(item_fixs[subj])
+        subj_scanpath = get_scanpath_string(item_scanpaths[subj], measure)
+        subj_fixs = measure_fixations(item_fixs[subj], measure)
         last_line_pos = 0
         for line in subj_scanpath:
             words = line.split()
@@ -307,7 +305,26 @@ def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path):
             last_line_pos += len(words)
 
 
-def discretize_fixations(subj_fixs):
+def get_scanpath_string(scanpath, measure):
+    # If measure is 'FFD' or 'GD', we only keep the first occurrence of consecutive words
+    subj_scanpath = ' '.join([word for i, word in enumerate(scanpath)
+                              if measure == 'FD' or i == 0 or word != scanpath[i - 1]])
+    subj_scanpath = subj_scanpath.replace('. ', '.\n')
+    subj_scanpath = subj_scanpath.split('\n')
+    return subj_scanpath
+
+
+def measure_fixations(subj_fixs, measure):
+    """ Define the fixation duration associated with each word in the scanpath:
+            'FD' (Fixation Duration): keep all fixations
+            'GD' (Gaze Duration): sum the duration of consecutive fixations on the same word
+            'FFD' (First Fixation Duration): keep only the first fixation on consecutive words
+        Then, binarize the fixation duration distribution into 5 categories according to the std
+    """
+    if measure != 'FD':
+        fix_duration = 'sum' if measure == 'GD' else 'first'
+        subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
+            {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
     subj_fixmean = subj_fixs['fix_duration'].mean()
     subj_fixstd = subj_fixs['fix_duration'].std()
     subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 1 if x < subj_fixmean - subj_fixstd
