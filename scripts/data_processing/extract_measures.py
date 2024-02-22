@@ -51,7 +51,7 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
         item_measures = add_aggregated_measures(item_measures)
 
         utils.save_measures_by_subj(item_measures, item_measures_path)
-        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, save_path / 'scanpaths' / item.name, chars_mapping,
+        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, item.name, save_path, chars_mapping,
                                       measure='GD')
 
 

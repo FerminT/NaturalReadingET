@@ -288,7 +288,11 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path, chars_mapping, measure=None):
+def save_subjects_scanpaths(item_scanpaths, item_fixs, item_name, save_path, chars_mapping, measure=None):
+    dir_name = 'scanpaths'
+    if measure is not None:
+        dir_name += f'_{measure.lower()}'
+    save_path = save_path / dir_name / item_name
     if not save_path.exists():
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
