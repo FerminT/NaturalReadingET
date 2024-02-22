@@ -288,7 +288,7 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path, chars_mapping, measure='FD'):
+def save_subjects_scanpaths(item_scanpaths, item_fixs, save_path, chars_mapping, measure=None):
     if not save_path.exists():
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
@@ -309,6 +309,7 @@ def get_scanpath_string(scanpath, measure, chars_mapping):
     # If measure is 'FFD' or 'GD', we only keep the first occurrence of consecutive words
     subj_scanpath = ' '.join([word for i, word in enumerate(scanpath)
                               if measure == 'FD'
+                              or measure is None
                               or i == len(scanpath) - 1
                               or word.translate(chars_mapping) != scanpath[i + 1].translate(chars_mapping)])
     subj_scanpath = subj_scanpath.replace('. ', '.\n')
@@ -323,14 +324,16 @@ def measure_fixations(subj_fixs, measure):
             'FFD' (First Fixation Duration): keep only the first fixation on consecutive words
         Then, binarize the fixation duration distribution into 5 categories according to the std
     """
-    if measure != 'FD':
+    if measure == 'GD' or measure == 'FFD':
         fix_duration = 'sum' if measure == 'GD' else 'first'
         subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
             {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
     subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(log)
     subj_fixmean = subj_fixs['fix_duration'].mean()
     subj_fixstd = subj_fixs['fix_duration'].std()
-    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 1 if x < subj_fixmean - subj_fixstd
+    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 0 if measure is None
+                                                                else
+                                                                1 if x < subj_fixmean - subj_fixstd
                                                                 else 2 if x < subj_fixmean - subj_fixstd / 2
                                                                 else 3 if x < subj_fixmean + subj_fixmean / 2
                                                                 else 4 if x > subj_fixmean + subj_fixstd / 2
