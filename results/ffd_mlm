@@ -1,17 +1,17 @@
-          Mixed Linear Model Regression Results
-==========================================================
-Model:            MixedLM  Dependent Variable: FFD        
-No. Observations: 158633   Method:             REML       
-No. Groups:       1        Scale:              0.1361     
-Min. group size:  158633   Log-Likelihood:     -67077.9843
-Max. group size:  158633   Converged:          Yes        
-Mean group size:  158633.0                                
------------------------------------------------------------
-           Coef.   Std.Err.     z     P>|z|  [0.025  0.975]
------------------------------------------------------------
-Intercept   5.379     0.042  128.848  0.000   5.297   5.460
-word_len   -0.063     0.006   -9.927  0.000  -0.075  -0.050
-word_freq  -0.030     0.002  -18.690  0.000  -0.033  -0.027
-item Var    0.000     0.000                                
-subj Var    0.066                                          
-==========================================================
+           Mixed Linear Model Regression Results
+===========================================================
+Model:            MixedLM  Dependent Variable: FFD         
+No. Observations: 362655   Method:             REML        
+No. Groups:       1        Scale:              0.1349      
+Min. group size:  362655   Log-Likelihood:     -151603.2997
+Max. group size:  362655   Converged:          Yes         
+Mean group size:  362655.0                                 
+------------------------------------------------------------
+            Coef.   Std.Err.     z     P>|z|  [0.025  0.975]
+------------------------------------------------------------
+Intercept    5.369     0.013  406.816  0.000   5.343   5.395
+word_len    -0.062     0.004  -14.634  0.000  -0.070  -0.054
+word_freq   -0.035     0.001  -33.353  0.000  -0.037  -0.033
+item Var     0.000     0.000                                
+subj Var     0.012     0.005                                
+===========================================================
