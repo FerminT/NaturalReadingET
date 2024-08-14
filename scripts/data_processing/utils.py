@@ -321,26 +321,16 @@ def get_scanpath_string(scanpath, measure, chars_mapping):
     return subj_scanpath
 
 
-def measure_fixations(subj_fixs, measure):
+def measure_fixations(subj_fixs, measure, n_bins=24):
     """ Define the fixation duration associated with each word in the scanpath:
             'FD' (Fixation Duration): keep all fixations
             'GD' (Gaze Duration): sum the duration of consecutive fixations on the same word
             'FFD' (First Fixation Duration): keep only the first fixation on consecutive words
-        Then, binarize the fixation duration distribution into 5 categories according to the std
+        Then, binarize the fixation duration distribution into n_bins bins
     """
     if measure == 'GD' or measure == 'FFD':
         fix_duration = 'sum' if measure == 'GD' else 'first'
         subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
             {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
-    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(log)
-    subj_fixmean = subj_fixs['fix_duration'].mean()
-    subj_fixstd = subj_fixs['fix_duration'].std()
-    subj_fixs['fix_duration'] = subj_fixs['fix_duration'].apply(lambda x: 0 if measure is None
-                                                                else
-                                                                1 if x < subj_fixmean - subj_fixstd
-                                                                else 2 if x < subj_fixmean - subj_fixstd / 2
-                                                                else 3 if x < subj_fixmean + subj_fixmean / 2
-                                                                else 4 if x > subj_fixmean + subj_fixstd / 2
-                                                                else 5 if x > subj_fixmean + subj_fixstd
-                                                                else 0)
+    subj_fixs['fix_duration'] = pd.qcut(subj_fixs['fix_duration'], q=n_bins, labels=False)
     return subj_fixs
