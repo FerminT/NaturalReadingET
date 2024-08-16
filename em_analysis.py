@@ -129,6 +129,7 @@ def remove_excluded_words(et_measures):
 def add_len_freq_skipped(et_measures, words_freq):
     et_measures['skipped'] = et_measures[~et_measures['excluded']]['FFD'].apply(lambda x: int(x == 0))
     et_measures['word_len'] = et_measures['word'].apply(lambda x: len(x))
+    words_freq = words_freq[['word', 'cnt']].copy()
     words_freq['cnt'] = pd.qcut(words_freq['cnt'], 15, labels=[i for i in range(1, 16)])
     et_measures['word_freq'] = et_measures['word'].apply(lambda x:
                                                          words_freq.loc[words_freq['word'] == x, 'cnt'].values[0]
