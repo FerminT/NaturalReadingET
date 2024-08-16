@@ -332,5 +332,5 @@ def measure_fixations(subj_fixs, measure, n_bins=24):
         fix_duration = 'sum' if measure == 'GD' else 'first'
         subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
             {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
-    subj_fixs['fix_duration'] = pd.qcut(subj_fixs['fix_duration'], q=n_bins, labels=False)
+    subj_fixs['fix_duration'] = pd.qcut(subj_fixs['fix_duration'], q=n_bins, labels=[i for i in range(1, n_bins + 1)])
     return subj_fixs
