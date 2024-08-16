@@ -321,7 +321,7 @@ def get_scanpath_string(scanpath, measure, chars_mapping):
     return subj_scanpath
 
 
-def measure_fixations(subj_fixs, measure, n_bins=24):
+def measure_fixations(subj_fixs, measure, n_bins=15):
     """ Define the fixation duration associated with each word in the scanpath:
             'FD' (Fixation Duration): keep all fixations
             'GD' (Gaze Duration): sum the duration of consecutive fixations on the same word
