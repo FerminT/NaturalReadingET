@@ -61,8 +61,9 @@ def extract_item_measures(screens_text, trials, chars_mapping):
         trial_df = pd.read_pickle(trial)
         add_trial_measures(trial_df, screens_text, chars_mapping, measures, words_fix)
 
-    measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'excluded',
-                                               'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT', 'FC', 'RC'])
+    measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'sentence_pos', 'screen_pos',
+                                               'excluded', 'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT',
+                                               'FC', 'RC'])
 
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
     words_fix = words_fix.sort_values(['subj', 'fix_idx'])
@@ -95,6 +96,7 @@ def add_aggregated_measures(item_measures):
 
 def add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix):
     word_idx = 0
+    sentence_pos = 0
     for screen in screens_text:
         screen_words, screen_fix = split_text_into_words(screens_text[screen]), trial[trial['screen'] == int(screen)]
         if screen_fix.empty:
@@ -106,7 +108,8 @@ def add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix):
 
             word_fix = screen_fix[screen_fix['word_pos'] == word_pos]
             add_word_fixations(word_fix, word_idx, words_fix)
-            add_word_measures(word_idx, clean_word, exclude, word_fix, screen_fix, measures)
+            add_word_measures(word_idx, clean_word, sentence_pos, word_pos, exclude, word_fix, screen_fix, measures)
+            sentence_pos = sentence_pos + 1 if not is_end_of_sentence(word) else 0
             word_idx += 1
 
 
@@ -116,13 +119,15 @@ def add_word_fixations(word_fix, word_idx, words_fix):
                          for fix_idx, fix_duration in zip(word_fix['trial_fix'], word_fix['duration']))
 
 
-def add_word_measures(word_idx, clean_word, exclude, word_fix, screen_fix, measures):
+def add_word_measures(word_idx, clean_word, sentence_pos, screen_pos, exclude, word_fix, screen_fix, measures):
     subj_name, screen = word_fix['subj'].iloc[0], word_fix['screen'].iloc[0]
     if has_no_fixations(word_fix) or exclude:
-        measures.append([subj_name, screen, word_idx, clean_word, exclude, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        measures.append([subj_name, screen, word_idx, clean_word, sentence_pos, screen_pos, exclude,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0])
     else:
         ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc = word_measures(word_fix, screen_fix)
-        measures.append([subj_name, screen, word_idx, clean_word, exclude, ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
+        measures.append([subj_name, screen, word_idx, clean_word, sentence_pos, screen_pos, exclude,
+                         ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc])
 
 
 def word_measures(word_fix, screen_fix):
@@ -207,8 +212,8 @@ def line_num_words(word_pos, screen_fix):
     return line_nwords
 
 
-def is_end_of_sentence(prev_word):
-    return bool([char for char in PUNCTUATION_MARKS if char in prev_word])
+def is_end_of_sentence(word):
+    return bool([char for char in PUNCTUATION_MARKS if char in word])
 
 
 def should_exclude_word(prev_word, word, clean_word, word_pos, line_nwords):
