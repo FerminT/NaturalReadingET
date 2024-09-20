@@ -73,11 +73,14 @@ def extract_item_measures(screens_text, trials, chars_mapping):
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
-    item_text = pd.DataFrame(divide_into_words(screens_text))
+    item_text, item_sentences_ids = divide_into_words(screens_text)
+    item_text = pd.DataFrame({'word': item_text, 'sentence_id': item_sentences_ids})
     scanpaths_text, scanpaths_fixs = {}, {}
     for subj in words_fix['subj'].unique():
-        subj_scanpath = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']][0].to_list()
-        subj_scanpath = remove_consecutive_punctuations(subj_scanpath, chars_mapping)
+        subj_scanpath_df = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']]
+        subj_scanpath = subj_scanpath_df['word'].tolist()
+        sentences_ids = subj_scanpath_df['sentence_id'].tolist()
+        subj_scanpath = parse_sentences(subj_scanpath, sentences_ids, chars_mapping)
         subj_fixs = words_fix[words_fix['subj'] == subj][['word_idx', 'fix_idx', 'fix_duration']]
         scanpaths_text[subj] = subj_scanpath
         scanpaths_fixs[subj] = subj_fixs.reset_index(drop=True)
@@ -98,7 +101,9 @@ def add_trial_measures(trial, screens_text, chars_mapping, measures, words_fix):
     word_idx = 0
     sentence_pos = 0
     for screen in screens_text:
-        screen_words, screen_fix = split_text_into_words(screens_text[screen]), trial[trial['screen'] == int(screen)]
+        screen_words = []
+        add_words_to_list(screens_text[screen], screen_words)
+        screen_fix = trial[trial['screen'] == int(screen)]
         if screen_fix.empty:
             continue
         for word_pos, word in enumerate(screen_words):
@@ -176,24 +181,32 @@ def get_trials_to_process(item, item_savepath, reprocess):
     return trials_to_process
 
 
-def remove_consecutive_punctuations(subj_scanpath, chars_mapping):
+def parse_sentences(subj_scanpath, sentences_ids, chars_mapping):
+    curr_sentence_id = 0
     for i, word in enumerate(subj_scanpath[:-1]):
-        next_word = subj_scanpath[i + 1]
-        subj_scanpath[i] = word if word != next_word else word.translate(chars_mapping)
+        next_word, next_sentence_id = subj_scanpath[i + 1], sentences_ids[i + 1]
+        word = word.replace('.', '')
+        word = word if word != next_word else word.translate(chars_mapping)
+        subj_scanpath[i] = word if curr_sentence_id == next_sentence_id else word.translate(chars_mapping) + '.'
+        curr_sentence_id = next_sentence_id
 
     return subj_scanpath
 
 
 def divide_into_words(screens_text):
-    item_text = []
+    item_text, sentences_ids = [], [0]
     for screenid in screens_text:
         screen_text = screens_text[screenid]
-        item_text.extend(split_text_into_words(screen_text))
-    return item_text
+        add_words_to_list(screen_text, item_text, sentences_ids)
+    return item_text, sentences_ids
 
 
-def split_text_into_words(text):
-    return [word for line in text for word in line.split()]
+def add_words_to_list(text, words, sentences_ids=None):
+    for line in text:
+        for i, word in enumerate(line.split()):
+            words.append(word)
+            if sentences_ids and len(words) > 1:
+                sentences_ids.append(sentences_ids[-1] + 1 if '.' in words[-2] else sentences_ids[-1])
 
 
 def word_pos_in_item(screen_id, screens_text):
