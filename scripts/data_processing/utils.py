@@ -288,7 +288,7 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, item_fixs, item_name, save_path, chars_mapping, measure=None):
+def save_subjects_scanpaths(item_scanpaths, item_avg_measures, item_name, save_path, measure=None):
     dir_name = 'scanpaths'
     if measure is not None:
         dir_name += f'_{measure.lower()}'
@@ -296,26 +296,22 @@ def save_subjects_scanpaths(item_scanpaths, item_fixs, item_name, save_path, cha
     if not save_path.exists():
         save_path.mkdir(parents=True)
     for subj in item_scanpaths:
-        subj_scanpath = get_scanpath_string(item_scanpaths[subj], measure, chars_mapping)
-        subj_fixs = measure_fixations(item_fixs[subj], measure)
+        subj_scanpath = get_scanpath_string(item_scanpaths[subj]['words'])
+        words_measures = item_avg_measures.loc[item_scanpaths[subj]['words_ids']]
         last_line_pos = 0
         for line in subj_scanpath:
             words = line.split()
-            line_fixs = subj_fixs.iloc[last_line_pos:last_line_pos + len(words)]
-            dump = {'text': line, 'fix_dur': line_fixs['fix_duration'].tolist()}
+            line_measures = words_measures.iloc[last_line_pos:last_line_pos + len(words)]
+            line_measures = line_measures[measure].tolist() if measure is not None else [0] * len(words)
+            dump = {'text': line, 'fix_dur': line_measures}
             with (save_path / f'{subj}.json').open('a') as f:
                 f.write(json.dumps(dump))
                 f.write('\n')
             last_line_pos += len(words)
 
 
-def get_scanpath_string(scanpath, measure, chars_mapping):
-    # If measure is 'FFD' or 'GD', we only keep the first occurrence of consecutive words
-    subj_scanpath = ' '.join([word for i, word in enumerate(scanpath)
-                              if measure == 'FD'
-                              or measure is None
-                              or i == len(scanpath) - 1
-                              or word.translate(chars_mapping) != scanpath[i + 1].translate(chars_mapping)])
+def get_scanpath_string(scanpath):
+    subj_scanpath = ' '.join(scanpath)
     subj_scanpath = subj_scanpath.replace('. ', '.\n')
     subj_scanpath = subj_scanpath.split('\n')
     return subj_scanpath

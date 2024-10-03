@@ -40,6 +40,21 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
+def average_measures(item_measures, measures, n_bins):
+    subject_measures = []
+    for subj in item_measures['subj'].unique():
+        subj_measures = item_measures[item_measures['subj'] == subj]
+        for measure in measures:
+            measure_mask = subj_measures[measure] != 0
+            binarized = pd.qcut(subj_measures[measure][measure_mask], n_bins, labels=[j for j in range(1, n_bins + 1)])
+            subj_measures.loc[binarized.index, measure] = binarized.astype(int)
+        subject_measures.append(subj_measures)
+    all_measures = measures + ['FC', 'RC']
+    binarized_measures = pd.concat(subject_measures)[['word_idx'] + all_measures]
+    averaged_measures = binarized_measures.groupby(['word_idx']).mean().round(0).astype(int)
+    return averaged_measures
+
+
 def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):
     print(f'Extracting eye-tracking measures from trials...')
     for item in (pbar := tqdm(items_wordsfix)):
@@ -47,12 +62,14 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
         item_measures_path = save_path / 'measures' / item.name
         item_trials = get_trials_to_process(item, item_measures_path, reprocess)
-        item_measures, item_scanpaths, item_fixs = extract_item_measures(screens_text, item_trials, chars_mapping)
+        item_measures, item_scanpaths = extract_item_measures(screens_text, item_trials, chars_mapping)
         item_measures = add_aggregated_measures(item_measures)
+        item_avg_measures = average_measures(item_measures,
+                                             measures=['FFD', 'SFD', 'FPRT', 'TFD', 'RPD', 'RRT', 'SPRT'],
+                                             n_bins=10)
 
         utils.save_measures_by_subj(item_measures, item_measures_path)
-        utils.save_subjects_scanpaths(item_scanpaths, item_fixs, item.name, save_path, chars_mapping,
-                                      measure='GD')
+        utils.save_subjects_scanpaths(item_scanpaths, item_avg_measures, item.name, save_path, measure='FPRT')
 
 
 def extract_item_measures(screens_text, trials, chars_mapping):
@@ -67,25 +84,24 @@ def extract_item_measures(screens_text, trials, chars_mapping):
 
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
     words_fix = words_fix.sort_values(['subj', 'fix_idx'])
-    scanpaths_texts, scanpaths_fixs = build_scanpaths(words_fix, screens_text, chars_mapping)
+    scanpaths_texts = build_scanpaths(words_fix, screens_text, chars_mapping)
 
-    return measures, scanpaths_texts, scanpaths_fixs
+    return measures, scanpaths_texts
 
 
 def build_scanpaths(words_fix, screens_text, chars_mapping):
     item_text, item_sentences_ids = divide_into_words(screens_text)
     item_text = pd.DataFrame({'word': item_text, 'sentence_id': item_sentences_ids})
-    scanpaths_text, scanpaths_fixs = {}, {}
+    scanpaths_text = {}
     for subj in words_fix['subj'].unique():
-        subj_scanpath_df = item_text.iloc[words_fix[words_fix['subj'] == subj]['word_idx']]
+        subj_fix = words_fix[words_fix['subj'] == subj]
+        subj_scanpath_df = item_text.iloc[subj_fix['word_idx']]
         subj_scanpath = subj_scanpath_df['word'].tolist()
         sentences_ids = subj_scanpath_df['sentence_id'].tolist()
         subj_scanpath = parse_sentences(subj_scanpath, sentences_ids, chars_mapping)
-        subj_fixs = words_fix[words_fix['subj'] == subj][['word_idx', 'fix_idx', 'fix_duration']]
-        scanpaths_text[subj] = subj_scanpath
-        scanpaths_fixs[subj] = subj_fixs.reset_index(drop=True)
+        scanpaths_text[subj] = {'words': subj_scanpath, 'words_ids': subj_fix['word_idx'].tolist()}
 
-    return scanpaths_text, scanpaths_fixs
+    return scanpaths_text
 
 
 def add_aggregated_measures(item_measures):
