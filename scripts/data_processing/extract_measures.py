@@ -5,6 +5,8 @@ from tqdm import tqdm
 import argparse
 import pandas as pd
 
+from scripts.data_processing.utils import average_measures
+
 PUNCTUATION_MARKS = ['?', '!', '.']
 WEIRD_CHARS = ['¿', '?', '¡', '!', '.', '−', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 # Not excluded: '(', ')', ',', ';', ':', '—', '«', '»', '“', '”', '‘', '’'
@@ -38,21 +40,6 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
         Intermediate:
             - RR (Regression Rate): number of trials with a regression divided by the number of trials
 """
-
-
-def average_measures(item_measures, measures, n_bins):
-    subject_measures = []
-    for subj in item_measures['subj'].unique():
-        subj_measures = item_measures[item_measures['subj'] == subj]
-        for measure in measures:
-            measure_mask = subj_measures[measure] != 0
-            binarized = pd.qcut(subj_measures[measure][measure_mask], n_bins, labels=[j for j in range(1, n_bins + 1)])
-            subj_measures.loc[binarized.index, measure] = binarized.astype(int)
-        subject_measures.append(subj_measures)
-    all_measures = measures + ['FC', 'RC']
-    binarized_measures = pd.concat(subject_measures)[['word_idx'] + all_measures]
-    averaged_measures = binarized_measures.groupby(['word_idx']).mean().round(0).astype(int)
-    return averaged_measures
 
 
 def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):

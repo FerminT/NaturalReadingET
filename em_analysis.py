@@ -50,7 +50,6 @@ def print_stats(et_measures, items_stats, save_path):
 
 
 def plot_measures(et_measures, save_path):
-    plot_skills_effects(et_measures, save_path)
     et_measures_no_skipped = remove_skipped_words(et_measures)
     plot_histograms(et_measures_no_skipped, ['FFD', 'FC'], ax_titles=['First Fixation Duration', 'Fixation Count'],
                     y_labels=['Number of words', 'Number of words'], save_file=save_path / 'FFD_FC_distributions.png')
@@ -153,29 +152,6 @@ def categorize_skill(reading_skill, thresholds):
         category = 'high'
 
     return category
-
-
-def plot_skills_effects(et_measures, save_path):
-    skills_threshold = {'low': 6, 'medium': 9, 'high': 10}
-    et_measures['reading_skill'] = et_measures['reading_skill'].apply(lambda x: categorize_skill(x, skills_threshold))
-    et_measures_no_skipped = log_normalize_durations(remove_skipped_words(et_measures))
-
-    skip_count = count_by_skill(et_measures, 'skipped')
-    fix_count = count_by_skill(et_measures_no_skipped, 'FC')
-    regression_count = count_by_skill(et_measures_no_skipped, 'RC')
-
-    y_labels = ['log First Fixation Duration', 'log Gaze Duration', 'Mean fixation count', 'Mean regression count',
-                'Mean number of skips']
-    plot_boxplots(['reading_skill'], measures=['FFD', 'FPRT', 'FC', 'RC', 'skipped'],
-                  data=[et_measures_no_skipped, et_measures_no_skipped, fix_count, regression_count, skip_count],
-                  x_labels=['Reading skill'] * 5,
-                  y_labels=y_labels,
-                  ax_titles=y_labels,
-                  fig_title='Reading skill on eye-tracking measures',
-                  save_file=save_path / 'skills_on_measures.png',
-                  sharey=False,
-                  orientation='vertical',
-                  order=['low', 'medium', 'high'])
 
 
 def plot_words_effects(et_measures, save_path):

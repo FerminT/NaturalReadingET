@@ -317,19 +317,16 @@ def get_scanpath_string(scanpath):
     return subj_scanpath
 
 
-def measure_fixations(subj_fixs, measure, n_bins=15):
-    """ Define the fixation duration associated with each word in the scanpath:
-            'FD' (Fixation Duration): keep all fixations
-            'GD' (Gaze Duration): sum the duration of consecutive fixations on the same word
-            'FFD' (First Fixation Duration): keep only the first fixation on consecutive words
-        Then, binarize the fixation duration distribution into n_bins bins
-    """
-    if measure == 'GD' or measure == 'FFD':
-        fix_duration = 'sum' if measure == 'GD' else 'first'
-        subj_fixs = subj_fixs.groupby((subj_fixs.word_idx != subj_fixs.word_idx.shift()).cumsum()).agg(
-            {'word_idx': 'first', 'fix_idx': 'first', 'fix_duration': fix_duration}).reset_index(drop=True)
-    if measure is None:
-        subj_fixs['fix_duration'] = 0
-    else:
-        subj_fixs['fix_duration'] = pd.qcut(subj_fixs['fix_duration'], q=n_bins, labels=[i for i in range(1, n_bins + 1)])
-    return subj_fixs
+def average_measures(item_measures, measures, n_bins):
+    subject_measures = []
+    for subj in item_measures['subj'].unique():
+        subj_measures = item_measures[item_measures['subj'] == subj]
+        for measure in measures:
+            measure_mask = subj_measures[measure] != 0
+            binarized = pd.qcut(subj_measures[measure][measure_mask], n_bins, labels=[j for j in range(1, n_bins + 1)])
+            subj_measures.loc[binarized.index, measure] = binarized.astype(int)
+        subject_measures.append(subj_measures)
+    all_measures = measures + ['FC', 'RC']
+    binarized_measures = pd.concat(subject_measures)[['word_idx'] + all_measures]
+    averaged_measures = binarized_measures.groupby(['word_idx']).mean().round(0).astype(int)
+    return averaged_measures
