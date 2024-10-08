@@ -288,26 +288,29 @@ def save_measures_by_subj(item_measures, save_path):
             subj_measures.to_pickle(save_path / f'{subj}.pkl')
 
 
-def save_subjects_scanpaths(item_scanpaths, item_avg_measures, item_name, save_path, measure=None):
+def save_subjects_scanpaths(items_scanpaths, words_avg_measures, chars_mapping, save_path, measure=None):
     dir_name = 'scanpaths'
     if measure is not None:
         dir_name += f'_{measure.lower()}'
-    save_path = save_path / dir_name / item_name
-    if not save_path.exists():
-        save_path.mkdir(parents=True)
-    for subj in item_scanpaths:
-        subj_scanpath = get_scanpath_string(item_scanpaths[subj]['words'])
-        words_measures = item_avg_measures.loc[item_scanpaths[subj]['words_ids']]
-        last_line_pos = 0
-        for line in subj_scanpath:
-            words = line.split()
-            line_measures = words_measures.iloc[last_line_pos:last_line_pos + len(words)]
-            line_measures = line_measures[measure].tolist() if measure is not None else [0] * len(words)
-            dump = {'text': line, 'fix_dur': line_measures}
-            with (save_path / f'{subj}.json').open('a') as f:
-                f.write(json.dumps(dump))
-                f.write('\n')
-            last_line_pos += len(words)
+    for item in items_scanpaths:
+        item_scanpaths = items_scanpaths[item]
+        save_path = save_path / dir_name / item
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
+        for subj in item_scanpaths:
+            subj_scanpath = get_scanpath_string(item_scanpaths[subj]['words'])
+            clean_words = [word.lower().translate(chars_mapping) for word in item_scanpaths[subj]['words']]
+            words_measures = words_avg_measures.loc[clean_words]
+            last_line_pos = 0
+            for line in subj_scanpath:
+                words = line.split()
+                line_measures = words_measures.iloc[last_line_pos:last_line_pos + len(words)]
+                line_measures = line_measures[measure].tolist() if measure is not None else [0] * len(words)
+                dump = {'text': line, 'fix_dur': line_measures}
+                with (save_path / f'{subj}.json').open('a') as f:
+                    f.write(json.dumps(dump))
+                    f.write('\n')
+                last_line_pos += len(words)
 
 
 def get_scanpath_string(scanpath):
@@ -318,15 +321,18 @@ def get_scanpath_string(scanpath):
 
 
 def average_measures(item_measures, measures, n_bins):
-    subject_measures = []
+    subjects_measures = []
     for subj in item_measures['subj'].unique():
         subj_measures = item_measures[item_measures['subj'] == subj]
         for measure in measures:
             measure_mask = subj_measures[measure] != 0
             binarized = pd.qcut(subj_measures[measure][measure_mask], n_bins, labels=[j for j in range(1, n_bins + 1)])
             subj_measures.loc[binarized.index, measure] = binarized.astype(int)
-        subject_measures.append(subj_measures)
+        subjects_measures.append(subj_measures)
+    subjects_measures_df = pd.concat(subjects_measures)
     all_measures = measures + ['FC', 'RC']
-    binarized_measures = pd.concat(subject_measures)[['word_idx'] + all_measures]
-    averaged_measures = binarized_measures.groupby(['word_idx']).mean().round(0).astype(int)
+    averaged_measures = (subjects_measures_df[['word_idx'] + all_measures].groupby(['word_idx'])
+                         .mean().round(0).astype(int))
+    averaged_measures['word'] = subjects_measures_df.loc[averaged_measures.index, 'word']
+    averaged_measures['excluded'] = subjects_measures_df.loc[averaged_measures.index, 'excluded']
     return averaged_measures

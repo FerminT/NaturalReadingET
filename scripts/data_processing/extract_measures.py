@@ -42,8 +42,35 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 """
 
 
+def main(item, data_path, items_path, trials_path, save_path, reprocess):
+    subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, item)
+    assign_fixations_to_words(items, subjects, data_path, reprocess=False)
+
+    if item != 'all':
+        items_wordsfix = [data_path / item]
+    else:
+        items_wordsfix = utils.get_dirs(data_path)
+
+    chars_mapping = str.maketrans(CHARS_MAP)
+    extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess)
+
+
+def measures_by_word(items_measures, save_path):
+    excluded_words = items_measures[items_measures['excluded']]
+    items_measures = items_measures[~items_measures['excluded']]
+    items_measures = items_measures.drop(columns=['excluded'])
+    items_measures = items_measures.groupby(['word']).mean().round(2)
+    missing_words = set(excluded_words['word']) - set(items_measures.index)
+    missing_words_df = pd.DataFrame(0, index=list(missing_words), columns=items_measures.columns)
+    items_measures = pd.concat([items_measures, missing_words_df])
+    items_measures.to_pickle(save_path / 'measures_by_word.pkl')
+    return items_measures
+
+
 def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess=False):
     print(f'Extracting eye-tracking measures from trials...')
+    items_measures = pd.DataFrame()
+    items_scanpaths = {item.name: {} for item in items_wordsfix}
     for item in (pbar := tqdm(items_wordsfix)):
         pbar.set_description(f'Processing "{item.stem}" trials')
         screens_text = utils.load_lines_text_by_screen(item.stem, items_path)
@@ -54,9 +81,12 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
         item_avg_measures = average_measures(item_measures,
                                              measures=['FFD', 'SFD', 'FPRT', 'TFD', 'RPD', 'RRT', 'SPRT'],
                                              n_bins=10)
+        items_measures = pd.concat([items_measures, item_avg_measures], ignore_index=True)
+        items_scanpaths[item.name] = item_scanpaths
 
         utils.save_measures_by_subj(item_measures, item_measures_path)
-        utils.save_subjects_scanpaths(item_scanpaths, item_avg_measures, item.name, save_path, measure='FPRT')
+    words_avg_measures = measures_by_word(items_measures, save_path)
+    utils.save_subjects_scanpaths(items_scanpaths, words_avg_measures, chars_mapping, save_path, measure='FPRT')
 
 
 def extract_item_measures(screens_text, trials, chars_mapping):
@@ -255,19 +285,6 @@ def has_weird_chars(word):
 
 def has_no_fixations(word_fix):
     return word_fix['trial_fix'].isna().all()
-
-
-def main(item, data_path, items_path, trials_path, save_path, reprocess):
-    subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, item)
-    assign_fixations_to_words(items, subjects, data_path, reprocess=False)
-
-    if item != 'all':
-        items_wordsfix = [data_path / item]
-    else:
-        items_wordsfix = utils.get_dirs(data_path)
-
-    chars_mapping = str.maketrans(CHARS_MAP)
-    extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess)
 
 
 if __name__ == '__main__':
