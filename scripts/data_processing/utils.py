@@ -294,9 +294,9 @@ def save_subjects_scanpaths(items_scanpaths, words_avg_measures, chars_mapping, 
         dir_name += f'_{measure.lower()}'
     for item in items_scanpaths:
         item_scanpaths = items_scanpaths[item]
-        save_path = save_path / dir_name / item
-        if not save_path.exists():
-            save_path.mkdir(parents=True)
+        item_savepath = save_path / dir_name / item
+        if not item_savepath.exists():
+            item_savepath.mkdir(parents=True)
         for subj in item_scanpaths:
             subj_scanpath = get_scanpath_string(item_scanpaths[subj]['words'])
             clean_words = [word.lower().translate(chars_mapping) for word in item_scanpaths[subj]['words']]
@@ -307,7 +307,7 @@ def save_subjects_scanpaths(items_scanpaths, words_avg_measures, chars_mapping, 
                 line_measures = words_measures.iloc[last_line_pos:last_line_pos + len(words)]
                 line_measures = line_measures[measure].tolist() if measure is not None else [0] * len(words)
                 dump = {'text': line, 'fix_dur': line_measures}
-                with (save_path / f'{subj}.json').open('a') as f:
+                with (item_savepath / f'{subj}.json').open('a') as f:
                     f.write(json.dumps(dump))
                     f.write('\n')
                 last_line_pos += len(words)
