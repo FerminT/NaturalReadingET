@@ -15,10 +15,10 @@ from scripts.data_processing.utils import get_dirs, get_files, log, load_profile
     3. Perform data analysis on the extracted measures """
 
 
-def do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path):
+def do_analysis(items_paths, words_freq_file, stats_file, save_path):
     print('Analysing eye-tracking measures...')
     words_freq, items_stats = pd.read_csv(words_freq_file), pd.read_csv(stats_file, index_col=0)
-    et_measures = load_et_measures(items_paths, words_freq, subjs_reading_skills)
+    et_measures = load_et_measures(items_paths, words_freq)
     print_stats(et_measures, items_stats, save_path)
 
     et_measures = remove_excluded_words(et_measures)
@@ -91,14 +91,6 @@ def mixedlm_fit_and_save(formula, vc_formula, re_formula, group, data, centre, n
     print(mixedlm_results.summary())
     with open(save_path / name, 'w') as f:
         f.write(mixedlm_results.summary().as_text())
-
-
-def count_by_skill(et_measures, measure):
-    group_measure = et_measures.groupby(['reading_skill', 'item'])[measure].sum().reset_index()
-    subjs_per_item = et_measures.groupby(['reading_skill', 'item'])['subj'].nunique().reset_index()
-    group_measure[measure] = group_measure[measure] / subjs_per_item['subj']
-
-    return group_measure
 
 
 def get_continuous_fixed_effects(formula):
@@ -217,20 +209,19 @@ def plot_histograms(et_measures, measures, ax_titles, y_labels, save_file):
     fig.savefig(save_file)
 
 
-def load_trial(trial, item_name, words_freq, subjs_reading_skills):
+def load_trial(trial, item_name, words_freq):
     trial_measures = add_len_freq_skipped(pd.read_pickle(trial), words_freq)
-    trial_measures.insert(1, 'reading_skill', subjs_reading_skills[trial_measures['subj'].iloc[0]])
     trial_measures.insert(0, 'item', item_name)
     return trial_measures
 
 
-def load_trials_measures(item, words_freq, subjs_reading_skills):
-    trials_measures = [load_trial(trial, item.name, words_freq, subjs_reading_skills) for trial in get_files(item)]
+def load_trials_measures(item, words_freq):
+    trials_measures = [load_trial(trial, item.name, words_freq) for trial in get_files(item)]
     return pd.concat(trials_measures, ignore_index=True)
 
 
-def load_et_measures(items_paths, words_freq, subjs_reading_skills):
-    measures = [load_trials_measures(item, words_freq, subjs_reading_skills) for item in items_paths]
+def load_et_measures(items_paths, words_freq):
+    measures = [load_trials_measures(item, words_freq) for item in items_paths]
     measures = pd.concat(measures, ignore_index=True)
     return measures
 
@@ -258,8 +249,6 @@ if __name__ == '__main__':
     wordsfix_path, measures_path, stimuli_path, participants_path, save_path = \
         Path(args.wordsfix), Path(args.measures), Path(args.stimuli), Path(args.participants), Path(args.output)
     words_freq_file, stats_file, questions_file = Path(args.words_freq), Path(args.stats), Path(args.questions)
-    subjs_reading_skills = {subj.name: load_profile(subj)['reading_level'].iloc[0]
-                            for subj in get_dirs(participants_path)}
     subjects_associations, words_associations = parse_wa_task(questions_file, participants_path)
 
     extract_measures(args.item, wordsfix_path, stimuli_path, participants_path, save_path, reprocess=args.reprocess)
@@ -273,4 +262,4 @@ if __name__ == '__main__':
     subjects_associations.to_csv(save_path / 'subjects_associations.csv')
     words_associations.to_csv(save_path / 'words_associations.csv', index=False)
 
-    do_analysis(items_paths, words_freq_file, stats_file, subjs_reading_skills, save_path)
+    do_analysis(items_paths, words_freq_file, stats_file, save_path)

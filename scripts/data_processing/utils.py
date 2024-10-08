@@ -129,11 +129,6 @@ def update_and_save_trial(sequence_states, stimuli, trial_path):
     messagebox.showinfo(title='Saved', message='Trial saved successfully')
 
 
-def save_json(dict_, save_path, filename):
-    with (save_path / filename).open('w') as file:
-        json.dump(dict_, file, indent=4)
-
-
 def save_trial(screens_fixations, screens_lines, del_seqindices, item_path):
     fix_filename = 'fixations.pkl'
     lines_filename = 'lines.pkl'
