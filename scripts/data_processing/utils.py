@@ -331,8 +331,7 @@ def average_measures(item_measures, measures, n_bins):
         subjects_measures.append(subj_measures)
     subjects_measures_df = pd.concat(subjects_measures)
     all_measures = measures + ['FC', 'RC']
-    averaged_measures = (subjects_measures_df[['word_idx'] + all_measures].groupby(['word_idx'])
-                         .mean().round(0).astype(int))
+    averaged_measures = subjects_measures_df[['word_idx'] + all_measures].groupby(['word_idx']).mean()
     averaged_measures['word'] = subjects_measures_df.loc[averaged_measures.index, 'word']
     averaged_measures['excluded'] = subjects_measures_df.loc[averaged_measures.index, 'excluded']
     return averaged_measures
