@@ -45,22 +45,20 @@ CHARS_MAP = {'—': '', '‒': '', '−': '', '-': '', '«': '', '»': '',
 def main(item, data_path, items_path, trials_path, save_path, reprocess):
     subjects, items = utils.get_dirs(trials_path), utils.get_items(items_path, item)
     assign_fixations_to_words(items, subjects, data_path, reprocess=False)
-
     if item != 'all':
         items_wordsfix = [data_path / item]
     else:
         items_wordsfix = utils.get_dirs(data_path)
-
     chars_mapping = str.maketrans(CHARS_MAP)
     extract_measures(items_wordsfix, chars_mapping, items_path, save_path, reprocess)
 
 
-def measures_by_word(items_measures, save_path):
+def words_measurements(items_measures, save_path):
     excluded_words = items_measures[items_measures['excluded']]
     items_measures = items_measures[~items_measures['excluded']]
     items_measures = items_measures.drop(columns=['excluded'])
     items_measures = items_measures.groupby(['word']).mean().round(2)
-    items_measures.to_pickle(save_path / 'measures_by_word.pkl')
+    items_measures.to_pickle(save_path / 'words_measurements.pkl')
     missing_words = set(excluded_words['word']) - set(items_measures.index)
     missing_words_df = pd.DataFrame(0, index=list(missing_words), columns=items_measures.columns)
     items_measures = pd.concat([items_measures, missing_words_df])
@@ -83,9 +81,9 @@ def extract_measures(items_wordsfix, chars_mapping, items_path, save_path, repro
                                              n_bins=10)
         items_measures = pd.concat([items_measures, item_avg_measures], ignore_index=True)
         items_scanpaths[item.name] = item_scanpaths
-
         utils.save_measures_by_subj(item_measures, item_measures_path)
-    words_avg_measures = measures_by_word(items_measures, save_path)
+
+    words_avg_measures = words_measurements(items_measures, save_path)
     utils.save_subjects_scanpaths(items_scanpaths, words_avg_measures, chars_mapping, save_path, measure='FPRT')
 
 
@@ -94,7 +92,6 @@ def extract_item_measures(screens_text, trials, chars_mapping):
     for trial in trials:
         trial_df = pd.read_pickle(trial)
         add_trial_measures(trial_df, screens_text, chars_mapping, measures, words_fix)
-
     measures = pd.DataFrame(measures, columns=['subj', 'screen', 'word_idx', 'word', 'sentence_pos', 'screen_pos',
                                                'excluded', 'FFD', 'SFD', 'FPRT', 'RPD', 'TFD', 'RRT', 'SPRT',
                                                'FC', 'RC'])
@@ -102,7 +99,6 @@ def extract_item_measures(screens_text, trials, chars_mapping):
     words_fix = pd.DataFrame(words_fix, columns=['subj', 'fix_idx', 'fix_duration', 'word_idx'])
     words_fix = words_fix.sort_values(['subj', 'fix_idx'])
     scanpaths_texts = build_scanpaths(words_fix, screens_text, chars_mapping)
-
     return measures, scanpaths_texts
 
 
@@ -117,7 +113,6 @@ def build_scanpaths(words_fix, screens_text, chars_mapping):
         sentences_ids = subj_scanpath_df['sentence_id'].tolist()
         subj_scanpath = parse_sentences(subj_scanpath, sentences_ids, chars_mapping)
         scanpaths_text[subj] = {'words': subj_scanpath, 'words_ids': subj_fix['word_idx'].tolist()}
-
     return scanpaths_text
 
 
@@ -126,7 +121,6 @@ def add_aggregated_measures(item_measures):
         valid_measures = item_measures[~item_measures['excluded']]
         item_measures['LS'] = valid_measures.groupby(['word_idx'])['FPRT'].transform(lambda x: sum(x == 0) / len(x))
         item_measures['RR'] = valid_measures.groupby(['word_idx'])['RPD'].transform(lambda x: sum(x > 0) / len(x))
-
     return item_measures
 
 
@@ -179,7 +173,6 @@ def word_measures(word_fix, screen_fix):
     sprt = tfd - fprt
     fc = len(word_fix['screen_fix'])
     rc = fc - n_first_pass_fix
-
     return ffd, sfd, fprt, rpd, tfd, rrt, sprt, fc, rc
 
 
@@ -210,7 +203,6 @@ def get_trials_to_process(item, item_savepath, reprocess):
     trials_to_process = utils.get_files(item, 'pkl')
     if item_savepath.exists() and not reprocess:
         trials_to_process = [trial for trial in trials_to_process if not (item_savepath / trial.name).exists()]
-
     return trials_to_process
 
 
@@ -222,7 +214,6 @@ def parse_sentences(subj_scanpath, sentences_ids, chars_mapping):
         word = word if word != next_word else word.translate(chars_mapping)
         subj_scanpath[i] = word if curr_sentence_id == next_sentence_id else word.translate(chars_mapping) + '.'
         curr_sentence_id = next_sentence_id
-
     return subj_scanpath
 
 
