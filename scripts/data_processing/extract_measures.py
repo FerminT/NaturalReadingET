@@ -60,10 +60,10 @@ def measures_by_word(items_measures, save_path):
     items_measures = items_measures[~items_measures['excluded']]
     items_measures = items_measures.drop(columns=['excluded'])
     items_measures = items_measures.groupby(['word']).mean().round(2)
+    items_measures.to_pickle(save_path / 'measures_by_word.pkl')
     missing_words = set(excluded_words['word']) - set(items_measures.index)
     missing_words_df = pd.DataFrame(0, index=list(missing_words), columns=items_measures.columns)
     items_measures = pd.concat([items_measures, missing_words_df])
-    items_measures.to_pickle(save_path / 'measures_by_word.pkl')
     return items_measures
 
 
